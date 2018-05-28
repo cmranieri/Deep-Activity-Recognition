@@ -23,7 +23,7 @@ def flow2bgr( raw_flow ):
 
 
 
-def store_video_flow( u, v, frame_id, u_dir, v_dir ):
+def store_frame_flow( u, v, frame_id, u_dir, v_dir ):
     cv2.imwrite( os.path.join( u_dir, frame_id + '.jpg' ),
                  u,
                  [ cv2.IMWRITE_JPEG_QUALITY , 50 ] )
@@ -75,7 +75,7 @@ def convert_video( video_name, u_dir, v_dir ):
         frame_id = str( 1000 + count )
         ur_dict[ frame_id ] = u_range
         vr_dict[ frame_id ] = v_range
-        store_video_flow( u, v, frame_id, u_dir, v_dir )
+        #store_frame_flow( u, v, frame_id, u_dir, v_dir )
 
 
         # TEST #
