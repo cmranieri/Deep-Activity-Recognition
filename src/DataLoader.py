@@ -3,6 +3,9 @@ import os
 import glob
 import time
 import cv2
+import pickle
+from PIL import Image
+from io import BytesIO
 
 class DataLoader:
 
@@ -10,9 +13,9 @@ class DataLoader:
                   rootPath,
                   filenames,
                   lblFilename ,
-                  batchSize = 10,
+                  batchSize = 20,
                   dim = 224,
-                  timesteps = 10 ):
+                  timesteps = 16 ):
         self.dim       = dim
         self.rootPath  = rootPath
         self.timesteps = timesteps
@@ -58,6 +61,7 @@ class DataLoader:
             batchPaths += [ self.filenames[ self.ids[ i ] ].split('.')[0] ]
         self.curBatchLen = len( batchPaths )
         self.incIndex()
+        # batchPaths is a list with video names
         return batchPaths
 
 
@@ -79,21 +83,29 @@ class DataLoader:
         return inp
 
 
-    def loadRanges( self, flowDir ):
-        r_file = np.load( os.path.join( flowDir, 'range.npy' ) )
-        r_dict = r_file[()]
-        return r_dict
+    def loadFlow( self, video, index ):
+        u_img = Image.open( video ['u'] [index] )
+        v_img = Image.open( video ['v'] [index] )
+        u_range = video ['u_range'] [index]
+        v_range = video ['v_range'] [index]
+
+        u = np.array( u_img, dtype = 'float32' ).copy()
+        v = np.array( v_img, dtype = 'float32' ).copy()
+        cv2.normalize( u, u,  u_range[ 0 ], u_range[ 1 ], cv2.NORM_MINMAX )
+        cv2.normalize( v, v,  v_range[ 0 ], v_range[ 1 ], cv2.NORM_MINMAX )
+        return u, v
 
 
-
-    def loadFlow( self, flowDir, filename, r_dict ):
-        r = r_dict[ filename.split('.')[0] ]
-        img = cv2.imread( os.path.join( flowDir, filename ),
-                          cv2.IMREAD_GRAYSCALE )
-        flow = np.array( img, dtype = 'float32' ).copy()
-        cv2.normalize( flow, flow,  r[ 0 ], r[ 1 ], cv2.NORM_MINMAX )
-        return flow
-
+    def stackFlow( self, video, start, timesteps ):
+        flowList = list()
+        for i in range( start, start+timesteps ):
+            u, v = self.loadFlow( video, i )
+            flowList += [ np.array( [ u , v ] ) ]
+        stack = np.array( flowList )
+        stack = np.transpose( stack , [ 2 , 3 , 1 , 0 ] )
+        stack = self.randomCrop( stack )
+        stack = self.randomFlip( stack )
+        return stack
 
 
     def randomBatchFlow( self ):
@@ -102,28 +114,10 @@ class DataLoader:
         labels = list()
         for batchPath in batchPaths:
             fullPath  = os.path.join( self.rootPath, batchPath )
-            filenames = sorted( [ os.path.basename(x) for x in glob.glob( 
-                                          os.path.join( fullPath, 'u', '*.jpg' ) ) ] )
+            video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
 
-            begin_id = np.random.randint( len( filenames ) - self.timesteps )
-
-            flowList = list()
-            ur_dict = self.loadRanges( os.path.join( fullPath, 'u' ) )
-            vr_dict = self.loadRanges( os.path.join( fullPath, 'v' ) )
-            for filename in filenames[ begin_id : begin_id + self.timesteps ]:
-                #u = cv2.imread( os.path.join( fullPath, 'u', filename ),
-                #                cv2.IMREAD_GRAYSCALE )
-                #v = cv2.imread( os.path.join( fullPath, 'v', filename ),
-                #                cv2.IMREAD_GRAYSCALE )
-                u = self.loadFlow( os.path.join( fullPath, 'u' ), filename, ur_dict )
-                v = self.loadFlow( os.path.join( fullPath, 'v' ), filename, vr_dict )
-                
-                flowList += [ np.array( [ u , v ] ) ]
-            videoFlow = np.array( flowList )
-            videoFlow = np.transpose( videoFlow , [ 2 , 3 , 1 , 0 ] )
-            videoFlow = self.randomCrop( videoFlow )
-            videoFlow = self.randomFlip( videoFlow )
-            batch  += [ videoFlow ]
+            start = np.random.randint( len( video[ 'u' ] ) - self.timesteps )
+            batch  += [ self.stackFlow( video, start, self.timesteps ) ]
 
             className = batchPath.split('/')[ 0 ]
             label = np.zeros(( 101 ) , dtype = 'float32')
@@ -138,9 +132,9 @@ class DataLoader:
 
 
 if __name__ == '__main__':
-    rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
+    # rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
     # rootPath    = '/media/olorin/Documentos/caetano/datasets/UCF-101_flow'
-    # rootPath    = '/home/caetano/Documents/datasets/UCF-101_flow'
+    rootPath    = '/home/caetano/Documents/datasets/UCF-101_flow'
     filenames   = np.load( '../splits/trainlist011.npy' )
     lblFilename = '../classInd.txt'
     dataLoader = DataLoader( rootPath, filenames, lblFilename )
