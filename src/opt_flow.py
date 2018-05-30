@@ -131,19 +131,19 @@ def process_video( input_dir , output_dir , raw_filename ):
 
 #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
 
-input_dir  = '/home/caetano/Documents/datasets/UCF-101'
-output_dir = '/home/caetano/Documents/datasets/UCF-101_flow'
-trainlist = np.load( '../splits/trainlist01.npy' )
+input_dir  = '/lustre/cranieri/UCF-101'
+output_dir = '/lustre/cranieri/UCF-101_flow'
+trainlist = np.load( '../splits/trainlist011.npy' )
 testlist = np.load( '../splits/testlist01.npy' )
 
 for filename in trainlist:
     t = time.time()
     process_video( input_dir, output_dir, filename )
     print( 'Time:', time.time() - t )
-for filename in testlist:
-    t = time.time()
-    process_video( input_dir, output_dir, filename )
-    print( 'Time:', time.time() - t )
+#for filename in testlist:
+#    t = time.time()
+#    process_video( input_dir, output_dir, filename )
+#    print( 'Time:', time.time() - t )
     
 
 
