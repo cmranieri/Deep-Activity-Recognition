@@ -11,10 +11,10 @@ class Classifier:
     def __init__( self ):
         timesteps = 10
         self.network = Network.Network( timesteps = timesteps,
-                                        modelsPath = '/media/olorin/Documentos/caetano/models/ucf101/',
-                                        restoreModel = True )
+                                        modelsPath = '/lustre/cranieri/models/ucf101/',
+                                        restoreModel = False )
         
-        rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
+        rootPath    = '/home/cranieri/datasets/UCF-101_flow'
         lblFilename = '../classInd.txt'
         trainFilenames   = np.load( '../splits/trainlist01.npy' )
         testFilenames    = np.load( '../splits/testlist01.npy'  )
@@ -22,7 +22,7 @@ class Classifier:
         self.dataLoader  = DataLoader.DataLoader( rootPath,
                                                   trainFilenames,
                                                   lblFilename,
-                                                  batchSize = 192,
+                                                  batchSize = 256,
                                                   timesteps = timesteps )
         self.testLoader  = TestLoader.TestLoader( rootPath,
                                                   testFilenames,
@@ -74,7 +74,7 @@ class Classifier:
         train_loss_list = list()
 
         self.step = network.getGlobalStep().eval()
-        while self.step < 150000:
+        while self.step < 60000:
             #np.random.seed( self.step )
 
             batch , labels = self.dataLoader.randomBatchFlow()
@@ -112,7 +112,7 @@ class Classifier:
 
 
 if __name__ == '__main__':
-    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
+    # os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
     
     classifier = Classifier()
     classifier.train()

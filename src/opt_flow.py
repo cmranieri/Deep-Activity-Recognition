@@ -133,10 +133,10 @@ def process_video( input_dir , output_dir , raw_filename ):
 
 input_dir  = '/lustre/cranieri/UCF-101'
 output_dir = '/lustre/cranieri/UCF-101_flow'
-trainlist = np.load( '../splits/trainlist011.npy' )
-testlist = np.load( '../splits/testlist01.npy' )
+trainlist = list(np.load( '../splits/trainlist01.npy' ))
+testlist = list(np.load( '../splits/testlist01.npy' ))
 
-for filename in trainlist:
+for filename in trainlist + testlist:
     t = time.time()
     process_video( input_dir, output_dir, filename )
     print( 'Time:', time.time() - t )

@@ -31,7 +31,7 @@ class Network:
             self.sess.run( tf.global_variables_initializer() )
             tf.train.export_meta_graph( filename = os.path.join( modelsPath,
                                                                  metaGraphName ) )
-            self.saver = tf.train.Saver( max_to_keep = 3 )
+            self.saver = tf.train.Saver( max_to_keep = 2 )
         else:
             self.saver = tf.train.import_meta_graph( os.path.join( modelsPath,
                                                                    metaGraphName ) )
