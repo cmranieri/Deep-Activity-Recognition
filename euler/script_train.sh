@@ -11,5 +11,5 @@ source ~/venv/bin/activate
 
 cd ~/Deep-Activity-Recognition/src
 
-python Classifier.py
+python Trainer.py
 

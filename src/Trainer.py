@@ -14,16 +14,17 @@ class Trainer:
                                           modelsPath = '/lustre/cranieri/models/ucf101/',
                                           restoreModel = False )
         
-        rootPath    = '/home/cranieri/datasets/UCF-101_flow'
-        lblFilename = '../classInd.txt'
-        trainFilenames   = np.load( '../splits/trainlist01.npy' )
-        testFilenames    = np.load( '../splits/testlist01.npy'  )
+        self.timesteps   = timesteps
+        self.rootPath    = '/home/cranieri/datasets/UCF-101_flow'
+        self.lblFilename = '../classInd.txt'
+        self.trainFilenames   = np.load( '../splits/trainlist01.npy' )
+        self.testFilenames    = np.load( '../splits/testlist01.npy'  )
         self.resultsPath = '../results'
-        self.testLoader  = TestLoader.TestLoader( rootPath,
-                                                  testFilenames,
-                                                  lblFilename,
+        self.testLoader  = TestLoader.TestLoader( self.rootPath,
+                                                  self.testFilenames,
+                                                  self.lblFilename,
                                                   numFrames = 5,
-                                                  timesteps = timesteps )
+                                                  timesteps = self.timesteps )
 
 
     def generateDataLoader( self ):
@@ -32,7 +33,7 @@ class Trainer:
                                       self.lblFilename,
                                       batchSize = 128,
                                       timesteps = self.timesteps,
-                                      numThreads = 4 )
+                                      numThreads = 10 )
 
 
 
@@ -79,42 +80,43 @@ class Trainer:
         train_loss_list = list()
 
         self.step = network.getGlobalStep().eval()
-        while self.step < 60000:
-            #np.random.seed( self.step )
+        with self.generateDataLoader() as dataLoader:
+            while self.step < 60000:
+                #np.random.seed( self.step )
 
-            batch , labels = self.dataLoader.getBatch()
+                batch , labels = dataLoader.getBatch()
 
-            # train the selected batch
-            [_, batch_accuracy, batch_loss] = network.trainBatch( 
-                                                batch , labels,
-                                                dropout1 = 0.3 , dropout2 = 0.3,
-                                                learning_rate = 1e-2 )
-            train_acc_list  += [ batch_accuracy ]
-            train_loss_list += [ batch_loss ]
+                # train the selected batch
+                [_, batch_accuracy, batch_loss] = network.trainBatch( 
+                                                    batch , labels,
+                                                    dropout1 = 0.3 , dropout2 = 0.3,
+                                                    learning_rate = 1e-2 )
+                train_acc_list  += [ batch_accuracy ]
+                train_loss_list += [ batch_loss ]
 
-            # periodically shows train acc and loss on the batches
-            if self.step % 100 == 0:
-                train_accuracy = np.mean( train_acc_list  )
-                train_loss     = np.mean( train_loss_list )
-                print( 'step %d, training accuracy %g, cross entropy %g'%(
-                       self.step, train_accuracy, train_loss ) )
-                self.storeResult( 'train.txt', str(self.step) + ' ' +
-                                               str(train_accuracy) + ' ' +
-                                               str(train_loss) + '\n' )
-                train_acc_list  = list()
-                train_loss_list = list()
+                # periodically shows train acc and loss on the batches
+                if self.step % 100 == 0:
+                    train_accuracy = np.mean( train_acc_list  )
+                    train_loss     = np.mean( train_loss_list )
+                    print( 'step %d, training accuracy %g, cross entropy %g'%(
+                           self.step, train_accuracy, train_loss ) )
+                    self.storeResult( 'train.txt', str(self.step) + ' ' +
+                                                   str(train_accuracy) + ' ' +
+                                                   str(train_loss) + '\n' )
+                    train_acc_list  = list()
+                    train_loss_list = list()
 
-            if self.step % 10000 == 0 and self.step != 0:
-                network.saveModel()
-           
-            if self.step % 10000 == 0 and self.step != 0:
-                print( 'STEP %d: TEST'%( self.step ) )
-                test_accuracy = self.evaluate()
-                print( 'test accuracy:', test_accuracy )
-                self.storeResult( 'test.txt', str(self.step) + ' ' +
-                                              str( test_accuracy ) + '\n' )
+                if self.step % 10000 == 0 and self.step != 0:
+                    network.saveModel()
+               
+                if self.step % 10000 == 0 and self.step != 0:
+                    print( 'STEP %d: TEST'%( self.step ) )
+                    test_accuracy = self.evaluate()
+                    print( 'test accuracy:', test_accuracy )
+                    self.storeResult( 'test.txt', str(self.step) + ' ' +
+                                                  str( test_accuracy ) + '\n' )
 
-            self.step = network.getGlobalStep().eval()
+                self.step = network.getGlobalStep().eval()
 
 
 
