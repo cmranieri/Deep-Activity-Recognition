@@ -68,18 +68,18 @@ class DataLoader:
 
     def _incIndex( self ):
         self._index += self.batchSize
-        if self.index >= self.length:
+        if self._index >= self.length:
             self._shuffle()
 
 
     def _randomBatchPaths( self ):
         self._indexMutex.acquire()
-        if self.index + self.batchSize > self.length:
+        if self._index + self.batchSize > self.length:
             self._incIndex()
         batchPaths = list()
         endIndex = self._index + self.batchSize
         for i in range( self._index , endIndex ):
-            batchPaths += [ self.filenames[ self.ids[ i ] ].split('.')[0] ]
+            batchPaths += [ self.filenames[ self._ids[ i ] ].split('.')[0] ]
         self._incIndex()
         self._indexMutex.release()
         return batchPaths
@@ -173,8 +173,8 @@ class DataLoader:
 
 
 if __name__ == '__main__':
-    # rootPath    = '/lustre/cranieri/UCF-101_flow'
-    rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
+    rootPath    = '/home/cranieri/datasets/UCF-101_flow'
+    # rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
     filenames   = np.load( '../splits/trainlist011.npy' )
     lblFilename = '../classInd.txt'
     with DataLoader( rootPath, filenames, lblFilename ) as dataLoader:
