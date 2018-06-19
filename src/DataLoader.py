@@ -1,11 +1,12 @@
 import numpy as np
 import os
-import glob
 import time
 import cv2
 import pickle
 from PIL import Image
 from io import BytesIO
+from threading import Thread, Lock
+import queue
 
 class DataLoader:
 
@@ -15,20 +16,39 @@ class DataLoader:
                   lblFilename ,
                   batchSize = 20,
                   dim = 224,
-                  timesteps = 16 ):
-        self.dim       = dim
-        self.rootPath  = rootPath
-        self.timesteps = timesteps
-        self.filenames = filenames
-        self.length    = filenames.shape[ 0 ]
+                  timesteps = 16,
+                  numThreads = 1 ):
+        self.rootPath   = rootPath
+        self.filenames  = filenames
+        self.dim        = dim
+        self.timesteps  = timesteps
+        self.numThreads = numThreads
+        self.length     = filenames.shape[ 0 ]
         
         self.setBatchSize( batchSize )
-        self.shuffle()
-        self.generateLabelsDict( lblFilename )
+        self._shuffle()
+        self._generateLabelsDict( lblFilename )
+
+        self._produce = True
+        self._batchQueue = queue.Queue( maxsize = 10 )
+        self._indexMutex = Lock()
+        self._queueMutex = Lock()
+        self._threadsList = list()
+ 
+
+    def __enter__( self ):
+        self._startThreads()
+        return self
 
 
+    def __exit__( self, exc_type, exc_value, traceback ):
+        self._produce = False
+        for i, t in enumerate( self._threadsList ):
+            t.join()
+            print( 'Finished thread %d' % ( i ) )
 
-    def generateLabelsDict( self, filename ):
+
+    def _generateLabelsDict( self, filename ):
         self.labelsDict = dict()
         f = open( filename , 'r' )
         for line in f.readlines():
@@ -36,36 +56,36 @@ class DataLoader:
 
 
 
-    def shuffle( self ):
-        self.ids = np.arange( self.length )
-        np.random.shuffle( self.ids )
-        self.index = 0
+    def _shuffle( self ):
+        self._ids = np.arange( self.length )
+        np.random.shuffle( self._ids )
+        self._index = 0
 
 
     def setBatchSize( self , batchSize ):
         self.batchSize = batchSize
 
 
-    def incIndex( self ):
-        self.index = self.index + self.batchSize
+    def _incIndex( self ):
+        self._index += self.batchSize
         if self.index >= self.length:
-            self.shuffle()
+            self._shuffle()
 
 
-    def randomBatchPaths( self ):
+    def _randomBatchPaths( self ):
+        self._indexMutex.acquire()
+        if self.index + self.batchSize > self.length:
+            self._incIndex()
         batchPaths = list()
-        endIndex = self.index + self.batchSize
-        if endIndex > self.length:
-            endIndex = self.length
-        for i in range( self.index , endIndex):
+        endIndex = self._index + self.batchSize
+        for i in range( self._index , endIndex ):
             batchPaths += [ self.filenames[ self.ids[ i ] ].split('.')[0] ]
-        self.curBatchLen = len( batchPaths )
-        self.incIndex()
-        # batchPaths is a list with video names
+        self._incIndex()
+        self._indexMutex.release()
         return batchPaths
 
 
-    def randomCrop( self , inp ):
+    def _randomCrop( self , inp ):
         dim = self.dim
         imgDimX = inp.shape[ 1 ]
         imgDimY = inp.shape[ 0 ]
@@ -77,7 +97,7 @@ class DataLoader:
         return crop
 
 
-    def randomFlip( self , inp ):
+    def _randomFlip( self , inp ):
         if np.random.random() > 0.5:
             inp = np.flip( inp , 1 )
         return inp
@@ -103,13 +123,13 @@ class DataLoader:
             flowList += [ np.array( [ u , v ] ) ]
         stack = np.array( flowList )
         stack = np.transpose( stack , [ 2 , 3 , 1 , 0 ] )
-        stack = self.randomCrop( stack )
-        stack = self.randomFlip( stack )
+        stack = self._randomCrop( stack )
+        stack = self._randomFlip( stack )
         return stack
 
 
     def randomBatchFlow( self ):
-        batchPaths = self.randomBatchPaths()
+        batchPaths = self._randomBatchPaths()
         batch  = list()
         labels = list()
         for batchPath in batchPaths:
@@ -117,7 +137,7 @@ class DataLoader:
             video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
 
             start = np.random.randint( len( video[ 'u' ] ) - self.timesteps )
-            batch  += [ self.stackFlow( video, start, self.timesteps ) ]
+            batch += [ self.stackFlow( video, start, self.timesteps ) ]
 
             className = batchPath.split('/')[ 0 ]
             label = np.zeros(( 101 ) , dtype = 'float32')
@@ -125,26 +145,44 @@ class DataLoader:
             labels += [ label ]
 
         batch = np.array( batch, dtype = 'float32' )
-        batch = np.reshape( batch , [ self.curBatchLen , 
+        batch = np.reshape( batch , [ len( batchPaths ), 
                                       self.dim * self.dim * 2 * self.timesteps] )
         labels = np.array( labels )
-        return batch, labels
+        return ( batch , labels )
+
+
+    def _startThreads( self ):
+        for i in range( self.numThreads ):
+            print( 'Initializing thread %d' % ( i ) )
+            t = Thread( target = self._batchThread )
+            self._threadsList += [ t ]
+            t.start()
+
+
+    def _batchThread( self ):
+        while self._produce:
+            batchTuple = self.randomBatchFlow()
+            self._queueMutex.acquire()
+            self._batchQueue.put( batchTuple )
+            self._queueMutex.release()
+
+
+    def getBatch( self ):
+        return self._batchQueue.get()
+
 
 
 if __name__ == '__main__':
-    # rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
-    # rootPath    = '/media/olorin/Documentos/caetano/datasets/UCF-101_flow'
-    # rootPath    = '/home/caetano/Documents/datasets/UCF-101_flow'
-    rootPath    = '/lustre/cranieri/UCF-101_flow'
+    # rootPath    = '/lustre/cranieri/UCF-101_flow'
+    rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
     filenames   = np.load( '../splits/trainlist011.npy' )
     lblFilename = '../classInd.txt'
-    dataLoader = DataLoader( rootPath, filenames, lblFilename )
-    # batch, labels =  dataLoader.randomBatchFlow()
-    for i in range( 100 ):
-        t = time.time()
-        batch, labels =  dataLoader.randomBatchFlow()
-        print( i , batch.shape , labels.shape )
-        print( 'Total time:' , time.time() - t )
+    with DataLoader( rootPath, filenames, lblFilename ) as dataLoader:
+        for i in range( 100 ):
+            t = time.time()
+            batch, labels =  dataLoader.getBatch()
+            print( i , batch.shape , labels.shape )
+            print( 'Total time:' , time.time() - t )
 
 
 
