@@ -17,7 +17,8 @@ class DataLoader:
                   batchSize = 20,
                   dim = 224,
                   timesteps = 16,
-                  numThreads = 1 ):
+                  numThreads = 1,
+                  maxsize = 10 ):
         self.rootPath   = rootPath
         self.filenames  = filenames
         self.dim        = dim
@@ -30,7 +31,7 @@ class DataLoader:
         self._generateLabelsDict( lblFilename )
 
         self._produce = True
-        self._batchQueue = queue.Queue( maxsize = 10 )
+        self._batchQueue = queue.Queue( maxsize = maxsize )
         self._indexMutex = Lock()
         self._queueMutex = Lock()
         self._threadsList = list()
@@ -173,11 +174,11 @@ class DataLoader:
 
 
 if __name__ == '__main__':
-    rootPath    = '/home/cranieri/datasets/UCF-101_flow'
+    rootPath    = '/lustre/cranieri/UCF-101_flow'
     # rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
-    filenames   = np.load( '../splits/trainlist011.npy' )
+    filenames   = np.load( '../splits/trainlist01.npy' )
     lblFilename = '../classInd.txt'
-    with DataLoader( rootPath, filenames, lblFilename ) as dataLoader:
+    with DataLoader( rootPath, filenames, lblFilename, numThreads = 5 ) as dataLoader:
         for i in range( 100 ):
             t = time.time()
             batch, labels =  dataLoader.getBatch()

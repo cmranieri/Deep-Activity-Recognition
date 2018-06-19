@@ -13,6 +13,7 @@ class Temporal:
                   n_actions = 101,
                   modelsPath = '../models/',
                   metaGraphName = 'model.meta',
+                  summaryPath   = None,
                   restoreModel  = False,
                   seed = None):
         if seed:
@@ -38,8 +39,9 @@ class Temporal:
             self.saver.restore( self.sess,
                                 tf.train.latest_checkpoint( modelsPath ) )
 
-        writer = tf.summary.FileWriter( 'tmp/net' )
-        writer.add_graph( self.sess.graph )
+        if summaryPath is not None:
+            writer = tf.summary.FileWriter( summaryPath + 'tmp/net' )
+            writer.add_graph( self.sess.graph )
 
 
 
@@ -124,7 +126,7 @@ class Temporal:
         #                   tf.nn.l2_loss( w_out ) )
         l2_loss = 0
         loss = tf.reduce_mean(
-            tf.nn.softmax_cross_entropy_with_logits( labels = self.y,
+            tf.nn.softmax_cross_entropy_with_logits_v2( labels = self.y,
                                                      logits = self.y_,
                                                      name   = 'cross_entropy') + l2_loss,
                                    name = 'loss' )

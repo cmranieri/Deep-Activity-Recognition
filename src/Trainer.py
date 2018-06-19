@@ -9,13 +9,13 @@ import time
 class Trainer:
     
     def __init__( self ):
-        timesteps = 10
+        timesteps = 16
         self.network = Temporal.Temporal( timesteps = timesteps,
                                           modelsPath = '/lustre/cranieri/models/ucf101/',
                                           restoreModel = False )
         
         self.timesteps   = timesteps
-        self.rootPath    = '/home/cranieri/datasets/UCF-101_flow'
+        self.rootPath    = '/lustre/cranieri/UCF-101_flow'
         self.lblFilename = '../classInd.txt'
         self.trainFilenames   = np.load( '../splits/trainlist01.npy' )
         self.testFilenames    = np.load( '../splits/testlist01.npy'  )
@@ -33,7 +33,8 @@ class Trainer:
                                       self.lblFilename,
                                       batchSize = 128,
                                       timesteps = self.timesteps,
-                                      numThreads = 10 )
+                                      numThreads = 8,
+                                      maxsize = 32 )
 
 
 
