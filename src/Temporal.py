@@ -72,12 +72,12 @@ class Temporal:
 
         conv1 = layers.conv2d( ksize_conv  = 7  , stride_conv  = 2,
                                ksize_pool  = 2  , out_channels = 96,
-                               bn_phase = None  , scope = 'conv1' )
-        conv1 = layers.lrn( out_channels = 96, scope = 'conv1' )
+                               bn_phase = phase  , scope = 'conv1' )
+        #conv1 = layers.lrn( out_channels = 96, scope = 'conv1' )
 
         conv2 = layers.conv2d( ksize_conv  = 5  , stride_conv  = 2,
                                ksize_pool  = 2  , out_channels = 256,
-                               bn_phase = None  ,  scope = 'conv2' )
+                               bn_phase = phase  ,  scope = 'conv2' )
 
         conv3 = layers.conv2d( ksize_conv  = 3   , stride_conv  = 1,
                                ksize_pool = None , out_channels = 512,
@@ -96,9 +96,9 @@ class Temporal:
 
         # Fully connected layers
         fully1 = layers.fully( out_channels = 4096 , dropout = dropout1,
-                               bn_phase = phase    , scope = 'fully1' )
+                               bn_phase = None    , scope = 'fully1' )
         fully2 = layers.fully( out_channels = 2048 , dropout = dropout2,
-                               bn_phase = phase    , scope = 'fully2' )
+                               bn_phase = None    , scope = 'fully2' )
 
         # Readout layer
         self.y_ = layers.fully( out_channels = self.n_actions,
@@ -119,9 +119,10 @@ class Temporal:
         w_fc1 = tf.get_default_graph().get_tensor_by_name( 'fully1/weights:0' )
         w_fc2 = tf.get_default_graph().get_tensor_by_name( 'fully2/weights:0' )
         w_out = tf.get_default_graph().get_tensor_by_name( 'y_/weights:0' )
-        l2_loss = 1e-3 * ( tf.nn.l2_loss( w_fc1 ) +
-                           tf.nn.l2_loss( w_fc2 ) +
-                           tf.nn.l2_loss( w_out ) )
+        #l2_loss = 1e-3 * ( tf.nn.l2_loss( w_fc1 ) +
+        #                   tf.nn.l2_loss( w_fc2 ) +
+        #                   tf.nn.l2_loss( w_out ) )
+        l2_loss = 0
         loss = tf.reduce_mean(
             tf.nn.softmax_cross_entropy_with_logits( labels = self.y,
                                                      logits = self.y_,
@@ -159,10 +160,12 @@ class Temporal:
 
 
     def saveModel( self ):
+        print( 'Saving model...' )
         self.saver.save( self.sess,
                          self.modelsPath,
                          write_meta_graph = False,
                          global_step = self.getGlobalStep().eval() )
+        print( 'Model saved!' )
 
 
 
@@ -210,5 +213,5 @@ class Temporal:
 
 
 if __name__ == '__main__':
-    # os.environ['CUDA_VISIBLE_DEVICES'] = '1'
-    network = Temporal()
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+    net = Temporal()
