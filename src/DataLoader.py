@@ -4,7 +4,6 @@ import time
 import cv2
 import pickle
 from PIL import Image
-from io import BytesIO
 from threading import Thread, Lock
 import queue
 
@@ -22,8 +21,8 @@ class DataLoader:
         self.rootPath   = rootPath
         self.filenames  = filenames
         self.dim        = dim
-        self.timesteps  = timesteps
-        self.numThreads = numThreads
+        self._timesteps  = timesteps
+        self._numThreads = numThreads
         self.length     = filenames.shape[ 0 ]
         
         self.setBatchSize( batchSize )
@@ -117,12 +116,13 @@ class DataLoader:
         return u, v
 
 
-    def stackFlow( self, video, start, timesteps ):
+    def stackFlow( self, video, start ):
         flowList = list()
-        for i in range( start, start+timesteps ):
+        for i in range( start, start + self._timesteps ):
             u, v = self.loadFlow( video, i )
-            flowList += [ np.array( [ u , v ] ) ]
+            flowList.append( np.array( [ u , v ] ) )
         stack = np.array( flowList )
+        # [ u, v, 2, t ]
         stack = np.transpose( stack , [ 2 , 3 , 1 , 0 ] )
         stack = self._randomCrop( stack )
         stack = self._randomFlip( stack )
@@ -137,26 +137,26 @@ class DataLoader:
             fullPath  = os.path.join( self.rootPath, batchPath )
             video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
 
-            start = np.random.randint( len( video[ 'u' ] ) - self.timesteps )
-            batch += [ self.stackFlow( video, start, self.timesteps ) ]
+            start = np.random.randint( len( video[ 'u' ] ) - self._timesteps )
+            batch.append( self.stackFlow( video, start ) )
 
             className = batchPath.split('/')[ 0 ]
             label = np.zeros(( 101 ) , dtype = 'float32')
             label[ int( self.labelsDict[ className ] ) - 1 ] = 1.0
-            labels += [ label ]
+            labels.append( label )
 
         batch = np.array( batch, dtype = 'float32' )
         batch = np.reshape( batch , [ len( batchPaths ), 
-                                      self.dim * self.dim * 2 * self.timesteps] )
+                                      self.dim * self.dim * 2 * self._timesteps] )
         labels = np.array( labels )
         return ( batch , labels )
 
 
     def _startThreads( self ):
-        for i in range( self.numThreads ):
+        for i in range( self._numThreads ):
             print( 'Initializing thread %d' % ( i ) )
             t = Thread( target = self._batchThread )
-            self._threadsList += [ t ]
+            self._threadsList.append( t )
             t.start()
 
 
