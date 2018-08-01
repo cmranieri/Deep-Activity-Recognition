@@ -23,9 +23,9 @@ class TestLoader:
         self.filenames    = filenames
         self._timesteps   = timesteps
         self._numThreads  = numThreads
-        self._length       = filenames.shape[ 0 ]
+        self._length      = filenames.shape[ 0 ]
         self._numSegments = numSegments
-        self._videoPaths   = self._getVideoPaths()
+        self._videoPaths  = self._getVideoPaths()
         
         self.dim = dim
         self._reset()
@@ -52,7 +52,10 @@ class TestLoader:
 
 
     def endOfData( self ):
-        return self._processedAll() and self._batchQueue.empty()
+        f = open( 'out1.txt', 'w' )
+        f.write( 'end of data' )
+        f.close()
+        return ( self._processedAll() and self._batchQueue.empty() )
 
     def _processedAll( self ):
         return self._index >= self._length

@@ -103,11 +103,12 @@ class Trainer:
         i = 0
         print( 'Evaluating...' )
         with self.generateTestLoader() as testLoader:
-            while not testLoader.endOfData():
-                if i % 200 == 0:
+            while i<2:
+                if True: #i % 200 == 0:
                     print( 'Evaluating video', i )
                 testBatch , testLabels = testLoader.getBatch()
                 y_ = network.evaluateActivs( testBatch, testLabels )
+                print(y_)
                 mean = np.mean( y_[0], 0 )
                 correct_prediction = np.equal( np.argmax( mean ),
                                                np.argmax( testLabels[0] ) )
@@ -129,4 +130,5 @@ if __name__ == '__main__':
     # os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
     
     trainer = Trainer()
-    trainer.train()
+    #trainer.train()
+    trainer.evaluate()
