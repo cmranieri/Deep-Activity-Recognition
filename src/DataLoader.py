@@ -18,12 +18,12 @@ class DataLoader:
                   timesteps = 16,
                   numThreads = 1,
                   maxsize = 10 ):
-        self.rootPath   = rootPath
-        self.filenames  = filenames
-        self.dim        = dim
+        self.rootPath    = rootPath
+        self.filenames   = filenames
+        self.dim         = dim
         self._timesteps  = timesteps
         self._numThreads = numThreads
-        self.length     = filenames.shape[ 0 ]
+        self.length      = filenames.shape[ 0 ]
         
         self.setBatchSize( batchSize )
         self._shuffle()
@@ -73,7 +73,6 @@ class DataLoader:
 
 
     def _randomBatchPaths( self ):
-        self._indexMutex.acquire()
         if self._index + self.batchSize > self.length:
             self._incIndex()
         batchPaths = list()
@@ -81,7 +80,6 @@ class DataLoader:
         for i in range( self._index , endIndex ):
             batchPaths += [ self.filenames[ self._ids[ i ] ].split('.')[0] ]
         self._incIndex()
-        self._indexMutex.release()
         return batchPaths
 
 
@@ -113,6 +111,9 @@ class DataLoader:
         v = np.array( v_img, dtype = 'float32' ).copy()
         cv2.normalize( u, u,  u_range[ 0 ], u_range[ 1 ], cv2.NORM_MINMAX )
         cv2.normalize( v, v,  v_range[ 0 ], v_range[ 1 ], cv2.NORM_MINMAX )
+
+        u = u / max( np.max( np.abs( u ) ) , 0.001 )
+        v = v / max( np.max( np.abs( v ) ) , 0.001 )
         return u, v
 
 
@@ -130,7 +131,9 @@ class DataLoader:
 
 
     def randomBatchFlow( self ):
+        self._indexMutex.acquire()
         batchPaths = self._randomBatchPaths()
+        self._indexMutex.release()
         batch  = list()
         labels = list()
         for batchPath in batchPaths:
@@ -163,19 +166,17 @@ class DataLoader:
     def _batchThread( self ):
         while self._produce:
             batchTuple = self.randomBatchFlow()
-            self._queueMutex.acquire()
             self._batchQueue.put( batchTuple )
-            self._queueMutex.release()
 
 
     def getBatch( self ):
-        return self._batchQueue.get()
-
+        batchTuple = self._batchQueue.get()
+        return batchTuple
 
 
 if __name__ == '__main__':
-    rootPath    = '/lustre/cranieri/UCF-101_flow'
-    # rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
+    #rootPath    = '/lustre/cranieri/UCF-101_flow'
+    rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
     filenames   = np.load( '../splits/trainlist01.npy' )
     lblFilename = '../classInd.txt'
     with DataLoader( rootPath, filenames, lblFilename, numThreads = 5 ) as dataLoader:

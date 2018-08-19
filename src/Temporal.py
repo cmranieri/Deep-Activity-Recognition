@@ -83,15 +83,15 @@ class Temporal:
 
         conv3 = layers.conv2d( ksize_conv  = 3   , stride_conv  = 1,
                                ksize_pool = None , out_channels = 512,
-                               bn_phase = None  , scope = 'conv3' )
+                               bn_phase = phase  , scope = 'conv3' )
 
         conv4 = layers.conv2d( ksize_conv  = 3    , stride_conv  = 1,
                                ksize_pool  = None , out_channels = 512,
-                               bn_phase = None   , scope = 'conv4' )
+                               bn_phase = phase   , scope = 'conv4' )
 
         conv5 = layers.conv2d( ksize_conv  = 3  , stride_conv  = 1,
                                ksize_pool  = 2  , out_channels = 512,
-                               bn_phase = None , scope = 'conv5' )
+                               bn_phase = phase , scope = 'conv5' )
 
         flatten = tf.reshape( conv5 , [ btc , 7 * 7 * 512 ] )
         layers.setDefaultInput( flatten , 7 * 7 * 512 )
@@ -126,7 +126,7 @@ class Temporal:
         #                   tf.nn.l2_loss( w_out ) )
         l2_loss = 0
         loss = tf.reduce_mean(
-            tf.nn.softmax_cross_entropy_with_logits_v2( labels = self.y,
+            tf.nn.softmax_cross_entropy_with_logits( labels = self.y,
                                                      logits = self.y_,
                                                      name   = 'cross_entropy') + l2_loss,
                                    name = 'loss' )

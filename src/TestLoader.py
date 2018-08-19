@@ -52,9 +52,6 @@ class TestLoader:
 
 
     def endOfData( self ):
-        f = open( 'out1.txt', 'w' )
-        f.write( 'end of data' )
-        f.close()
         return ( self._processedAll() and self._batchQueue.empty() )
 
     def _processedAll( self ):
@@ -93,6 +90,9 @@ class TestLoader:
         v = np.array( v_img, dtype = 'float32' ).copy()
         cv2.normalize( u, u,  u_range[ 0 ], u_range[ 1 ], cv2.NORM_MINMAX )
         cv2.normalize( v, v,  v_range[ 0 ], v_range[ 1 ], cv2.NORM_MINMAX )
+
+        u = u / max( np.nanmax( np.abs(u) ), 0.001 )
+        v = v / max( np.nanmax( np.abs(v) ), 0.001 )
         return u, v
 
 
@@ -218,8 +218,8 @@ class TestLoader:
 
 
 if __name__ == '__main__':
-    # rootPath = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
-    rootPath = '/lustre/cranieri/UCF-101_flow'
+    rootPath = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
+    # rootPath = '/lustre/cranieri/UCF-101_flow'
     filenames   = np.load( '../splits/trainlist011.npy' )
     lblFilename = '../classInd.txt'
     

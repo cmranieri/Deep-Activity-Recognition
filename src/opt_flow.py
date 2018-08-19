@@ -99,7 +99,6 @@ def convert_video( video_path, out_dir ):
         ur_list += [ u_range ]
         vr_list += [ v_range ]
 
-
         # TEST #
         #ut = cv2.imread( os.path.join( u_dir, frame_id + '.jpg' ),
         #                 cv2.IMREAD_GRAYSCALE )
@@ -131,12 +130,14 @@ def process_video( input_dir , output_dir , raw_filename ):
 
 #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
 
-input_dir  = '/lustre/cranieri/UCF-101'
-output_dir = '/lustre/cranieri/UCF-101_flow'
+# input_dir  = '/lustre/cranieri/UCF-101'
+# output_dir = '/lustre/cranieri/UCF-101_flow'
+input_dir  = '/media/olorin/Documentos/caetano/datasets/UCF-101'
+output_dir = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
 trainlist = list(np.load( '../splits/trainlist01.npy' ))
 testlist = list(np.load( '../splits/testlist01.npy' ))
 
-for filename in trainlist + testlist:
+for filename in testlist:
     t = time.time()
     process_video( input_dir, output_dir, filename )
     print( 'Time:', time.time() - t )

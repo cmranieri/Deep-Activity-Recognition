@@ -9,17 +9,18 @@ import time
 class Trainer:
     
     def __init__( self ):
-        timesteps = 16
+        timesteps = 5
         self.network = Temporal.Temporal( timesteps = timesteps,
-                                          modelsPath = '/lustre/cranieri/models/ucf101/',
-                                          restoreModel = True )
-        
+                                          modelsPath = '/media/olorin/Documentos/caetano/models/ucf101/',
+                                          restoreModel = False )
+       
+        self.step = self.network.getGlobalStep().eval()
         self.timesteps   = timesteps
-        self.rootPath    = '/lustre/cranieri/UCF-101_flow'
+        self.rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
         self.lblFilename = '../classInd.txt'
         self.trainFilenames   = np.load( '../splits/trainlist01.npy' )
-        # self.testFilenames    = np.load( '../splits/testlist01.npy'  )
-        self.testFilenames    = np.load( '../splits/trainlist011.npy'  )
+        self.testFilenames    = np.load( '../splits/testlist01.npy'  )
+        #self.testFilenames    = np.load( '../splits/trainlist011.npy'  )
         self.resultsPath = '../results'
 
 
@@ -27,10 +28,10 @@ class Trainer:
         return DataLoader.DataLoader( self.rootPath,
                                       self.trainFilenames,
                                       self.lblFilename,
-                                      batchSize = 256,
+                                      batchSize = 128,
                                       timesteps = self.timesteps,
-                                      numThreads = 10,
-                                      maxsize = 32 )
+                                      numThreads = 4,
+                                      maxsize = 16 )
 
     def generateTestLoader( self ):
         return TestLoader.TestLoader( self.rootPath,
@@ -38,8 +39,8 @@ class Trainer:
                                       self.lblFilename,
                                       numSegments = 5,
                                       timesteps = self.timesteps,
-                                      numThreads = 8,
-                                      maxsize = 32 )
+                                      numThreads = 4,
+                                      maxsize = 4 )
 
 
 
@@ -57,7 +58,7 @@ class Trainer:
         trainFlag = True
 
         self.step = network.getGlobalStep().eval()
-        while self.step < 80000:
+        while self.step < 100000:
             with self.generateDataLoader() as dataLoader:
                while self.step % 10000 or trainFlag:
                     trainFlag = False
@@ -67,7 +68,7 @@ class Trainer:
                     # train the selected batch
                     [_, batch_accuracy, batch_loss] = network.trainBatch( 
                                                       batch , labels,
-                                                      dropout1 = 0.3 , dropout2 = 0.3,
+                                                      dropout1 = 0.7 , dropout2 = 0.7,
                                                       learning_rate = 1e-2 )
                     train_acc_list  += [ batch_accuracy ]
                     train_loss_list += [ batch_loss ]
@@ -103,15 +104,16 @@ class Trainer:
         i = 0
         print( 'Evaluating...' )
         with self.generateTestLoader() as testLoader:
-            while i<2:
-                if True: #i % 200 == 0:
+            while not testLoader.endOfData():
+            #while i<2:
+                if i % 200 == 0:
                     print( 'Evaluating video', i )
                 testBatch , testLabels = testLoader.getBatch()
                 y_ = network.evaluateActivs( testBatch, testLabels )
-                print(y_)
                 mean = np.mean( y_[0], 0 )
+                #print(np.argmax(mean), np.argmax(testLabels))
                 correct_prediction = np.equal( np.argmax( mean ),
-                                               np.argmax( testLabels[0] ) )
+                                               np.argmax( testLabels ) )
                 if correct_prediction: test_acc_list.append( 1.0 )
                 else: test_acc_list.append( 0.0 )
                 i += 1
@@ -127,8 +129,8 @@ class Trainer:
 
 
 if __name__ == '__main__':
-    # os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
+    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
     trainer = Trainer()
-    #trainer.train()
+    trainer.train()
     trainer.evaluate()
