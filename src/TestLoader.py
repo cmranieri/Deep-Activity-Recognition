@@ -6,72 +6,39 @@ import pickle
 from PIL import Image
 from threading import Thread, Lock
 import queue
+#import DataLoader
+import DataLoader_norange as DataLoader
 
-class TestLoader:
+class TestLoader( DataLoader.DataLoader ):
 
     def __init__( self,
                   rootPath,
                   filenames,
                   lblFilename,
-                  numSegments = 25,
                   dim = 224,
                   timesteps = 16,
                   numThreads = 1,
-                  maxsize=10 ):
-
-        self.rootPath     = rootPath
-        self.filenames    = filenames
-        self._timesteps   = timesteps
-        self._numThreads  = numThreads
-        self._length      = filenames.shape[ 0 ]
+                  maxsize=10,
+                  numSegments = 25 ):
+        super( TestLoader , self ).__init__( rootPath,
+                                             filenames,
+                                             lblFilename,
+                                             dim, 
+                                             timesteps, 
+                                             numThreads,
+                                             maxsize )
         self._numSegments = numSegments
         self._videoPaths  = self._getVideoPaths()
         
-        self.dim = dim
-        self._reset()
-        self.generateLabelsDict( lblFilename )
-
-        self._produce = True
-        self._batchQueue = queue.Queue( maxsize = maxsize )
-        self._indexMutex = Lock()
-        self._queueMutex = Lock()
-        self._threadsList = list()
  
-
-    def __enter__( self ):
-        self._startThreads()
-        return self
-
-
-    def __exit__( self, exc_type, exc_value, traceback ):
-        self._produce = False
-        for i, t in enumerate( self._threadsList ):
-            t.join()
-            print( 'Finished thread %d' % ( i ) )
-
+    def _processedAll( self ):
+        return self._index >= self._length
 
 
     def endOfData( self ):
         return ( self._processedAll() and self._batchQueue.empty() )
 
-    def _processedAll( self ):
-        return self._index >= self._length
-
-
-    def loadRanges( self, flowDir ):
-        r_file = np.load( os.path.join( flowDir, 'range.npy' ) )
-        r_dict = r_file[()]
-        return r_dict
-
-
-    def generateLabelsDict( self, filename ):
-        self._labelsDict = dict()
-        f = open( filename , 'r' )
-        for line in f.readlines():
-            self._labelsDict[ line.split()[ 1 ] ] = line.split()[ 0 ]
-
-
-
+    
     def _reset( self ):
         self._index = 0
 
@@ -80,31 +47,8 @@ class TestLoader:
         self._index += 1
 
 
-    def loadFlow( self, video, index ):
-        u_img = Image.open( video ['u'] [index] )
-        v_img = Image.open( video ['v'] [index] )
-        u_range = video ['u_range'] [index]
-        v_range = video ['v_range'] [index]
-
-        u = np.array( u_img, dtype = 'float32' ).copy()
-        v = np.array( v_img, dtype = 'float32' ).copy()
-        cv2.normalize( u, u,  u_range[ 0 ], u_range[ 1 ], cv2.NORM_MINMAX )
-        cv2.normalize( v, v,  v_range[ 0 ], v_range[ 1 ], cv2.NORM_MINMAX )
-
-        u = u / max( np.nanmax( np.abs(u) ), 0.001 )
-        v = v / max( np.nanmax( np.abs(v) ), 0.001 )
-        return u, v
-
-
     def stackFlow( self, video, start ):
-        flowList = list()
-        for i in range( start, start + self._timesteps ):
-            u, v = self.loadFlow( video, i )
-            flowList += [ np.array( [ u , v ] ) ]
-        stack = np.array( flowList )
-        # [ u, v, 2, t ]
-        stack = np.transpose( stack , [ 2 , 3 , 1 , 0 ] )
-        return stack
+        return super( TestLoader , self ).stackFlow( video, start )
 
 
     def getVideoBatch( self, path, flip = False ):
@@ -188,14 +132,6 @@ class TestLoader:
         fbatch  = np.reshape( fbatch , [ 5 * self._numSegments , 
                                          self.dim * self.dim * 2 * self._timesteps] )
         return ( fbatch , labels )
-
-
-    def _startThreads( self ):
-        for i in range( self._numThreads ):
-            print( 'Initializing thread %d' % ( i ) )
-            t = Thread( target = self._batchThread )
-            self._threadsList.append( t )
-            t.start()
 
 
     def _batchThread( self ):

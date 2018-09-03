@@ -9,7 +9,7 @@ class Temporal:
     def __init__( self,
                   dim = 224,
                   inp_channels = 2,
-                  timesteps = 10,
+                  timesteps = 5,
                   n_actions = 101,
                   modelsPath = '../models/',
                   metaGraphName = 'model.meta',
@@ -72,26 +72,26 @@ class Temporal:
         # Convolution and pooling layers
         layers.setDefaultInput( fold , self.inp_channels * self.timesteps )
 
-        conv1 = layers.conv2d( ksize_conv  = 7  , stride_conv  = 2,
-                               ksize_pool  = 2  , out_channels = 96,
-                               bn_phase = phase  , scope = 'conv1' )
+        conv1 = layers.conv2d( ksize_conv  = 7     , stride_conv  = 2,
+                               ksize_pool  = 2     , out_channels = 96,
+                               bn_phase    = phase , scope = 'conv1' )
         #conv1 = layers.lrn( out_channels = 96, scope = 'conv1' )
 
-        conv2 = layers.conv2d( ksize_conv  = 5  , stride_conv  = 2,
-                               ksize_pool  = 2  , out_channels = 256,
-                               bn_phase = phase  ,  scope = 'conv2' )
+        conv2 = layers.conv2d( ksize_conv  = 5     , stride_conv  = 2,
+                               ksize_pool  = 2     , out_channels = 256,
+                               bn_phase    = phase ,  scope = 'conv2' )
 
-        conv3 = layers.conv2d( ksize_conv  = 3   , stride_conv  = 1,
-                               ksize_pool = None , out_channels = 512,
-                               bn_phase = phase  , scope = 'conv3' )
+        conv3 = layers.conv2d( ksize_conv  = 3    , stride_conv  = 1,
+                               ksize_pool = None  , out_channels = 512,
+                               bn_phase   = phase , scope = 'conv3' )
 
-        conv4 = layers.conv2d( ksize_conv  = 3    , stride_conv  = 1,
-                               ksize_pool  = None , out_channels = 512,
-                               bn_phase = phase   , scope = 'conv4' )
+        conv4 = layers.conv2d( ksize_conv  = 3     , stride_conv  = 1,
+                               ksize_pool  = None  , out_channels = 512,
+                               bn_phase    = phase , scope = 'conv4' )
 
-        conv5 = layers.conv2d( ksize_conv  = 3  , stride_conv  = 1,
-                               ksize_pool  = 2  , out_channels = 512,
-                               bn_phase = phase , scope = 'conv5' )
+        conv5 = layers.conv2d( ksize_conv  = 3     , stride_conv  = 1,
+                               ksize_pool  = 2     , out_channels = 512,
+                               bn_phase    = phase  , scope = 'conv5' )
 
         flatten = tf.reshape( conv5 , [ btc , 7 * 7 * 512 ] )
         layers.setDefaultInput( flatten , 7 * 7 * 512 )
@@ -121,10 +121,10 @@ class Temporal:
         w_fc1 = tf.get_default_graph().get_tensor_by_name( 'fully1/weights:0' )
         w_fc2 = tf.get_default_graph().get_tensor_by_name( 'fully2/weights:0' )
         w_out = tf.get_default_graph().get_tensor_by_name( 'y_/weights:0' )
-        #l2_loss = 1e-3 * ( tf.nn.l2_loss( w_fc1 ) +
-        #                   tf.nn.l2_loss( w_fc2 ) +
-        #                   tf.nn.l2_loss( w_out ) )
-        l2_loss = 0
+        l2_loss = 1e-3 * ( tf.nn.l2_loss( w_fc1 ) +
+                           tf.nn.l2_loss( w_fc2 ) +
+                           tf.nn.l2_loss( w_out ) )
+        #l2_loss = 0
         loss = tf.reduce_mean(
             tf.nn.softmax_cross_entropy_with_logits( labels = self.y,
                                                      logits = self.y_,
@@ -184,8 +184,8 @@ class Temporal:
                                 feed_dict = { 'x:0': x ,
                                               'y:0': y,
                                               'phase:0': 1,
-                                              'dropout1:0':    dropout1,
-                                              'dropout2:0':    dropout2,
+                                              'dropout1:0': dropout1,
+                                              'dropout2:0': dropout2,
                                               'learning_rate:0': learning_rate } )
 
 
@@ -198,8 +198,8 @@ class Temporal:
                                 feed_dict = { 'x:0': x, 
                                               'y:0': y,
                                               'phase:0': 0,
-                                              'dropout1:0':    1.0,
-                                              'dropout2:0':    1.0 } )
+                                              'dropout1:0': 1.0,
+                                              'dropout2:0': 1.0 } )
 
 
     def evaluateActivs( self, x, y ):
@@ -210,8 +210,8 @@ class Temporal:
                                 feed_dict = { 'x:0': x, 
                                               'y:0': y,
                                               'phase:0': 0,
-                                              'dropout1:0':    1.0,
-                                              'dropout2:0':    1.0 } )
+                                              'dropout1:0': 1.0,
+                                              'dropout2:0': 1.0 } )
 
 
 if __name__ == '__main__':

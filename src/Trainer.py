@@ -1,6 +1,6 @@
 import numpy as np
-import DataLoader
-import TestLoader
+from TrainLoader import TrainLoader
+from TestLoader import TestLoader
 import Temporal 
 import os
 import time
@@ -9,7 +9,7 @@ import time
 class Trainer:
     
     def __init__( self ):
-        timesteps = 5
+        timesteps = 16
         self.network = Temporal.Temporal( timesteps = timesteps,
                                           modelsPath = '/media/olorin/Documentos/caetano/models/ucf101/',
                                           restoreModel = False )
@@ -24,23 +24,23 @@ class Trainer:
         self.resultsPath = '../results'
 
 
-    def generateDataLoader( self ):
-        return DataLoader.DataLoader( self.rootPath,
-                                      self.trainFilenames,
-                                      self.lblFilename,
-                                      batchSize = 128,
-                                      timesteps = self.timesteps,
-                                      numThreads = 4,
-                                      maxsize = 16 )
+    def generateTrainLoader( self ):
+        return TrainLoader( self.rootPath,
+                            self.trainFilenames,
+                            self.lblFilename,
+                            batchSize = 192,
+                            timesteps = self.timesteps,
+                            numThreads = 4,
+                            maxsize = 16 )
 
     def generateTestLoader( self ):
-        return TestLoader.TestLoader( self.rootPath,
-                                      self.testFilenames,
-                                      self.lblFilename,
-                                      numSegments = 5,
-                                      timesteps = self.timesteps,
-                                      numThreads = 4,
-                                      maxsize = 4 )
+        return TestLoader( self.rootPath,
+                           self.testFilenames,
+                           self.lblFilename,
+                           numSegments = 5,
+                           timesteps = self.timesteps,
+                           numThreads = 4,
+                           maxsize = 4 )
 
 
 
@@ -59,16 +59,16 @@ class Trainer:
 
         self.step = network.getGlobalStep().eval()
         while self.step < 100000:
-            with self.generateDataLoader() as dataLoader:
+            with self.generateTrainLoader() as trainLoader:
                while self.step % 10000 or trainFlag:
                     trainFlag = False
                     #np.random.seed( self.step )
 
-                    batch , labels = dataLoader.getBatch()
+                    batch , labels = trainLoader.getBatch()
                     # train the selected batch
                     [_, batch_accuracy, batch_loss] = network.trainBatch( 
                                                       batch , labels,
-                                                      dropout1 = 0.7 , dropout2 = 0.7,
+                                                      dropout1 = 0.9 , dropout2 = 0.9,
                                                       learning_rate = 1e-2 )
                     train_acc_list  += [ batch_accuracy ]
                     train_loss_list += [ batch_loss ]
@@ -111,7 +111,6 @@ class Trainer:
                 testBatch , testLabels = testLoader.getBatch()
                 y_ = network.evaluateActivs( testBatch, testLabels )
                 mean = np.mean( y_[0], 0 )
-                #print(np.argmax(mean), np.argmax(testLabels))
                 correct_prediction = np.equal( np.argmax( mean ),
                                                np.argmax( testLabels ) )
                 if correct_prediction: test_acc_list.append( 1.0 )
@@ -129,8 +128,7 @@ class Trainer:
 
 
 if __name__ == '__main__':
-    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
+    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
     
     trainer = Trainer()
     trainer.train()
-    trainer.evaluate()
