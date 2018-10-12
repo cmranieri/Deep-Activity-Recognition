@@ -65,6 +65,7 @@ def convert_video( video_path, out_dir ):
     cap = cv2.VideoCapture( video_path + '.avi' )
     ret, frame1 = cap.read()
     prvs = cv2.cvtColor( frame1 , cv2.COLOR_BGR2GRAY )
+    prvs = cv2.UMat( prvs )
 
     u_list  = list()
     v_list  = list()
@@ -75,8 +76,11 @@ def convert_video( video_path, out_dir ):
         ret, frame2 = cap.read()
         if not ret:
             break
-        
         next = cv2.cvtColor( frame2,cv2.COLOR_BGR2GRAY )
+        next = cv2.UMat( next )
+        optical_flow = cv2.DualTVL1OpticalFlow_create()
+        flow = optical_flow.calc( prvs, next, None )
+        """
         flow = cv2.calcOpticalFlowFarneback( prev       = prvs,
                                              next       = next, 
                                              flow       = None, 
@@ -87,7 +91,8 @@ def convert_video( video_path, out_dir ):
                                              poly_n     = 5,
                                              poly_sigma = 1.2,
                                              flags      = 0 )
-
+        """
+        flow = flow.get()
         u_out, v_out = prep_flow_frame( flow[ ... , 0 ].copy(),
                                         flow[ ... , 1 ].copy() )
         u_list += [ u_out ]
@@ -128,23 +133,16 @@ def process_video( input_dir , output_dir , raw_filename ):
     convert_video( filepath, class_out_dir )
     print( 'Done' )
 
-#os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
 
-# input_dir  = '/lustre/cranieri/UCF-101'
-# output_dir = '/lustre/cranieri/UCF-101_flow'
-input_dir  = '/media/olorin/Documentos/caetano/datasets/UCF-101'
-output_dir = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
+input_dir  = '/home/caetano/datasets/UCF-101'
+output_dir = '/home/caetano/datasets/UCF-101_flow'
 trainlist = list(np.load( '../splits/trainlist01.npy' ))
 testlist = list(np.load( '../splits/testlist01.npy' ))
 
-for filename in trainlist + testlist:
+for filename in trainlist:
     t = time.time()
     process_video( input_dir, output_dir, filename )
     print( 'Time:', time.time() - t )
-#for filename in testlist:
-#    t = time.time()
-#    process_video( input_dir, output_dir, filename )
-#    print( 'Time:', time.time() - t )
     
 
 
