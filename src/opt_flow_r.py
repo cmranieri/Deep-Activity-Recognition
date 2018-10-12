@@ -36,24 +36,23 @@ def store_frame_flow( u, v, frame_id, u_dir, v_dir ):
 
 
 def store_video_flow( u_list, v_list,
+                      ur_list, vr_list,
                       out_dir, video_name ):
     print(out_dir, video_name)
     with open( os.path.join( out_dir , video_name + '.pickle' ) , 'wb' ) as f :
         pickle.dump( { 'u' : np.array( u_list ),
-                       'v' : np.array( v_list ) },  f )
+                       'v' : np.array( v_list ),
+                       'u_range' : np.array( ur_list ),
+                       'v_range' : np.array( vr_list ) } , f )
 
 
-def prep_flow_frame( flow ):
-    u = cv2.convertScaleAbs( flow[ ... , 0 ], alpha = 10 )
-    v = cv2.convertScaleAbs( flow[ ... , 1 ], alpha = 10 )
-    flow = np.array( [ u , v ] , dtype = np.uint8 )
-    cv2.normalize( flow, flow, 0, 255, cv2.NORM_MINMAX )
-    #u = cv2.normalize( u, u, 0, 255, cv2.NORM_MINMAX )
-    #v = cv2.normalize( v, v, 0, 255, cv2.NORM_MINMAX )
-    #u = u.astype( 'uint8' )
-    #v = v.astype( 'uint8' )
-    img_u = Image.fromarray( flow[ 0 ] )
-    img_v = Image.fromarray( flow[ 1 ] )
+def prep_flow_frame( u, v ):
+    u = cv2.normalize( u, u, 0, 255, cv2.NORM_MINMAX )
+    v = cv2.normalize( v, v, 0, 255, cv2.NORM_MINMAX )
+    u = u.astype( 'uint8' )
+    v = v.astype( 'uint8' )
+    img_u = Image.fromarray( u )
+    img_v = Image.fromarray( v )
     u_out = BytesIO()
     v_out = BytesIO()
     img_u.save( u_out , format='jpeg' , quality=90 )
@@ -69,6 +68,8 @@ def convert_video( video_path, out_dir ):
 
     u_list  = list()
     v_list  = list()
+    ur_list = list()
+    vr_list = list()
     count = 0
     while( ret ):
         ret, frame2 = cap.read()
@@ -83,19 +84,33 @@ def convert_video( video_path, out_dir ):
                                              levels     = 3,
                                              winsize    = 15,
                                              iterations = 3,
-                                             poly_n     = 7,
-                                             poly_sigma = 1.5,
+                                             poly_n     = 5,
+                                             poly_sigma = 1.2,
                                              flags      = 0 )
 
-        u_out, v_out = prep_flow_frame( np.copy(flow) )
+        u_out, v_out = prep_flow_frame( flow[ ... , 0 ].copy(),
+                                        flow[ ... , 1 ].copy() )
         u_list += [ u_out ]
         v_list += [ v_out ]
+        u_range = [ np.min( flow[ ... , 0 ] ),
+                    np.max( flow[ ... , 0 ] ) ]
+        v_range = [ np.min( flow[ ... , 1 ] ),
+                    np.max( flow[ ... , 1 ] ) ]
+        ur_list += [ u_range ]
+        vr_list += [ v_range ]
+
+        # TEST #
+        #ut = cv2.imread( os.path.join( u_dir, frame_id + '.jpg' ),
+        #                 cv2.IMREAD_GRAYSCALE )
+        #u1 = np.array( ut, dtype = 'float32' ).copy()
+        #cv2.normalize( u1, u1, u_range[0], u_range[1], cv2.NORM_MINMAX )
+        # END TEST #
 
         prvs = next
         count += 1
 
     video_name = video_path.split('/')[-1]
-    store_video_flow( u_list, v_list, out_dir, video_name )
+    store_video_flow( u_list, v_list, ur_list, vr_list, out_dir, video_name )
     cap.release()
 
 
@@ -122,7 +137,7 @@ output_dir = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
 trainlist = list(np.load( '../splits/trainlist01.npy' ))
 testlist = list(np.load( '../splits/testlist01.npy' ))
 
-for filename in trainlist:
+for filename in trainlist + testlist:
     t = time.time()
     process_video( input_dir, output_dir, filename )
     print( 'Time:', time.time() - t )

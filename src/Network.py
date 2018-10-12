@@ -1,46 +1,76 @@
 import numpy as np
 from TrainLoader import TrainLoader
-from TestLoader import TestLoader
-import Temporal 
+from TestLoader  import TestLoader
+
+import keras
+#from keras.applications.mobilenetv2 import MobileNetV2
+from keras.applications.inception_v3 import InceptionV3
+#from keras.applications.vgg16 import VGG16
+from keras.layers import Input, Dense, Flatten, Dropout
+from keras.optimizers import SGD
+from keras.models import load_model, Model
+
 import os
 import time
 
 
-class Trainer:
+class Network:
     
-    def __init__( self ):
-        timesteps = 16
-        self.network = Temporal.Temporal( timesteps = timesteps,
-                                          modelsPath = '/media/olorin/Documentos/caetano/models/ucf101/',
-                                          restoreModel = False )
-       
-        self.step = self.network.getGlobalStep().eval()
-        self.timesteps   = timesteps
-        self.rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
+    def __init__( self, restoreModel = False ):
+        self.timesteps = 10
+        self.dim = 224
+        self.classes = 101
+        self.modelPath = '/media/olorin/Documentos/caetano/ucf101/models'
+        
+        self.defineNetwork( restoreModel )
+      
+        self.step = 0
+        self.rootPath = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
         self.lblFilename = '../classInd.txt'
-        self.trainFilenames   = np.load( '../splits/trainlist01.npy' )
-        self.testFilenames    = np.load( '../splits/testlist01.npy'  )
+        self.trainFilenames = np.load( '../splits/trainlist01.npy' )
+        self.testFilenames  = np.load( '../splits/testlist01.npy'  )
         #self.testFilenames    = np.load( '../splits/trainlist011.npy'  )
         self.resultsPath = '../results'
 
+
+    def defineNetwork( self, restoreModel ):
+        if not restoreModel:
+            input_tensor = Input( shape = ( self.dim, self.dim,
+                                            2 * self.timesteps) )
+            self.model = InceptionV3( input_tensor = input_tensor,
+                                      weights = None,
+                                      include_top = True,
+                                      pooling = None,
+                                      classes = self.classes )
+            optimizer = SGD( lr = 1e-2, momentum = 0.9,
+                             nesterov=True, decay = 1e-5 )
+            self.model.compile( loss = 'categorical_crossentropy',
+                                optimizer = optimizer,
+                                metrics   = [ 'acc' ] ) 
+
+
+        else:
+            self.model = load_model( os.path.join( self.modelPath,
+                                                   'model.h5' ) )
+        
 
     def generateTrainLoader( self ):
         return TrainLoader( self.rootPath,
                             self.trainFilenames,
                             self.lblFilename,
-                            batchSize = 192,
+                            batchSize = 32,
                             timesteps = self.timesteps,
                             numThreads = 4,
-                            maxsize = 16 )
+                            maxsize = 10 )
 
     def generateTestLoader( self ):
         return TestLoader( self.rootPath,
                            self.testFilenames,
                            self.lblFilename,
-                           numSegments = 5,
+                           numSegments = 25,
                            timesteps = self.timesteps,
                            numThreads = 4,
-                           maxsize = 4 )
+                           maxsize = 5 )
 
 
 
@@ -52,25 +82,23 @@ class Trainer:
 
 
     def train( self ):
-        network = self.network
         train_acc_list  = list()
         train_loss_list = list()
         trainFlag = True
 
-        self.step = network.getGlobalStep().eval()
         while self.step < 100000:
             with self.generateTrainLoader() as trainLoader:
-               while self.step % 10000 or trainFlag:
+                # saves and evaluates every n steps 
+                while self.step % 10000 or trainFlag:
                     trainFlag = False
-                    #np.random.seed( self.step )
 
                     batch , labels = trainLoader.getBatch()
                     # train the selected batch
-                    [_, batch_accuracy, batch_loss] = network.trainBatch( 
-                                                      batch , labels,
-                                                      dropout1 = 0.9 , dropout2 = 0.9,
-                                                      learning_rate = 1e-2 )
-                    train_acc_list  += [ batch_accuracy ]
+                    tr = self.model.train_on_batch( batch,
+                                                    labels )
+                    batch_loss = tr[ 0 ]
+                    batch_acc  = tr[ 1 ]
+                    train_acc_list  += [ batch_acc ]
                     train_loss_list += [ batch_loss ]
 
                     # periodically shows train acc and loss on the batches
@@ -85,38 +113,43 @@ class Trainer:
                         train_acc_list  = list()
                         train_loss_list = list()
 
-                    self.step = network.getGlobalStep().eval()
-
+                    self.step += 1
             # save model
-            network.saveModel()
+            print( 'Saving model...' )
+            self.model.save( os.path.join( self.modelPath,
+                                           'model.h5' ) )
+            print( 'Model saved!' )
+
             # evalutate model
             print( 'STEP %d: TEST'%( self.step ) )
-            test_accuracy = self.evaluate()
-            self.step = network.getGlobalStep().eval()
+            self.evaluate()
             trainFlag = True
 
 
 
     def evaluate( self ):
         t = time.time()
-        network = self.network
         test_acc_list  = list()
         i = 0
         print( 'Evaluating...' )
         with self.generateTestLoader() as testLoader:
             while not testLoader.endOfData():
-            #while i<2:
                 if i % 200 == 0:
                     print( 'Evaluating video', i )
+
                 testBatch , testLabels = testLoader.getBatch()
-                y_ = network.evaluateActivs( testBatch, testLabels )
-                mean = np.mean( y_[0], 0 )
+                y_ = self.model.predict_on_batch( testBatch )
+                mean = np.mean( y_, 0 )
                 correct_prediction = np.equal( np.argmax( mean ),
                                                np.argmax( testLabels ) )
+                
                 if correct_prediction: test_acc_list.append( 1.0 )
                 else: test_acc_list.append( 0.0 )
+                
+                #tst = self.model.test_on_batch( testBatch , testLabels )
+                #test_acc_list.append( tst[ 1 ] )
                 i += 1
-
+            
         test_accuracy = np.mean( test_acc_list  )
         print( 'Time elapsed:', time.time() - t )
         print( 'test accuracy:', test_accuracy )
@@ -128,7 +161,8 @@ class Trainer:
 
 
 if __name__ == '__main__':
-    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
+    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    trainer = Trainer()
-    trainer.train()
+    network = Network( False )
+    network.train()
+    #network.evaluate()

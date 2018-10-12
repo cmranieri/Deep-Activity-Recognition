@@ -6,8 +6,8 @@ import pickle
 from PIL import Image
 from threading import Thread, Lock
 import queue
-#import DataLoader
-import DataLoader_norange as DataLoader
+import DataLoader
+#import DataLoader_norange as DataLoader
 
 class TestLoader( DataLoader.DataLoader ):
 
@@ -16,17 +16,18 @@ class TestLoader( DataLoader.DataLoader ):
                   filenames,
                   lblFilename,
                   dim = 224,
-                  timesteps = 16,
+                  timesteps = 1,
                   numThreads = 1,
                   maxsize=10,
-                  numSegments = 25 ):
+                  numSegments = 1 ):
         super( TestLoader , self ).__init__( rootPath,
                                              filenames,
                                              lblFilename,
                                              dim, 
                                              timesteps, 
                                              numThreads,
-                                             maxsize )
+                                             maxsize,
+                                             ranges = False )
         self._numSegments = numSegments
         self._videoPaths  = self._getVideoPaths()
         
@@ -36,7 +37,8 @@ class TestLoader( DataLoader.DataLoader ):
 
 
     def endOfData( self ):
-        return ( self._processedAll() and self._batchQueue.empty() )
+        return ( self._processedAll() and
+                 self._batchQueue.empty() )
 
     
     def _reset( self ):
@@ -82,6 +84,8 @@ class TestLoader( DataLoader.DataLoader ):
         marginX = ( inp.shape[ 2 ] - dim ) // 2
         marginY = ( inp.shape[ 1 ] - dim ) // 2
 
+        cv2.imwrite( 'test/a.jpeg', inp[0,:,:,0,0] )
+        cv2.imwrite( 'test/b.jpeg', inp[0,:,:,1,0] )
         crops =  list()
         crops += [ inp[ :,    0    : dim  ,   0    : dim ] ]
         crops += [ inp[ :,  -dim-1 : -1   ,   0    : dim ] ]
@@ -113,7 +117,8 @@ class TestLoader( DataLoader.DataLoader ):
         self._labels = labels
 
         batch  = np.reshape( batch , [ 5 * self._numSegments , 
-                                       self.dim * self.dim * 2 * self._timesteps] )
+                                       self.dim, self.dim,
+                                       2 * self._timesteps] )
         return ( batch , labels )
 
 
@@ -130,26 +135,34 @@ class TestLoader( DataLoader.DataLoader ):
                                          2, self._timesteps] )
         fbatch = self.getFlips( fbatch )
         fbatch  = np.reshape( fbatch , [ 5 * self._numSegments , 
-                                         self.dim * self.dim * 2 * self._timesteps] )
+                                         self.dim, self.dim,
+                                         2 * self._timesteps] )
         return ( fbatch , labels )
 
 
     def _batchThread( self ):
-        while self._produce:
+        while True:
             batchTuple1 = self.nextVideoBatch()
             if batchTuple1 is not None:
                 batchTuple2 = self.getFlippedBatch( batchTuple1 )
-                self._queueMutex.acquire()
                 self._batchQueue.put( batchTuple1 )
                 self._batchQueue.put( batchTuple2 )
-                self._queueMutex.release()
             else: break
+
+    
+    def toFiles( self, batch, prefix='' ):
+        i = 0
+        for instance in batch:
+            for frame in instance.transpose( 2,0,1 ):
+                cv2.imwrite( 'test/' + str(prefix) + str(i) + '.jpeg', frame )
+                i += 1
 
 
     def getBatch( self ):
         if self.endOfData():
             return None
-        return self._batchQueue.get()
+        batch = self._batchQueue.get()
+        return batch
 
 
 
@@ -159,11 +172,12 @@ if __name__ == '__main__':
     filenames   = np.load( '../splits/trainlist011.npy' )
     lblFilename = '../classInd.txt'
     
-    with TestLoader( rootPath, filenames, lblFilename, numThreads=2 ) as testLoader:
+    with TestLoader( rootPath, filenames, lblFilename, numThreads=1 ) as testLoader:
         # for i in range(100):
-        while not testLoader.endOfData():
+        # while not testLoader.endOfData():
             t = time.time()
             batch, labels = testLoader.getBatch()
+            testLoader.toFiles( batch )
             # batch, labels =  testLoader.nextVideoBatch()
             # batch =  testLoader.getFlippedBatch( batch )
             print( testLoader._index, 'Total time:' , time.time() - t )

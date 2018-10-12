@@ -16,13 +16,15 @@ class DataLoader:
                   dim = 224,
                   timesteps = 10,
                   numThreads = 1,
-                  maxsize = 10 ):
+                  maxsize = 10,
+                  ranges = True ):
         self.rootPath    = rootPath
         self.filenames   = filenames
         self.dim         = dim
         self._timesteps  = timesteps
         self._numThreads = numThreads
-        self._length      = filenames.shape[ 0 ]
+        self._length     = filenames.shape[ 0 ]
+        self._ranges     = ranges
         
         self._reset()
         self._generateLabelsDict( lblFilename )
@@ -30,7 +32,6 @@ class DataLoader:
         self._produce = True
         self._batchQueue = queue.Queue( maxsize = maxsize )
         self._indexMutex = Lock()
-        self._queueMutex = Lock()
         self._threadsList = list()
  
 
@@ -42,15 +43,15 @@ class DataLoader:
     def __exit__( self, exc_type, exc_value, traceback ):
         self._produce = False
         for i, t in enumerate( self._threadsList ):
-            t.join()
+            t.join(1)
             print( 'Finished thread %d' % ( i ) )
 
 
     def _generateLabelsDict( self, filename ):
-        self.labelsDict = dict()
+        self._labelsDict = dict()
         f = open( filename , 'r' )
         for line in f.readlines():
-            self.labelsDict[ line.split()[ 1 ] ] = line.split()[ 0 ]
+            self._labelsDict[ line.split()[ 1 ] ] = line.split()[ 0 ]
 
     def _reset( self ):
         raise NotImplementedError("Please Implement this method")
@@ -63,16 +64,15 @@ class DataLoader:
     def loadFlow( self, video, index ):
         u = np.asarray( Image.open( video ['u'] [index] ) , dtype = 'float32' )
         v = np.asarray( Image.open( video ['v'] [index] ) , dtype = 'float32' )
-        u_range = video ['u_range'] [index]
-        v_range = video ['v_range'] [index]
 
-        #u = np.array( u_img, dtype = 'float32' ).copy()
-        #v = np.array( v_img, dtype = 'float32' ).copy()
-        cv2.normalize( u, u,  u_range[ 0 ], u_range[ 1 ], cv2.NORM_MINMAX )
-        cv2.normalize( v, v,  v_range[ 0 ], v_range[ 1 ], cv2.NORM_MINMAX )
+        if self._ranges:
+            u_range = video ['u_range'] [index]
+            v_range = video ['v_range'] [index]
+            cv2.normalize( u, u, u_range[0], u_range[1], cv2.NORM_MINMAX )
+            cv2.normalize( v, v, v_range[0], v_range[1], cv2.NORM_MINMAX )
 
-        u = np.abs( u / max( np.max( np.abs( u ) ) , 0.001 ) )
-        v = np.abs( v / max( np.max( np.abs( v ) ) , 0.001 ) )
+        #u = u / max( np.max( np.abs( u ) ) , 1 ) 
+        #v = v / max( np.max( np.abs( v ) ) , 1 ) 
         return u, v
 
 
