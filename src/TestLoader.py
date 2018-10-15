@@ -27,7 +27,7 @@ class TestLoader( DataLoader.DataLoader ):
                                              timesteps, 
                                              numThreads,
                                              maxsize,
-                                             ranges = False )
+                                             ranges = True )
         self._numSegments = numSegments
         self._videoPaths  = self._getVideoPaths()
         
@@ -161,8 +161,8 @@ class TestLoader( DataLoader.DataLoader ):
     def getBatch( self ):
         if self.endOfData():
             return None
-        batch = self._batchQueue.get()
-        return batch
+        batchTuple = self._batchQueue.get()
+        return batchTuple
 
 
 

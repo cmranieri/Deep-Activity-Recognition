@@ -16,21 +16,28 @@ import time
 
 class Network:
     
-    def __init__( self, restoreModel = False ):
-        self.timesteps = 10
-        self.dim = 224
-        self.classes = 101
-        self.modelPath = '/media/olorin/Documentos/caetano/ucf101/models'
+    def __init__( self,
+                  restoreModel = False,
+                  dim = 224,
+                  timesteps = 10,
+                  classes   = 101,
+                  rootPath  = '/home/olorin/Documents/caetano/datasets/UCF-101_flow',
+                  modelPath =  '/media/olorin/Documentos/caetano/ucf101/models',
+                  modelName = 'model-norm' ):
+        self.dim = dim
+        self.timesteps = timesteps
+        self.classes   = classes
+        self.rootPath  = rootPath
+        self.modelPath = modelPath
+        self.modelName = modelName
         
         self.defineNetwork( restoreModel )
       
-        self.step = 0
-        self.rootPath = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
         self.lblFilename = '../classInd.txt'
         self.trainFilenames = np.load( '../splits/trainlist01.npy' )
         self.testFilenames  = np.load( '../splits/testlist01.npy'  )
-        #self.testFilenames    = np.load( '../splits/trainlist011.npy'  )
         self.resultsPath = '../results'
+        self.step = 0
 
 
     def defineNetwork( self, restoreModel ):
@@ -51,7 +58,7 @@ class Network:
 
         else:
             self.model = load_model( os.path.join( self.modelPath,
-                                                   'model.h5' ) )
+                                                   str(self.modelName) + '.h5' ) )
         
 
     def generateTrainLoader( self ):
@@ -75,7 +82,8 @@ class Network:
 
 
     def storeResult( self, filename, data ):
-        f = open( os.path.join( self.resultsPath, filename ), 'a' )
+        f = open( os.path.join( self.resultsPath,
+                                self.modelName + '_' + filename ), 'a' )
         f.write( data )
         f.close()
 
@@ -117,7 +125,7 @@ class Network:
             # save model
             print( 'Saving model...' )
             self.model.save( os.path.join( self.modelPath,
-                                           'model.h5' ) )
+                                           str(self.modelName) + '.h5' ) )
             print( 'Model saved!' )
 
             # evalutate model
@@ -163,6 +171,6 @@ class Network:
 if __name__ == '__main__':
     os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = Network( False )
-    network.train()
+    network = Network( True )
     #network.evaluate()
+    network.train()

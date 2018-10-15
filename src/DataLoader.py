@@ -71,8 +71,8 @@ class DataLoader:
             cv2.normalize( u, u, u_range[0], u_range[1], cv2.NORM_MINMAX )
             cv2.normalize( v, v, v_range[0], v_range[1], cv2.NORM_MINMAX )
 
-        #u = u / max( np.max( np.abs( u ) ) , 1 ) 
-        #v = v / max( np.max( np.abs( v ) ) , 1 ) 
+        u = u / max( np.max( np.abs( u ) ) , 1 ) 
+        v = v / max( np.max( np.abs( v ) ) , 1 ) 
         return u, v
 
 
