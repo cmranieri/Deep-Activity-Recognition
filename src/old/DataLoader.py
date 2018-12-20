@@ -16,17 +16,13 @@ class DataLoader:
                   dim = 224,
                   timesteps = 10,
                   numThreads = 1,
-                  maxsize = 10,
-                  ranges = True,
-                  tshape = False):
+                  maxsize = 10 ):
         self.rootPath    = rootPath
         self.filenames   = filenames
         self.dim         = dim
         self._timesteps  = timesteps
         self._numThreads = numThreads
-        self._length     = filenames.shape[ 0 ]
-        self._ranges     = ranges
-        self._tshape     = tshape
+        self._length      = filenames.shape[ 0 ]
         
         self._reset()
         self._generateLabelsDict( lblFilename )
@@ -34,6 +30,7 @@ class DataLoader:
         self._produce = True
         self._batchQueue = queue.Queue( maxsize = maxsize )
         self._indexMutex = Lock()
+        self._queueMutex = Lock()
         self._threadsList = list()
  
 
@@ -45,36 +42,37 @@ class DataLoader:
     def __exit__( self, exc_type, exc_value, traceback ):
         self._produce = False
         for i, t in enumerate( self._threadsList ):
-            t.join(1)
+            t.join()
             print( 'Finished thread %d' % ( i ) )
 
 
     def _generateLabelsDict( self, filename ):
-        self._labelsDict = dict()
+        self.labelsDict = dict()
         f = open( filename , 'r' )
         for line in f.readlines():
-            self._labelsDict[ line.split()[ 1 ] ] = line.split()[ 0 ]
+            self.labelsDict[ line.split()[ 1 ] ] = line.split()[ 0 ]
 
     def _reset( self ):
-        raise NotImplementedError( 'Please implement this method' )
+        raise NotImplementedError("Please Implement this method")
 
 
     def _incIndex( self ):
-        raise NotImplementedError( 'Please implement this method' )
+        raise NotImplementedError("Please Implement this method")
 
 
     def loadFlow( self, video, index ):
         u = np.asarray( Image.open( video ['u'] [index] ) , dtype = 'float32' )
         v = np.asarray( Image.open( video ['v'] [index] ) , dtype = 'float32' )
+        u_range = video ['u_range'] [index]
+        v_range = video ['v_range'] [index]
 
-        if self._ranges:
-            u_range = video ['u_range'] [index]
-            v_range = video ['v_range'] [index]
-            cv2.normalize( u, u, u_range[0], u_range[1], cv2.NORM_MINMAX )
-            cv2.normalize( v, v, v_range[0], v_range[1], cv2.NORM_MINMAX )
+        #u = np.array( u_img, dtype = 'float32' ).copy()
+        #v = np.array( v_img, dtype = 'float32' ).copy()
+        cv2.normalize( u, u,  u_range[ 0 ], u_range[ 1 ], cv2.NORM_MINMAX )
+        cv2.normalize( v, v,  v_range[ 0 ], v_range[ 1 ], cv2.NORM_MINMAX )
 
-        #u = u / max( np.max( np.abs( u ) ) , 0.0001 ) 
-        #v = v / max( np.max( np.abs( v ) ) , 0.0001 ) 
+        u = u / max( np.max( np.abs( u ) ) , 0.001 )
+        v = v / max( np.max( np.abs( v ) ) , 0.001 ) 
         return u, v
 
 
@@ -84,16 +82,8 @@ class DataLoader:
             u, v = self.loadFlow( video, i )
             flowList.append( np.array( [ u , v ] ) )
         stack = np.array( flowList )
-        if self._tshape:
-            # [ u, v, 2, t ]
-            stack = np.transpose( stack , [ 2 , 3 , 1 , 0 ] )
-        else:
-            # [ u, v, t, 2 ]
-            stack = np.transpose( stack , [ 2 , 3 , 0 , 1 ] )
-            #stack = np.reshape( stack , [ stack.shape[ 0 ],
-            #                              stack.shape[ 1 ],
-            #                              self._timesteps * 2 ] )
-        #stack = stack / np.max( np.abs( stack ) )
+        # [ u, v, 2, t ]
+        stack = np.transpose( stack , [ 2 , 3 , 1 , 0 ] )
         return stack
 
 
@@ -106,10 +96,10 @@ class DataLoader:
 
 
     def _batchThread( self ):
-        raise NotImplementedError( 'Please implement this method' )
+        raise NotImplementedError("Please Implement this method")
 
     def getBatch( self ):
-        raise NotImplementedError( 'Please Implement this method' )
+        raise NotImplementedError("Please Implement this method")
 
 
 

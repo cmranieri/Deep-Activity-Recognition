@@ -6,7 +6,8 @@ import pickle
 from PIL import Image
 from threading import Thread, Lock
 import queue
-from DataLoader import DataLoader
+#import DataLoader
+from DataLoader_norange import DataLoader
 
 class TrainLoader( DataLoader ):
 
@@ -18,8 +19,7 @@ class TrainLoader( DataLoader ):
                   timesteps = 10,
                   numThreads = 1,
                   maxsize = 10,
-                  batchSize = 32,
-                  tshape = False ):
+                  batchSize = 32 ):
         
         super( TrainLoader , self ).__init__( rootPath,
                                               filenames,
@@ -27,11 +27,8 @@ class TrainLoader( DataLoader ):
                                               dim,
                                               timesteps,
                                               numThreads,
-                                              maxsize,
-                                              ranges = True,
-                                              tshape = tshape)
+                                              maxsize )
         self.setBatchSize( batchSize )
-        self._flip = False
  
 
     def _reset( self ):
@@ -61,27 +58,6 @@ class TrainLoader( DataLoader ):
         return batchPaths
 
 
-    def _randomCrop_c( self, inp ):
-        dim = self.dim
-        cropId = np.random.randint( 5 )
-       
-        if cropId == 0:
-            crop = inp[   0    : dim  ,   0    : dim ]
-        elif cropId == 1:
-            crop = inp[ -dim-1 : -1   ,   0    : dim ] 
-        elif cropId == 2:
-            crop = inp[   0    : dim  , -dim-1 : -1  ]
-        elif cropId == 3:
-            crop = inp[ -dim-1 : -1   , -dim-1 : -1  ] 
-        elif cropId == 4:
-            marginX = ( inp.shape[ 1 ] - dim ) // 2
-            marginY = ( inp.shape[ 0 ] - dim ) // 2
-            crop = inp[ marginY : -marginY,
-                        marginX : -marginX ] 
-        return crop
-
-
-
     def _randomCrop( self , inp ):
         dim = self.dim
         imgDimX = inp.shape[ 1 ]
@@ -94,12 +70,10 @@ class TrainLoader( DataLoader ):
         return crop
 
 
-    def _randomFlip( self , img ):
-        #if np.random.random() > 0.5:
-        if self._flip:
-            img = np.flip( img , 1 )
-        self._flip = not self._flip
-        return img
+    def _randomFlip( self , inp ):
+        if np.random.random() > 0.5:
+            inp = np.flip( inp , 1 )
+        return inp
 
 
 
@@ -130,12 +104,9 @@ class TrainLoader( DataLoader ):
 
         batch = np.array( batch, dtype = 'float32' )
         batch = np.reshape( batch , [ len( batchPaths ), 
-                                      self.dim,
-                                      self.dim,
-                                      2 * self._timesteps] )
+                                      self.dim * self.dim * 2 * self._timesteps] )
         labels = np.array( labels )
         return ( batch , labels )
-
 
 
     def _batchThread( self ):
@@ -154,16 +125,11 @@ if __name__ == '__main__':
     rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
     filenames   = np.load( '../splits/trainlist01.npy' )
     lblFilename = '../classInd.txt'
-    with TrainLoader( rootPath, filenames, lblFilename, numThreads = 1 ) as trainLoader:
-        for i in range( 1 ):
+    with TrainLoader( rootPath, filenames, lblFilename, numThreads = 5 ) as trainLoader:
+        for i in range( 100 ):
             t = time.time()
             batch, labels =  trainLoader.getBatch()
             print( i , batch.shape , labels.shape )
-
-            #for i, frame in enumerate(batch):
-            #    cv2.imwrite(str(i)+'u.jpeg', frame[...,0])
-            #    cv2.imwrite(str(i)+'v.jpeg', frame[...,1])
-
             print( 'Total time:' , time.time() - t )
 
 

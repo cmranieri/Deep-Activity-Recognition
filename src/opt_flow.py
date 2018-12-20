@@ -38,9 +38,9 @@ def prep_flow_frame( u, v ):
     return u_out, v_out
 
 
-def convert_video( video_path, out_dir ):
+def convert_video( video_path, out_dir, ext ):
  
-    cap = cv2.VideoCapture( video_path + '.avi' )
+    cap = cv2.VideoCapture( video_path + ext )
     ret, frame1 = cap.read()
     prev = cv2.cvtColor( frame1 , cv2.COLOR_BGR2GRAY )
     prev = cv2.UMat( prev )
@@ -91,24 +91,31 @@ def process_video( input_dir , output_dir , raw_filename ):
     class_inp_dir = os.path.join( input_dir  , path_dirs[0] )
     class_out_dir = os.path.join( output_dir , path_dirs[0] )
     filename_no_ext = path_dirs[1].split('.')[0]
+    ext             = path_dirs[1].split('.')[1]
     make_dir( class_out_dir )
     filepath = os.path.join( class_inp_dir, filename_no_ext )
 
     print( 'Converting' , filename )
-    convert_video( filepath, class_out_dir )
+    convert_video( filepath, class_out_dir, '.' + ext )
     print( 'Done' )
 
 
-input_dir  = '/media/olorin/Documentos/caetano/datasets/UCF-101'
-output_dir = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
-trainlist = list(np.load( '../splits/trainlist01.npy' ))
-testlist = list(np.load( '../splits/testlist01.npy' ))
+def process_ucf101():
+    input_dir  = '/media/olorin/Documentos/caetano/datasets/UCF-101'
+    output_dir = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
+    trainlist = list(np.load( '../splits/trainlist01.npy' ))
+    testlist = list(np.load( '../splits/testlist01.npy' ))
 
-for filename in trainlist+testlist:
-    t = time.time()
-    process_video( input_dir, output_dir, filename )
-    print( 'Time:', time.time() - t )
+    for filename in trainlist+testlist:
+        t = time.time()
+        process_video( input_dir, output_dir, filename )
+        print( 'Time:', time.time() - t )
+        
+
+#def process_multimodal():
     
 
+
+process_ucf101()
 
 

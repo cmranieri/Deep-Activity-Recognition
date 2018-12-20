@@ -6,7 +6,8 @@ import pickle
 from PIL import Image
 from threading import Thread, Lock
 import queue
-import DataLoader
+#import DataLoader
+import DataLoader_norange as DataLoader
 
 class TestLoader( DataLoader.DataLoader ):
 
@@ -15,20 +16,17 @@ class TestLoader( DataLoader.DataLoader ):
                   filenames,
                   lblFilename,
                   dim = 224,
-                  timesteps = 10,
+                  timesteps = 16,
                   numThreads = 1,
                   maxsize=10,
-                  numSegments = 25,
-                  tshape = False ):
+                  numSegments = 25 ):
         super( TestLoader , self ).__init__( rootPath,
                                              filenames,
                                              lblFilename,
                                              dim, 
                                              timesteps, 
                                              numThreads,
-                                             maxsize,
-                                             ranges = True,
-                                             tshape = tshape )
+                                             maxsize )
         self._numSegments = numSegments
         self._videoPaths  = self._getVideoPaths()
         
@@ -38,8 +36,7 @@ class TestLoader( DataLoader.DataLoader ):
 
 
     def endOfData( self ):
-        return ( self._processedAll() and
-                 self._batchQueue.empty() )
+        return ( self._processedAll() and self._batchQueue.empty() )
 
     
     def _reset( self ):
@@ -90,13 +87,13 @@ class TestLoader( DataLoader.DataLoader ):
         crops += [ inp[ :,  -dim-1 : -1   ,   0    : dim ] ]
         crops += [ inp[ :,    0    : dim  , -dim-1 : -1  ] ]
         crops += [ inp[ :,  -dim-1 : -1   , -dim-1 : -1  ] ]
-        crops += [ inp[ :, marginY : marginY + dim,
-                           marginX : marginX + dim ] ]
+        crops += [ inp[ :, marginY : -marginY,
+                           marginX : -marginX ] ]
         crops = np.array( crops, dtype = 'float32' )
-        # [ c * b, u, v, 2t ]
+        # [ c * b, u, v, 2, t ]
         crops = np.reshape( crops, [ 5 * self._numSegments,
                                      self.dim, self.dim,
-                                     2 * self._timesteps ] )
+                                     2, self._timesteps ] )
         return crops
 
 
@@ -110,12 +107,13 @@ class TestLoader( DataLoader.DataLoader ):
         self._indexMutex.release()
 
         batch = self.getVideoBatch( videoPath )
-
         labels = np.zeros( ( 5 * self._numSegments, 101 ), dtype = 'float32' )
         className = videoPath.split('/')[ -2 ]
         labels[ :, int( self._labelsDict[ className ] ) - 1 ] = 1.0
         self._labels = labels
 
+        batch  = np.reshape( batch , [ 5 * self._numSegments , 
+                                       self.dim * self.dim * 2 * self._timesteps] )
         return ( batch , labels )
 
 
@@ -127,33 +125,31 @@ class TestLoader( DataLoader.DataLoader ):
     def getFlippedBatch( self , batchTuple ):
         batch, labels = batchTuple
         fbatch = batch.copy()
+        fbatch  = np.reshape( fbatch , [ 5 * self._numSegments , 
+                                         self.dim, self.dim,
+                                         2, self._timesteps] )
         fbatch = self.getFlips( fbatch )
+        fbatch  = np.reshape( fbatch , [ 5 * self._numSegments , 
+                                         self.dim * self.dim * 2 * self._timesteps] )
         return ( fbatch , labels )
 
 
     def _batchThread( self ):
-        while True:
+        while self._produce:
             batchTuple1 = self.nextVideoBatch()
             if batchTuple1 is not None:
                 batchTuple2 = self.getFlippedBatch( batchTuple1 )
+                self._queueMutex.acquire()
                 self._batchQueue.put( batchTuple1 )
                 self._batchQueue.put( batchTuple2 )
+                self._queueMutex.release()
             else: break
-
-    
-    def toFiles( self, batch, prefix='' ):
-        i = 0
-        for instance in batch:
-            for frame in instance.transpose( 2,0,1 ):
-                cv2.imwrite( 'test/' + str(prefix) + str(i) + '.jpeg', frame )
-                i += 1
 
 
     def getBatch( self ):
         if self.endOfData():
             return None
-        batchTuple = self._batchQueue.get()
-        return batchTuple
+        return self._batchQueue.get()
 
 
 
@@ -164,11 +160,10 @@ if __name__ == '__main__':
     lblFilename = '../classInd.txt'
     
     with TestLoader( rootPath, filenames, lblFilename, numThreads=2 ) as testLoader:
-         for i in range(100):
-        # while not testLoader.endOfData():
+        # for i in range(100):
+        while not testLoader.endOfData():
             t = time.time()
             batch, labels = testLoader.getBatch()
-            testLoader.toFiles( batch )
             # batch, labels =  testLoader.nextVideoBatch()
             # batch =  testLoader.getFlippedBatch( batch )
             print( testLoader._index, 'Total time:' , time.time() - t )
