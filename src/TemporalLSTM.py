@@ -23,9 +23,11 @@ class TemporalLSTM( BaseTemporal ):
                   rootPath  = '/home/olorin/Documents/caetano/datasets/UCF-101_flow',
                   modelPath = '/media/olorin/Documentos/caetano/ucf101/models',
                   modelName = 'model-lstm-final',
-                  numThreads = 2,
+                  numThreads = 4,
                   maxsizeTrain = 8,
-                  maxsizeTest  = 4):
+                  maxsizeTest  = 8,
+                  lblFilename  = '../classInd.txt',
+                  splitsDir    = '../splits/ucf101' ):
         super( TemporalLSTM , self ).__init__( restoreModel = restoreModel,
                                                dim = dim,
                                                timesteps    = timesteps,
@@ -87,7 +89,7 @@ class TemporalLSTM( BaseTemporal ):
 
 
 if __name__ == '__main__':
-    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
+    #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
     
     network = TemporalLSTM( restoreModel = False )
     #network.evaluate()

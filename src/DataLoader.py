@@ -12,7 +12,7 @@ class DataLoader:
     def __init__( self,
                   rootPath,
                   filenames,
-                  lblFilename ,
+                  lblFilename,
                   dim = 224,
                   timesteps = 10,
                   numThreads = 1,

@@ -22,7 +22,9 @@ class BaseTemporal:
                   modelName,
                   numThreads,
                   maxsizeTrain,
-                  maxsizeTest ):
+                  maxsizeTest,
+                  lblFilename = '../classInd.txt',
+                  splitsDir = '../splits/ucf101'):
         self._dim = dim
         self._timesteps = timesteps
         self._classes   = classes
@@ -34,9 +36,9 @@ class BaseTemporal:
         self._maxsizeTrain = maxsizeTrain
         self._maxsizeTest  = maxsizeTest
         
-        self._lblFilename = '../classInd.txt'
-        self._trainFilenames = np.load( '../splits/trainlist01.npy' )
-        self._testFilenames  = np.load( '../splits/testlist01.npy'  )
+        self._lblFilename = lblFilename
+        self._trainFilenames = np.load( os.path.join( splitsDir, 'trainlist01.npy' ) )
+        self._testFilenames  = np.load( os.path.join( splitsDir, 'testlist01.npy'  ) )
         self._resultsPath = '../results'
         self._step = 0
 
@@ -64,6 +66,7 @@ class BaseTemporal:
         return TrainLoader( self._rootPath,
                             self._trainFilenames,
                             self._lblFilename,
+                            dim = self._dim,
                             batchSize = self._batchSize,
                             timesteps = self._timesteps,
                             numThreads = self._numThreads,
@@ -74,6 +77,7 @@ class BaseTemporal:
         return TestLoader( self._rootPath,
                            self._testFilenames,
                            self._lblFilename,
+                           dim = self._dim,
                            numSegments = 5,
                            timesteps = self._timesteps,
                            numThreads = self._numThreads,

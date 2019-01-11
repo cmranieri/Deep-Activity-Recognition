@@ -95,16 +95,16 @@ def process_video( input_dir , output_dir , raw_filename ):
     make_dir( class_out_dir )
     filepath = os.path.join( class_inp_dir, filename_no_ext )
 
-    print( 'Converting' , filename )
+    print( 'Converting' , raw_filename )
     convert_video( filepath, class_out_dir, '.' + ext )
     print( 'Done' )
 
 
 def process_ucf101():
-    input_dir  = '/media/olorin/Documentos/caetano/datasets/UCF-101'
-    output_dir = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
-    trainlist = list(np.load( '../splits/trainlist01.npy' ))
-    testlist = list(np.load( '../splits/testlist01.npy' ))
+    input_dir  = '/home/cranieri/datasets/UCF-101'
+    output_dir = '/home/cranieri/datasets/UCF-101_flow'
+    trainlist = list(np.load( '../splits/ucf101/trainlist01.npy' ))
+    testlist = list(np.load( '../splits/ucf101/testlist01.npy' ))
 
     for filename in trainlist+testlist:
         t = time.time()
@@ -112,10 +112,20 @@ def process_ucf101():
         print( 'Time:', time.time() - t )
         
 
-#def process_multimodal():
+def process_multimodal():
+    input_dir  = '/home/cranieri/datasets/multimodal_dataset/video'
+    output_dir = '/home/cranieri/datasets/multimodal_dataset_flow'
+    trainlist = list(np.load( '../splits/multimodal_dataset/trainlist.npy' ))
+    testlist = list(np.load( '../splits/multimodal_dataset/testlist.npy' ))
+
+    for filename in trainlist+testlist:
+        t = time.time()
+        process_video( input_dir, output_dir, filename )
+        print( 'Time:', time.time() - t )
     
 
-
-process_ucf101()
+if __name__ == '__main__':
+    #process_ucf101()
+    process_multimodal()
 
 
