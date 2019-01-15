@@ -13,6 +13,7 @@ class DataLoader:
                   rootPath,
                   filenames,
                   lblFilename,
+                  classes = 101,
                   dim = 224,
                   timesteps = 10,
                   numThreads = 1,
@@ -21,6 +22,7 @@ class DataLoader:
                   tshape = False):
         self.rootPath    = rootPath
         self.filenames   = filenames
+        self._classes    = classes
         self.dim         = dim
         self._timesteps  = timesteps
         self._numThreads = numThreads

@@ -13,7 +13,8 @@ class TrainLoader( DataLoader ):
     def __init__( self,
                   rootPath,
                   filenames,
-                  lblFilename ,
+                  lblFilename,
+                  classes = 101,
                   dim = 224,
                   timesteps = 10,
                   numThreads = 1,
@@ -24,6 +25,7 @@ class TrainLoader( DataLoader ):
         super( TrainLoader , self ).__init__( rootPath,
                                               filenames,
                                               lblFilename,
+                                              classes,
                                               dim,
                                               timesteps,
                                               numThreads,
@@ -124,7 +126,7 @@ class TrainLoader( DataLoader ):
             batch.append( self.stackFlow( video, start ) )
 
             className = batchPath.split('/')[ 0 ]
-            label = np.zeros(( 101 ) , dtype = 'float32')
+            label = np.zeros(( self._classes ) , dtype = 'float32')
             label[ int( self._labelsDict[ className ] ) - 1 ] = 1.0
             labels.append( label )
 

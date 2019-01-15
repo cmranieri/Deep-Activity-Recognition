@@ -8,7 +8,6 @@ from TestLoader  import TestLoader
 from keras.models import load_model
 
 
-
 class BaseTemporal:
     
     def __init__( self,
@@ -66,6 +65,7 @@ class BaseTemporal:
         return TrainLoader( self._rootPath,
                             self._trainFilenames,
                             self._lblFilename,
+                            classes = self._classes,
                             dim = self._dim,
                             batchSize = self._batchSize,
                             timesteps = self._timesteps,
@@ -77,6 +77,7 @@ class BaseTemporal:
         return TestLoader( self._rootPath,
                            self._testFilenames,
                            self._lblFilename,
+                           classes = self._classes,
                            dim = self._dim,
                            numSegments = 5,
                            timesteps = self._timesteps,
@@ -120,6 +121,8 @@ class BaseTemporal:
                     trainFlag = False
 
                     batch , labels = trainLoader.getBatch()
+                    print( batch.shape, labels.shape )
+                    exit()
                     batch = self._prepareBatch( batch )
                     # train the selected batch
                     tr = self.model.train_on_batch( batch,

@@ -23,9 +23,9 @@ class TemporalLSTM( BaseTemporal ):
                   rootPath  = '/home/olorin/Documents/caetano/datasets/UCF-101_flow',
                   modelPath = '/media/olorin/Documentos/caetano/ucf101/models',
                   modelName = 'model-lstm-final',
-                  numThreads = 4,
-                  maxsizeTrain = 8,
-                  maxsizeTest  = 8,
+                  numThreads = 8,
+                  maxsizeTrain = 16,
+                  maxsizeTest  = 16,
                   lblFilename  = '../classInd.txt',
                   splitsDir    = '../splits/ucf101' ):
         super( TemporalLSTM , self ).__init__( restoreModel = restoreModel,
@@ -38,7 +38,9 @@ class TemporalLSTM( BaseTemporal ):
                                                modelName    = modelName,
                                                numThreads   = numThreads,
                                                maxsizeTrain = maxsizeTrain,
-                                               maxsizeTest  = maxsizeTest )
+                                               maxsizeTest  = maxsizeTest,
+                                               lblFilename  = lblFilename,
+                                               splitsDir    = splitsDir )
 
 
     def _defineNetwork( self ):
