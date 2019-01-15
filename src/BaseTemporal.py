@@ -121,8 +121,6 @@ class BaseTemporal:
                     trainFlag = False
 
                     batch , labels = trainLoader.getBatch()
-                    print( batch.shape, labels.shape )
-                    exit()
                     batch = self._prepareBatch( batch )
                     # train the selected batch
                     tr = self.model.train_on_batch( batch,
