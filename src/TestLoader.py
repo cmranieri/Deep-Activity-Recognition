@@ -25,7 +25,7 @@ class TestLoader( DataLoader.DataLoader ):
                                              filenames,
                                              lblFilename,
                                              classes,
-                                             dim, 
+                                             dim,
                                              timesteps, 
                                              numThreads,
                                              maxsize,

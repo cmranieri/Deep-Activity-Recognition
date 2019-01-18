@@ -20,15 +20,15 @@ class DataLoader:
                   maxsize = 10,
                   ranges = True,
                   tshape = False):
-        self.rootPath    = rootPath
-        self.filenames   = filenames
-        self._classes    = classes
-        self.dim         = dim
-        self._timesteps  = timesteps
-        self._numThreads = numThreads
-        self._length     = filenames.shape[ 0 ]
-        self._ranges     = ranges
-        self._tshape     = tshape
+        self.rootPath     = rootPath
+        self.filenames    = filenames
+        self._classes     = classes
+        self.dim          = dim
+        self._timesteps   = timesteps
+        self._numThreads  = numThreads
+        self._length      = filenames.shape[ 0 ]
+        self._ranges      = ranges
+        self._tshape      = tshape
         
         self._reset()
         self._generateLabelsDict( lblFilename )

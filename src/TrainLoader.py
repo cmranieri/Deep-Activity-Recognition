@@ -153,8 +153,8 @@ class TrainLoader( DataLoader ):
 
 if __name__ == '__main__':
     #rootPath    = '/lustre/cranieri/UCF-101_flow'
-    rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
-    filenames   = np.load( '../splits/trainlist01.npy' )
+    rootPath    = '/home/cmranieri/datasets/UCF-101_flow'
+    filenames   = np.load( '../splits/ucf101/trainlist01.npy' )
     lblFilename = '../classInd.txt'
     with TrainLoader( rootPath, filenames, lblFilename, numThreads = 1 ) as trainLoader:
         for i in range( 1 ):

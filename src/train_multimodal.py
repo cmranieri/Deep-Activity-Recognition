@@ -1,11 +1,14 @@
-import TemporalLSTM
+import Temporal
+import os
 
-network = TemporalLSTM.TemporalLSTM( restoreModel = False,
+os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
+
+network = Temporal.Temporal( restoreModel = False,
                                      classes   = 20,
-                                     rootPath  = '/home/cranieri/datasets/multimodal_dataset_flow',
-                                     modelPath = '/lustre/cranieri/models',
-                                     modelName = 'model-lstm-multi-video',
+                                     rootPath  = '/home/cmranieri/datasets/multimodal_dataset_flow2',
+                                     modelPath = '/home/cmranieri/models/multimodal',
+                                     modelName = 'model-multi-video',
                                      lblFilename = '../classIndMulti.txt',
                                      splitsDir   = '../splits/multimodal_dataset')
 
-network.train( epochs = 500000 )
+network.train( epochs = 800000 )

@@ -23,9 +23,9 @@ class TemporalLSTM( BaseTemporal ):
                   rootPath  = '/home/olorin/Documents/caetano/datasets/UCF-101_flow',
                   modelPath = '/media/olorin/Documentos/caetano/ucf101/models',
                   modelName = 'model-lstm-final',
-                  numThreads = 8,
-                  maxsizeTrain = 16,
-                  maxsizeTest  = 16,
+                  numThreads = 3,
+                  maxsizeTrain = 6,
+                  maxsizeTest  = 4,
                   lblFilename  = '../classInd.txt',
                   splitsDir    = '../splits/ucf101' ):
         super( TemporalLSTM , self ).__init__( restoreModel = restoreModel,

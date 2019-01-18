@@ -14,15 +14,18 @@ class Temporal( BaseTemporal ):
     def __init__( self,
                   restoreModel = False,
                   dim = 224,
-                  timesteps = 10,
+                  timesteps = 8,
                   classes   = 101,
-                  batchSize = 32,
-                  rootPath  = '/home/olorin/Documents/caetano/datasets/UCF-101_flow',
-                  modelPath =  '/media/olorin/Documentos/caetano/ucf101/models',
+                  batchSize = 16,
+                  rootPath  = '/home/cmranieri/datasets/UCF-101_flow',
+                  modelPath =  '/home/cmranieri/models/ucf101',
                   modelName = 'model-norm',
                   numThreads = 4,
-                  maxsizeTrain = 8,
-                  maxsizeTest  = 6):
+                  maxsizeTrain = 6,
+                  maxsizeTest  = 4,
+                  lblFilename  = '../classInd.txt',
+                  splitsDir    = '../splits/ucf101' ):
+
         super( Temporal , self ).__init__( restoreModel = restoreModel,
                                            dim = dim,
                                            timesteps    = timesteps,
@@ -33,7 +36,9 @@ class Temporal( BaseTemporal ):
                                            modelName    = modelName,
                                            numThreads   = numThreads,
                                            maxsizeTrain = maxsizeTrain,
-                                           maxsizeTest  = maxsizeTest )
+                                           maxsizeTest  = maxsizeTest,
+                                           lblFilename  = lblFilename,
+                                           splitsDir    = splitsDir )
 
 
 
@@ -43,8 +48,8 @@ class Temporal( BaseTemporal ):
         model = InceptionV3( input_tensor = input_tensor,
                              weights = None,
                              classes = self._classes )
-        optimizer = SGD( lr = 1e-2, momentum = 0.9,
-                         nesterov=True, decay = 1e-5 )
+        optimizer = SGD( lr = 1e-3, momentum = 0.9,
+                         nesterov=True, decay = 1e-4 )
         model.compile( loss = 'categorical_crossentropy',
                        optimizer = optimizer,
                        metrics   = [ 'acc' ] ) 
@@ -53,8 +58,8 @@ class Temporal( BaseTemporal ):
 
 
 if __name__ == '__main__':
-    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
+    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = Temporal()
+    network = Temporal( restoreModel = True )
     #network.evaluate()
-    network.train()
+    network.train( epochs = 300000 )
