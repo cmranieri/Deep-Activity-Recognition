@@ -24,7 +24,9 @@ class BaseTemporal:
                   maxsizeTest,
                   lblFilename = '../classInd.txt',
                   splitsDir = '../splits/ucf101',
-                  split_n = '01' ):
+                  split_n = '01',
+                  tl = False,
+                  tlSuffix = '' ):
         self._dim = dim
         self._timesteps = timesteps
         self._classes   = classes
@@ -49,13 +51,34 @@ class BaseTemporal:
         raise NotImplementedError( 'Please implement this method' )
 
 
-    def loadModel( self, restoreModel ):
+    def _changeTop( self ):
+        model = self.model
+        model.layers.pop()
+        y = model.layers[-1].output
+        y = Dense( self._classes, activation='softmax' )( y )
+        x = model.input
+        model = Model( x , y )
+        optimizer  = SGD( lr = 1e-3,
+                          momentum = 0.9,
+                          nesterov = True,
+                          decay = 1e-4 )
+        model.compile( loss = 'categorical_crossentropy',
+                       optimizer = optimizer,
+                       metrics = [ 'acc' ] )
+        self.model = model
+
+
+    def loadModel( self, restoreModel, tl ):
         print( 'Loading model...' )
-        if not restoreModel:
+        if not ( restoreModel or tl ):
             self.model = self._defineNetwork()
         else:
             self.model = load_model( os.path.join( self._modelPath,
                                                    str(self._modelName) + '.h5' ) )
+        if tl:
+            self._modelName = self.modelName + self.tlSuffix
+            self._changeTop()
+            self._saveModel()
         print( 'Model loaded!' )
         nparams = self.model.count_params()
         print( str(nparams) + ' parameters.' )
