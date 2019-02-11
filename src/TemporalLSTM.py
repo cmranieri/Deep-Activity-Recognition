@@ -3,8 +3,8 @@ import os
 
 from BaseTemporal import BaseTemporal
 
-#from keras.applications.inception_v3 import InceptionV3 as BaseModel
-from keras.applications.mobilenet import MobileNet as BaseModel
+from keras.applications.inception_v3 import InceptionV3 as BaseModel
+#from keras.applications.mobilenet import MobileNet as BaseModel
 from keras.layers import Input, Dense, LSTM
 from keras.layers import concatenate, Reshape, Permute
 from keras.optimizers import SGD
@@ -23,8 +23,8 @@ class TemporalLSTM( BaseTemporal ):
                   rootPath  = '/home/olorin/Documents/caetano/datasets/UCF-101_flow',
                   modelPath = '/media/olorin/Documentos/caetano/ucf101/models',
                   modelName = 'model-lstm-final',
-                  numThreads = 3,
-                  maxsizeTrain = 6,
+                  numThreads = 2,
+                  maxsizeTrain = 4,
                   maxsizeTest  = 4,
                   lblFilename  = '../classInd.txt',
                   splitsDir    = '../splits/ucf101' ):

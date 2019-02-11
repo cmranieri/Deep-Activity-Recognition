@@ -20,11 +20,12 @@ class Temporal( BaseTemporal ):
                   rootPath  = '/home/cmranieri/datasets/UCF-101_flow',
                   modelPath =  '/home/cmranieri/models/ucf101',
                   modelName = 'model-norm',
-                  numThreads = 4,
-                  maxsizeTrain = 6,
+                  numThreads = 2,
+                  maxsizeTrain = 4,
                   maxsizeTest  = 4,
                   lblFilename  = '../classInd.txt',
-                  splitsDir    = '../splits/ucf101' ):
+                  splitsDir    = '../splits/ucf101',
+                  split_n = '01' ):
 
         super( Temporal , self ).__init__( restoreModel = restoreModel,
                                            dim = dim,
@@ -38,7 +39,8 @@ class Temporal( BaseTemporal ):
                                            maxsizeTrain = maxsizeTrain,
                                            maxsizeTest  = maxsizeTest,
                                            lblFilename  = lblFilename,
-                                           splitsDir    = splitsDir )
+                                           splitsDir    = splitsDir,
+                                           split_n      = split_n )
 
 
 
@@ -48,7 +50,7 @@ class Temporal( BaseTemporal ):
         model = InceptionV3( input_tensor = input_tensor,
                              weights = None,
                              classes = self._classes )
-        optimizer = SGD( lr = 1e-3, momentum = 0.9,
+        optimizer = SGD( lr = 1e-2, momentum = 0.9,
                          nesterov=True, decay = 1e-4 )
         model.compile( loss = 'categorical_crossentropy',
                        optimizer = optimizer,
@@ -58,8 +60,8 @@ class Temporal( BaseTemporal ):
 
 
 if __name__ == '__main__':
-    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
+    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
     
     network = Temporal( restoreModel = True )
     #network.evaluate()
-    network.train( epochs = 300000 )
+    network.train( epochs = 600000 )

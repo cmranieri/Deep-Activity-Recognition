@@ -23,7 +23,8 @@ class BaseTemporal:
                   maxsizeTrain,
                   maxsizeTest,
                   lblFilename = '../classInd.txt',
-                  splitsDir = '../splits/ucf101'):
+                  splitsDir = '../splits/ucf101',
+                  split_n = '01' ):
         self._dim = dim
         self._timesteps = timesteps
         self._classes   = classes
@@ -36,8 +37,8 @@ class BaseTemporal:
         self._maxsizeTest  = maxsizeTest
         
         self._lblFilename = lblFilename
-        self._trainFilenames = np.load( os.path.join( splitsDir, 'trainlist01.npy' ) )
-        self._testFilenames  = np.load( os.path.join( splitsDir, 'testlist01.npy'  ) )
+        self._trainFilenames = np.load( os.path.join( splitsDir, 'trainlist' + split_n + '.npy' ) )
+        self._testFilenames  = np.load( os.path.join( splitsDir, 'testlist'  + split_n + '.npy' ) )
         self._resultsPath = '../results'
         self._step = 0
 

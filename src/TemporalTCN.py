@@ -3,8 +3,8 @@ import os
 
 from BaseTemporal import BaseTemporal
 
-#from keras.applications.inception_v3 import InceptionV3 as BaseModel
-from keras.applications.mobilenet import MobileNet as BaseModel
+from keras.applications.inception_v3 import InceptionV3 as BaseModel
+#from keras.applications.mobilenet import MobileNet as BaseModel
 from keras.layers import Input, Dense 
 from keras.layers import concatenate, Reshape, Permute
 from keras.optimizers import SGD
@@ -21,11 +21,11 @@ class TemporalTCN( BaseTemporal ):
                   timesteps = 8,
                   classes   = 101,
                   batchSize = 16,
-                  rootPath  = '/home/olorin/Documents/caetano/datasets/UCF-101_flow',
-                  modelPath = '/media/olorin/Documentos/caetano/ucf101/models',
+                  rootPath  = '/home/cmranieri/datasets/UCF-101_flow',
+                  modelPath = '/home/cmranieri/models/ucf101',
                   modelName = 'model-tcn-final',
                   numThreads = 2,
-                  maxsizeTrain = 8,
+                  maxsizeTrain = 4,
                   maxsizeTest  = 4):
         super( TemporalTCN , self ).__init__( restoreModel = restoreModel,
                                               dim = dim,
@@ -64,7 +64,7 @@ class TemporalTCN( BaseTemporal ):
             y = TCN( nb_filters = 128,
                      return_sequences = False,
                      nb_stacks = 1,
-                     dilations = [ 1, 2, 4, 8 ],
+                     dilations = [ 1, 2, 4 ],
                      dropout_rate = 0.3 )( merge )
             y = Dense( self._classes, activation='softmax' )( y )
             
@@ -92,6 +92,6 @@ class TemporalTCN( BaseTemporal ):
 if __name__ == '__main__':
     os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalTCN( restoreModel = False )
+    network = TemporalTCN( restoreModel = True )
     #network.evaluate()
-    network.train( epochs = 800000 )
+    network.train( epochs = 600000 )
