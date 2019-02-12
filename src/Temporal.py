@@ -25,10 +25,12 @@ class Temporal( BaseTemporal ):
                   maxsizeTest  = 4,
                   lblFilename  = '../classInd.txt',
                   splitsDir    = '../splits/ucf101',
-                  split_n = '01' ):
+                  split_n = '01',
+                  tl = False,
+                  tlSuffix = '' ):
 
         super( Temporal , self ).__init__( restoreModel = restoreModel,
-                                           dim = dim,
+                                           dim          = dim,
                                            timesteps    = timesteps,
                                            classes      = classes,
                                            batchSize    = batchSize,
@@ -40,7 +42,9 @@ class Temporal( BaseTemporal ):
                                            maxsizeTest  = maxsizeTest,
                                            lblFilename  = lblFilename,
                                            splitsDir    = splitsDir,
-                                           split_n      = split_n )
+                                           split_n      = split_n,
+                                           tl           = tl,
+                                           tlSuffix     = tlSuffix )
 
 
 

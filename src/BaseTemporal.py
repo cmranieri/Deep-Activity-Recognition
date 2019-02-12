@@ -5,8 +5,9 @@ import time
 from TrainLoader import TrainLoader
 from TestLoader  import TestLoader
 
-from keras.models import load_model
-
+from keras.layers import Dense
+from keras.models import Model, load_model
+from keras.optimizers import SGD
 
 class BaseTemporal:
     
@@ -28,15 +29,16 @@ class BaseTemporal:
                   tl = False,
                   tlSuffix = '' ):
         self._dim = dim
-        self._timesteps = timesteps
-        self._classes   = classes
-        self._batchSize = batchSize
-        self._rootPath  = rootPath
-        self._modelPath = modelPath
-        self._modelName = modelName
-        self._numThreads = numThreads
+        self._timesteps    = timesteps
+        self._classes      = classes
+        self._batchSize    = batchSize
+        self._rootPath     = rootPath
+        self._modelPath    = modelPath
+        self._modelName    = modelName
+        self._numThreads   = numThreads
         self._maxsizeTrain = maxsizeTrain
         self._maxsizeTest  = maxsizeTest
+        self._tlSuffix     = tlSuffix
         
         self._lblFilename = lblFilename
         self._trainFilenames = np.load( os.path.join( splitsDir, 'trainlist' + split_n + '.npy' ) )
@@ -44,7 +46,7 @@ class BaseTemporal:
         self._resultsPath = '../results'
         self._step = 0
 
-        self.loadModel( restoreModel )
+        self.loadModel( restoreModel , tl )
 
 
     def _defineNetwork( self ):
@@ -76,7 +78,7 @@ class BaseTemporal:
             self.model = load_model( os.path.join( self._modelPath,
                                                    str(self._modelName) + '.h5' ) )
         if tl:
-            self._modelName = self.modelName + self.tlSuffix
+            self._modelName = self._modelName + self._tlSuffix
             self._changeTop()
             self._saveModel()
         print( 'Model loaded!' )

@@ -1,15 +1,17 @@
-import TemporalTCN
+import Temporal
 import os
 
-os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
+os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
 
-network = TemporalTCN.TemporalTCN( restoreModel = False,
+network = Temporal.Temporal( restoreModel = False,
                                      classes     = 20,
                                      rootPath    = '/home/cmranieri/datasets/multimodal_dataset_flow2',
-                                     modelPath   = '/home/cmranieri/models/multimodal',
-                                     modelName   = 'model-multi-video-tcn-1',
+                                     modelPath   = '/home/cmranieri/models/ucf101',
+                                     modelName   = 'model-norm',
                                      lblFilename = '../classIndMulti.txt',
                                      splitsDir   = '../splits/multimodal_dataset',
-                                     split_n     = '01' )
+                                     split_n     = '02',
+                                     tl          = True,
+                                     tlSuffix    = '_tl_multi-2')
 
-network.train( epochs = 200000 )
+network.train( epochs = 100000 )
