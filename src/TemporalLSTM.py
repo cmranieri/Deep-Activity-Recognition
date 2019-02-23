@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-from BaseTemporal import BaseTemporal
+from NetworkBase import NetworkBase
 
 from keras.applications.inception_v3 import InceptionV3 as BaseModel
 #from keras.applications.mobilenet import MobileNet as BaseModel
@@ -12,7 +12,7 @@ from keras.models import Model
 
 
 
-class TemporalLSTM( BaseTemporal ):
+class TemporalLSTM( NetworkBase ):
     
     def __init__( self,
                   restoreModel = True,

@@ -20,6 +20,7 @@ class TrainLoader( DataLoader ):
                   numThreads = 1,
                   maxsize = 10,
                   batchSize = 32,
+                  stream = 'temporal',
                   tshape = False ):
         
         super( TrainLoader , self ).__init__( rootPath,
@@ -33,7 +34,8 @@ class TrainLoader( DataLoader ):
                                               ranges = True,
                                               tshape = tshape)
         self.setBatchSize( batchSize )
-        self._flip = False
+        self._stream = stream
+        self._flip   = False
  
 
     def _reset( self ):
@@ -52,7 +54,7 @@ class TrainLoader( DataLoader ):
             self._reset()
 
 
-    def _randomBatchPaths( self ):
+    def _selectBatchPaths( self ):
         if self._index + self.batchSize > self._length:
             self._incIndex()
         batchPaths = list()
@@ -61,27 +63,6 @@ class TrainLoader( DataLoader ):
             batchPaths += [ self.filenames[ self._ids[ i ] ].split('.')[0] ]
         self._incIndex()
         return batchPaths
-
-
-    def _randomCrop_c( self, inp ):
-        dim = self.dim
-        cropId = np.random.randint( 5 )
-       
-        if cropId == 0:
-            crop = inp[   0    : dim  ,   0    : dim ]
-        elif cropId == 1:
-            crop = inp[ -dim-1 : -1   ,   0    : dim ] 
-        elif cropId == 2:
-            crop = inp[   0    : dim  , -dim-1 : -1  ]
-        elif cropId == 3:
-            crop = inp[ -dim-1 : -1   , -dim-1 : -1  ] 
-        elif cropId == 4:
-            marginX = ( inp.shape[ 1 ] - dim ) // 2
-            marginY = ( inp.shape[ 0 ] - dim ) // 2
-            crop = inp[ marginY : -marginY,
-                        marginX : -marginX ] 
-        return crop
-
 
 
     def _randomCrop( self , inp ):
@@ -104,6 +85,38 @@ class TrainLoader( DataLoader ):
         return img
 
 
+    def _getLabelArray( self, path ):
+        className = path.split('/')[ 0 ]
+        label = np.zeros(( self._classes ) , dtype = 'float32')
+        label[ int( self._labelsDict[ className ] ) - 1 ] = 1.0
+        return label
+
+
+    def generateRgbBatch( self ):
+        self._indexMutex.acquire()
+        batchPaths = self._selectBatchPaths()
+        self._indexMutex.release()
+        batch  = list()
+        labels = list()
+        for batchPath in batchPaths:
+            fullPath  = os.path.join( self.rootPath, batchPath )
+            video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
+
+            frameId = np.random.randint( len( video ) )
+            
+            frame = np.asarray( Image.open( video[ frameId ] ),
+                                dtype = 'float32' )
+            frame = frame / 255.0
+            frame = self._randomCrop( frame )
+            frame = self._randomFlip( frame )
+
+            batch.append( frame )
+            labels.append( self._getLabelArray( batchPath ) )
+
+        batch  = np.array( batch, dtype = 'float32' )
+        labels = np.array( labels )
+        return ( batch , labels )
+
 
     def stackFlow( self, video, start ):
         stack = super( TrainLoader, self ).stackFlow( video, start )
@@ -112,9 +125,9 @@ class TrainLoader( DataLoader ):
         return stack
 
 
-    def randomBatchFlow( self ):
+    def generateFlowBatch( self ):
         self._indexMutex.acquire()
-        batchPaths = self._randomBatchPaths()
+        batchPaths = self._selectBatchPaths()
         self._indexMutex.release()
         batch  = list()
         labels = list()
@@ -124,11 +137,7 @@ class TrainLoader( DataLoader ):
 
             start = np.random.randint( len( video[ 'u' ] ) - self._timesteps )
             batch.append( self.stackFlow( video, start ) )
-
-            className = batchPath.split('/')[ 0 ]
-            label = np.zeros(( self._classes ) , dtype = 'float32')
-            label[ int( self._labelsDict[ className ] ) - 1 ] = 1.0
-            labels.append( label )
+            labels.append( self._getLabelArray( batchPath ) )
 
         batch = np.array( batch, dtype = 'float32' )
         batch = np.reshape( batch , [ len( batchPaths ), 
@@ -142,7 +151,10 @@ class TrainLoader( DataLoader ):
 
     def _batchThread( self ):
         while self._produce:
-            batchTuple = self.randomBatchFlow()
+            if self._stream == 'temporal':
+                batchTuple = self.generateFlowBatch()
+            elif self._stream == 'spatial':
+                batchTuple = self.generateRgbBatch()
             self._batchQueue.put( batchTuple )
 
 
@@ -153,10 +165,11 @@ class TrainLoader( DataLoader ):
 
 if __name__ == '__main__':
     #rootPath    = '/lustre/cranieri/UCF-101_flow'
-    rootPath    = '/home/cmranieri/datasets/UCF-101_flow'
+    rootPath    = '/home/cmranieri/datasets/UCF-101_rgb'
     filenames   = np.load( '../splits/ucf101/trainlist01.npy' )
     lblFilename = '../classInd.txt'
-    with TrainLoader( rootPath, filenames, lblFilename, numThreads = 1 ) as trainLoader:
+    with TrainLoader( rootPath, filenames, lblFilename, numThreads = 1,
+                      stream = 'spatial' ) as trainLoader:
         for i in range( 1 ):
             t = time.time()
             batch, labels =  trainLoader.getBatch()

@@ -20,6 +20,7 @@ class TestLoader( DataLoader.DataLoader ):
                   numThreads = 1,
                   maxsize=10,
                   numSegments = 25,
+                  stream = 'temporal',
                   tshape = False ):
         super( TestLoader , self ).__init__( rootPath,
                                              filenames,
@@ -32,6 +33,7 @@ class TestLoader( DataLoader.DataLoader ):
                                              ranges = True,
                                              tshape = tshape )
         self._numSegments = numSegments
+        self._stream = stream
         self._videoPaths  = self._getVideoPaths()
         
  
@@ -60,15 +62,24 @@ class TestLoader( DataLoader.DataLoader ):
         batch = list()
         fullPath  = os.path.join( self.rootPath, path )
         video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
-        space = len( video[ 'u' ] ) // self._numSegments
 
         for i in range( self._numSegments):
-            if i * space + self._timesteps < len( video[ 'u' ] ):
-                start = i * space
-            else:
-                start = len( video[ 'u' ] ) - 1 - self._timesteps
-            # [ b, u, v, 2, t ]
-            batch.append( self.stackFlow( video, start ) )
+            if self._stream == 'temporal':
+                space = len( video[ 'u' ] ) // self._numSegments
+                if i * space + self._timesteps < len( video[ 'u' ] ):
+                    start = i * space
+                else:
+                    start = len( video[ 'u' ] ) - 1 - self._timesteps
+                # [ b, u, v, 2, t ]
+                batch.append( self.stackFlow( video, start ) )
+
+            elif self._stream == 'spatial':
+                space = len( video ) // self._numSegments
+                frame = np.asarray( Image.open( video [ i * space ] ),
+                                    dtype = 'float32' )
+                frame = frame / 255.0
+                batch.append( frame )
+        
         batch = np.array( batch, dtype = 'float32' )
         batch = self.getCrops( batch )
         return batch
@@ -95,10 +106,11 @@ class TestLoader( DataLoader.DataLoader ):
         crops += [ inp[ :, marginY : marginY + dim,
                            marginX : marginX + dim ] ]
         crops = np.array( crops, dtype = 'float32' )
-        # [ c * b, u, v, 2t ]
-        crops = np.reshape( crops, [ 5 * self._numSegments,
-                                     self.dim, self.dim,
-                                     2 * self._timesteps ] )
+        if self._stream == 'temporal':
+            # [ c * b, u, v, 2t ]
+            crops = np.reshape( crops, [ 5 * self._numSegments,
+                                         self.dim, self.dim,
+                                         2 * self._timesteps ] )
         return crops
 
 
@@ -160,17 +172,18 @@ class TestLoader( DataLoader.DataLoader ):
 
 
 if __name__ == '__main__':
-    rootPath = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
+    rootPath = '/home/cmranieri/datasets/UCF-101_rgb'
     # rootPath = '/lustre/cranieri/UCF-101_flow'
     filenames   = np.load( '../splits/trainlist011.npy' )
     lblFilename = '../classInd.txt'
     
-    with TestLoader( rootPath, filenames, lblFilename, numThreads=2 ) as testLoader:
+    with TestLoader( rootPath, filenames, lblFilename, numThreads=2,
+                     stream = 'spatial' ) as testLoader:
          for i in range(100):
         # while not testLoader.endOfData():
             t = time.time()
             batch, labels = testLoader.getBatch()
-            testLoader.toFiles( batch )
+            #testLoader.toFiles( batch )
             # batch, labels =  testLoader.nextVideoBatch()
             # batch =  testLoader.getFlippedBatch( batch )
             print( testLoader._index, 'Total time:' , time.time() - t )
