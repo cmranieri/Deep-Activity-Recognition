@@ -45,7 +45,7 @@ class NetworkBase:
         self._lblFilename = lblFilename
         self._trainFilenames = np.load( os.path.join( splitsDir, 'trainlist' + split_n + '.npy' ) )
         self._testFilenames  = np.load( os.path.join( splitsDir, 'testlist'  + split_n + '.npy' ) )
-        self._resultsPath = '../../results'
+        self._resultsPath = '../results'
         self._step = 0
 
         self.loadModel( restoreModel , tl )
@@ -56,12 +56,15 @@ class NetworkBase:
 
 
     def _changeTop( self ):
-        model = self.model
-        model.layers.pop()
-        y = model.layers[-1].output
+        base_model = self.model
+        base_model.layers.pop()
+        y = base_model.layers[-1].output
         y = Dense( self._classes, activation='softmax' )( y )
-        x = model.input
-        model = Model( x , y )
+        model = Model( inputs = base_model.input , outputs = y )
+
+        for layer in base_model.layers:
+            layer.trainabe = False
+
         optimizer  = SGD( lr = 1e-3,
                           momentum = 0.9,
                           nesterov = True,
