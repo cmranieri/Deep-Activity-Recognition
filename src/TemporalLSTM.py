@@ -27,7 +27,10 @@ class TemporalLSTM( NetworkBase ):
                   maxsizeTrain = 4,
                   maxsizeTest  = 4,
                   lblFilename  = '../classInd.txt',
-                  splitsDir    = '../splits/ucf101' ):
+                  splitsDir    = '../splits/ucf101',
+                  split_n      = '01',
+                  tl           = False,
+                  tlSuffix     = '' ):
         super( TemporalLSTM , self ).__init__( restoreModel = restoreModel,
                                                dim = dim,
                                                timesteps    = timesteps,
@@ -40,7 +43,10 @@ class TemporalLSTM( NetworkBase ):
                                                maxsizeTrain = maxsizeTrain,
                                                maxsizeTest  = maxsizeTest,
                                                lblFilename  = lblFilename,
-                                               splitsDir    = splitsDir )
+                                               splitsDir    = splitsDir,
+                                               split_n      = split_n,
+                                               tl           = tl,
+                                               tlSuffix     = tlSuffix)
 
 
     def _defineNetwork( self ):
