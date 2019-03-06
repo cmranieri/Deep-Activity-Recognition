@@ -19,7 +19,7 @@ class TrainLoader( DataLoader ):
                   timesteps = 10,
                   numThreads = 1,
                   maxsize = 10,
-                  batchSize = 32,
+                  batchSize = 16,
                   stream = 'temporal',
                   tshape = False ):
         
@@ -165,12 +165,12 @@ class TrainLoader( DataLoader ):
 
 if __name__ == '__main__':
     #rootPath    = '/lustre/cranieri/UCF-101_flow'
-    rootPath    = '/home/olorin/Documents/caetano/datasets/UCF-101_flow'
+    rootPath    = '/home/cmranieri/datasets/UCF-101_flow'
     filenames   = np.load( '../splits/ucf101/trainlist01.npy' )
     lblFilename = '../classInd.txt'
     with TrainLoader( rootPath, filenames, lblFilename, numThreads = 1,
                       stream = 'temporal' ) as trainLoader:
-        for i in range( 1 ):
+        for i in range( 10 ):
             t = time.time()
             batch, labels =  trainLoader.getBatch()
             print( i , batch.shape , labels.shape )

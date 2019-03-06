@@ -111,6 +111,10 @@ class TestLoader( DataLoader.DataLoader ):
             crops = np.reshape( crops, [ 5 * self._numSegments,
                                          self.dim, self.dim,
                                          2 * self._timesteps ] )
+        elif self._stream == 'spatial':
+            # [ c * b, h, v, 3 ]
+            crops = np.reshape( crops, [ 5 * self._numSegments,
+                                         self.dim, self.dim, 3 ] )
         return crops
 
 

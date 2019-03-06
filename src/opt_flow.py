@@ -7,6 +7,7 @@ from io import BytesIO
 import pickle
 
 algorithm = 'tvl1'
+outsize   = (256,454)
 
 def make_dir( path ):
     if not os.path.exists( path ):
@@ -29,12 +30,14 @@ def prep_flow_frame( u, v ):
     v = cv2.normalize( v, v, 0, 255, cv2.NORM_MINMAX )
     u = u.astype( 'uint8' )
     v = v.astype( 'uint8' )
+    u = cv2.resize( u, outsize, interpolation=cv2.INTER_AREA )
+    v = cv2.resize( v, outsize, interpolation=cv2.INTER_AREA )
     img_u = Image.fromarray( u )
     img_v = Image.fromarray( v )
     u_out = BytesIO()
     v_out = BytesIO()
-    img_u.save( u_out , format='jpeg' , quality=90 )
-    img_v.save( v_out , format='jpeg' , quality=90 )
+    img_u.save( u_out , format='jpeg' , quality=100 )
+    img_v.save( v_out , format='jpeg' , quality=100 )
     return u_out, v_out
 
 
@@ -115,8 +118,8 @@ def process_ucf101():
 def process_multimodal():
     input_dir  = '/home/cranieri/datasets/multimodal_dataset/video'
     output_dir = '/home/cranieri/datasets/multimodal_dataset_flow'
-    trainlist = list(np.load( '../splits/multimodal_dataset/trainlist.npy' ))
-    testlist = list(np.load( '../splits/multimodal_dataset/testlist.npy' ))
+    trainlist = list(np.load( '../splits/multimodal_dataset/trainlist01.npy' ))
+    testlist = list(np.load( '../splits/multimodal_dataset/testlist01.npy' ))
 
     for filename in trainlist+testlist:
         t = time.time()

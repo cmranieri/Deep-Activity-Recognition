@@ -6,6 +6,7 @@ from PIL import Image
 from io import BytesIO
 import pickle
 
+outsize   = (256,454)
 
 def make_dir( path ):
     if not os.path.exists( path ):
@@ -20,6 +21,7 @@ def store_video_rgb( frames_list,
 
 
 def prep_jpeg_frame( frame ):
+    frame = cv2.resize( frame, outsize, interpolation=cv2.INTER_AREA )
     frame = frame[ ... , [ 2 , 1 , 0 ] ]
     img_frame = Image.fromarray( frame )
     out = BytesIO()
@@ -82,7 +84,7 @@ def process_multimodal():
     
 
 if __name__ == '__main__':
-    process_ucf101()
-    #process_multimodal()
+    #process_ucf101()
+    process_multimodal()
 
 

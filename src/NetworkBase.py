@@ -68,7 +68,7 @@ class NetworkBase:
         optimizer  = SGD( lr = 1e-3,
                           momentum = 0.9,
                           nesterov = True,
-                          decay = 1e-4 )
+                          decay = 1e-5 )
         model.compile( loss = 'categorical_crossentropy',
                        optimizer = optimizer,
                        metrics = [ 'acc' ] )

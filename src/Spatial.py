@@ -18,15 +18,13 @@ class Spatial( NetworkBase ):
                   batchSize = 32,
                   rootPath  = '/home/cmranieri/datasets/UCF-101_rgb',
                   modelPath =  '/home/cmranieri/models/ucf101',
-                  modelName = 'model-ucf101-rgb',
+                  modelName = 'model-ucf101-spatial',
                   numThreads = 2,
-                  maxsizeTrain = 4,
-                  maxsizeTest  = 4,
+                  maxsizeTrain = 16,
+                  maxsizeTest  = 16,
                   lblFilename  = '../classInd.txt',
                   splitsDir    = '../splits/ucf101',
-                  split_n = '01',
-                  tl = False,
-                  tlSuffix = '' ):
+                  split_n = '01' ):
 
         super( Spatial , self ).__init__( restoreModel = restoreModel,
                                           dim          = dim,
@@ -42,8 +40,6 @@ class Spatial( NetworkBase ):
                                           lblFilename  = lblFilename,
                                           splitsDir    = splitsDir,
                                           split_n      = split_n,
-                                          tl           = tl,
-                                          tlSuffix     = tlSuffix,
                                           stream       = 'spatial' )
 
 
@@ -73,6 +69,6 @@ class Spatial( NetworkBase ):
 if __name__ == '__main__':
     os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
     
-    network = Spatial( restoreModel = False )
+    network = Spatial( restoreModel = True )
     #network.evaluate()
-    network.train( epochs = 100000 )
+    network.train( epochs = 40000 )
