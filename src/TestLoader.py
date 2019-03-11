@@ -11,7 +11,7 @@ import DataLoader
 class TestLoader( DataLoader.DataLoader ):
 
     def __init__( self,
-                  rootPath,
+                  dataDir,
                   filenames,
                   lblFilename,
                   classes = 101,
@@ -21,8 +21,8 @@ class TestLoader( DataLoader.DataLoader ):
                   maxsize=10,
                   numSegments = 25,
                   stream = 'temporal',
-                  tshape = False ):
-        super( TestLoader , self ).__init__( rootPath,
+                  smallBatches = 1 ):
+        super( TestLoader , self ).__init__( dataDir,
                                              filenames,
                                              lblFilename,
                                              classes,
@@ -30,10 +30,10 @@ class TestLoader( DataLoader.DataLoader ):
                                              timesteps, 
                                              numThreads,
                                              maxsize,
-                                             ranges = True,
-                                             tshape = tshape )
+                                             ranges = True )
         self._numSegments = numSegments
         self._stream = stream
+        self._smallBatches = smallBatches
         self._videoPaths  = self._getVideoPaths()
         
  
@@ -60,7 +60,7 @@ class TestLoader( DataLoader.DataLoader ):
 
     def getVideoBatch( self, path, flip = False ):
         batch = list()
-        fullPath  = os.path.join( self.rootPath, path )
+        fullPath  = os.path.join( self.dataDir, path )
         video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
 
         for i in range( self._numSegments):
@@ -89,7 +89,7 @@ class TestLoader( DataLoader.DataLoader ):
         videoPaths = list()
         for filename in self.filenames:
             name = filename.split('.')[0] 
-            videoPaths += [ os.path.join( self.rootPath, name ) ]
+            videoPaths += [ os.path.join( self.dataDir, name ) ]
         return videoPaths
 
 
@@ -152,11 +152,17 @@ class TestLoader( DataLoader.DataLoader ):
     def _batchThread( self ):
         while True:
             batchTuple1 = self.nextVideoBatch()
-            if batchTuple1 is not None:
-                batchTuple2 = self.getFlippedBatch( batchTuple1 )
-                self._batchQueue.put( batchTuple1 )
-                self._batchQueue.put( batchTuple2 )
-            else: break
+            if batchTuple1 is None: break
+            batchTuple2 = self.getFlippedBatch( batchTuple1 )
+
+            batchStep = len( batchTuple1[0] ) // self._smallBatches
+            for i in range( self._smallBatches ):
+                sBatchTuple1 = ( batchTuple1[0][ i * batchStep : (i+1) * batchStep ],
+                                 batchTuple1[1][ i * batchStep : (i+1) * batchStep ] )
+                sBatchTuple2 = ( batchTuple2[0][ i * batchStep : (i+1) * batchStep ],
+                                 batchTuple2[1][ i * batchStep : (i+1) * batchStep ] )
+                self._batchQueue.put( sBatchTuple1 )
+                self._batchQueue.put( sBatchTuple2 )
 
     
     def toFiles( self, batch, prefix='' ):
@@ -176,15 +182,16 @@ class TestLoader( DataLoader.DataLoader ):
 
 
 if __name__ == '__main__':
-    rootPath = '/home/cmranieri/datasets/UCF-101_rgb'
-    # rootPath = '/lustre/cranieri/UCF-101_flow'
+    dataDir = '/home/cmranieri/datasets/UCF-101_flow'
+    # dataDir = '/lustre/cranieri/UCF-101_flow'
     filenames   = np.load( '../splits/trainlist011.npy' )
     lblFilename = '../classInd.txt'
     
-    with TestLoader( rootPath, filenames, lblFilename, numThreads=2,
-                     stream = 'spatial' ) as testLoader:
+    with TestLoader( dataDir, filenames, lblFilename, numThreads=2,
+                     stream = 'temporal',
+                     numSegments = 25, smallBatches = 5 ) as testLoader:
          for i in range(100):
-        # while not testLoader.endOfData():
+         # while not testLoader.endOfData():
             t = time.time()
             batch, labels = testLoader.getBatch()
             #testLoader.toFiles( batch )

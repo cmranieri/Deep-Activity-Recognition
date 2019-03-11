@@ -16,31 +16,37 @@ class Spatial( NetworkBase ):
                   dim = 224,
                   classes   = 101,
                   batchSize = 32,
-                  rootPath  = '/home/cmranieri/datasets/UCF-101_rgb',
-                  modelPath =  '/home/cmranieri/models/ucf101',
+                  dataDir  = '/home/cmranieri/datasets/UCF-101_rgb',
+                  modelDir =  '/home/cmranieri/models/ucf101',
                   modelName = 'model-ucf101-spatial',
                   numThreads = 2,
                   maxsizeTrain = 16,
                   maxsizeTest  = 16,
+                  numSegments  = 25,
+                  smallBatches = 5,
                   lblFilename  = '../classInd.txt',
                   splitsDir    = '../splits/ucf101',
-                  split_n = '01' ):
+                  split_n      = '01',
+                  storeTests   = False ):
 
         super( Spatial , self ).__init__( restoreModel = restoreModel,
                                           dim          = dim,
                                           timesteps    = None,
                                           classes      = classes,
                                           batchSize    = batchSize,
-                                          rootPath     = rootPath,
-                                          modelPath    = modelPath,
+                                          dataDir      = dataDir,
+                                          modelDir     = modelDir,
                                           modelName    = modelName,
                                           numThreads   = numThreads,
                                           maxsizeTrain = maxsizeTrain,
                                           maxsizeTest  = maxsizeTest,
+                                          numSegments  = numSegments,
+                                          smallBatches = smallBatches,
                                           lblFilename  = lblFilename,
                                           splitsDir    = splitsDir,
                                           split_n      = split_n,
-                                          stream       = 'spatial' )
+                                          stream       = 'spatial',
+                                          storeTests   = storeTests )
 
 
 
@@ -58,7 +64,7 @@ class Spatial( NetworkBase ):
                 layer.trainable = False
 
         optimizer = SGD( lr = 1e-2, momentum = 0.9,
-                         nesterov=True, decay = 1e-4 )
+                         nesterov=True, decay = 1e-5 )
         model.compile( loss = 'categorical_crossentropy',
                        optimizer = optimizer,
                        metrics   = [ 'acc' ] ) 

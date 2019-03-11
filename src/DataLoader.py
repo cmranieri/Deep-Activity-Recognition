@@ -10,7 +10,7 @@ import queue
 class DataLoader:
 
     def __init__( self,
-                  rootPath,
+                  dataDir,
                   filenames,
                   lblFilename,
                   classes = 101,
@@ -19,8 +19,8 @@ class DataLoader:
                   numThreads = 1,
                   maxsize = 10,
                   ranges = True,
-                  tshape = False):
-        self.rootPath     = rootPath
+                  tshape = True ):
+        self.dataDir     = dataDir
         self.filenames    = filenames
         self._classes     = classes
         self.dim          = dim

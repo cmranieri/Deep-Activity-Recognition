@@ -11,7 +11,7 @@ from DataLoader import DataLoader
 class TrainLoader( DataLoader ):
 
     def __init__( self,
-                  rootPath,
+                  dataDir,
                   filenames,
                   lblFilename,
                   classes = 101,
@@ -20,10 +20,9 @@ class TrainLoader( DataLoader ):
                   numThreads = 1,
                   maxsize = 10,
                   batchSize = 16,
-                  stream = 'temporal',
-                  tshape = False ):
+                  stream = 'temporal' ):
         
-        super( TrainLoader , self ).__init__( rootPath,
+        super( TrainLoader , self ).__init__( dataDir,
                                               filenames,
                                               lblFilename,
                                               classes,
@@ -31,8 +30,7 @@ class TrainLoader( DataLoader ):
                                               timesteps,
                                               numThreads,
                                               maxsize,
-                                              ranges = True,
-                                              tshape = tshape)
+                                              ranges = True )
         self.setBatchSize( batchSize )
         self._stream = stream
         self._flip   = False
@@ -99,7 +97,7 @@ class TrainLoader( DataLoader ):
         batch  = list()
         labels = list()
         for batchPath in batchPaths:
-            fullPath  = os.path.join( self.rootPath, batchPath )
+            fullPath  = os.path.join( self.dataDir, batchPath )
             video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
 
             frameId = np.random.randint( len( video ) )
@@ -132,7 +130,7 @@ class TrainLoader( DataLoader ):
         batch  = list()
         labels = list()
         for batchPath in batchPaths:
-            fullPath  = os.path.join( self.rootPath, batchPath )
+            fullPath  = os.path.join( self.dataDir, batchPath )
             video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
 
             start = np.random.randint( len( video[ 'u' ] ) - self._timesteps )
@@ -164,11 +162,11 @@ class TrainLoader( DataLoader ):
 
 
 if __name__ == '__main__':
-    #rootPath    = '/lustre/cranieri/UCF-101_flow'
-    rootPath    = '/home/cmranieri/datasets/UCF-101_flow'
+    #dataDir    = '/lustre/cranieri/UCF-101_flow'
+    dataDir     = '/home/cmranieri/datasets/UCF-101_flow'
     filenames   = np.load( '../splits/ucf101/trainlist01.npy' )
     lblFilename = '../classInd.txt'
-    with TrainLoader( rootPath, filenames, lblFilename, numThreads = 1,
+    with TrainLoader( dataDir, filenames, lblFilename, numThreads = 1,
                       stream = 'temporal' ) as trainLoader:
         for i in range( 10 ):
             t = time.time()

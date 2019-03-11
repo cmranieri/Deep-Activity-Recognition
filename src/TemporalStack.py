@@ -17,34 +17,40 @@ class TemporalStack( NetworkBase ):
                   timesteps = 8,
                   classes   = 101,
                   batchSize = 16,
-                  rootPath  = '/home/cmranieri/datasets/UCF-101_flow',
-                  modelPath =  '/home/cmranieri/models/ucf101',
-                  modelName = 'model-stack',
+                  dataDir  = '/home/cmranieri/datasets/UCF-101_flow',
+                  modelDir =  '/home/cmranieri/models/ucf101',
+                  modelName = 'model-norm',
                   numThreads = 2,
                   maxsizeTrain = 4,
                   maxsizeTest  = 4,
+                  numSegments  = 25,
+                  smallBatches = 5,
                   lblFilename  = '../classInd.txt',
                   splitsDir    = '../splits/ucf101',
                   split_n = '01',
                   tl = False,
-                  tlSuffix = '' ):
+                  tlSuffix = '',
+                  storeTests = False ):
 
         super( TemporalStack , self ).__init__( restoreModel = restoreModel,
                                                 dim          = dim,
                                                 timesteps    = timesteps,
                                                 classes      = classes,
                                                 batchSize    = batchSize,
-                                                rootPath     = rootPath,
-                                                modelPath    = modelPath,
+                                                dataDir      = dataDir,
+                                                modelDir     = modelDir,
                                                 modelName    = modelName,
                                                 numThreads   = numThreads,
                                                 maxsizeTrain = maxsizeTrain,
                                                 maxsizeTest  = maxsizeTest,
+                                                numSegments  = numSegments,
+                                                smallBatches = smallBatches,
                                                 lblFilename  = lblFilename,
                                                 splitsDir    = splitsDir,
                                                 split_n      = split_n,
                                                 tl           = tl,
-                                                tlSuffix     = tlSuffix )
+                                                tlSuffix     = tlSuffix,
+                                                storeTests   = storeTests )
 
 
 
@@ -66,6 +72,7 @@ class TemporalStack( NetworkBase ):
 if __name__ == '__main__':
     os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
     
-    network = TemporalStack( restoreModel = False )
-    #network.evaluate()
-    network.train( epochs = 600000 )
+    network = TemporalStack( restoreModel = True,
+                             storeTests   = True )
+    network.evaluate()
+    #network.train( epochs = 600000 )
