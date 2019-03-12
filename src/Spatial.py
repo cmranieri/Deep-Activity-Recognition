@@ -73,8 +73,9 @@ class Spatial( NetworkBase ):
 
 
 if __name__ == '__main__':
-    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
+    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = Spatial( restoreModel = True )
-    #network.evaluate()
-    network.train( epochs = 40000 )
+    network = Spatial( restoreModel = True,
+                       storeTests   = True )
+    network.evaluate()
+    #network.train( epochs = 40000 )

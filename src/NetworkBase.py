@@ -123,7 +123,6 @@ class NetworkBase:
                            dim          = self._dim,
                            numSegments  = self._numSegments,
                            timesteps    = self._timesteps,
-                           numThreads   = self._numThreads,
                            maxsize      = self._maxsizeTest,
                            stream       = self._stream,
                            smallBatches = self._smallBatches)
@@ -218,17 +217,16 @@ class NetworkBase:
                 if not (i+1) % (self._smallBatches * 2):
                     mean = np.mean( np.array( video_outs ), 0 )
                     video_outs = list()
-                    # check whether prediction is correct
+                    # check whether the prediction is correct
                     # assumes the label is the same for all small batches
                     correct_prediction = np.equal( np.argmax( mean ),
                                                    np.argmax( testLabels[0] ) )
-                    if correct_prediction: test_acc_list.append( 1.0 )
-                    else: test_acc_list.append( 0.0 )
+                    test_acc_list.append( correct_prediction )
 
                     # store outputs
                     if self._storeTests:
-                        preds_list  += list( mean )
-                        labels_list += list( testLabels[0] )
+                        preds_list.append( mean )
+                        labels_list.append( testLabels[0] )
                 i += 1
             
         test_accuracy = np.mean( test_acc_list )
@@ -238,8 +236,8 @@ class NetworkBase:
                                       str( test_accuracy ) + '\n' )
         if self._storeTests:
             with open( self._outputsPath, 'wb' ) as f:
-                pickle.dump( dict( { 'predictions': preds_list,
-                                     'labels' : labels_list } ), f )
+                pickle.dump( dict( { 'predictions': np.array( preds_list ),
+                                     'labels'     : np.array( labels_list ) } ), f )
         return test_accuracy
         
 

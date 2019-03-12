@@ -109,6 +109,7 @@ class TemporalTCN( NetworkBase ):
 if __name__ == '__main__':
     os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalTCN( restoreModel = True )
-    #network.evaluate()
-    network.train( epochs = 600000 )
+    network = TemporalTCN( restoreModel = True,
+                           storeTests   = True )
+    network.evaluate()
+    #network.train( epochs = 600000 )

@@ -9,8 +9,8 @@ import cv2
 outsize   = (256,454)
 inpdir    = '/home/cmranieri/datasets/UCF-101_rgb'
 outdir    = '/home/cmranieri/datasets/UCF-101_rgb2'
-trainlist = list(np.load( '../splits/ucf101/trainlist01.npy' ))
-testlist  = list(np.load( '../splits/ucf101/testlist01.npy' ))
+trainlist = list(np.load( '../../splits/ucf101/trainlist01.npy' ))
+testlist  = list(np.load( '../../splits/ucf101/testlist01.npy' ))
 
 
 def make_dir( path ):

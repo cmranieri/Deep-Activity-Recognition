@@ -17,23 +17,23 @@ class TestLoader( DataLoader.DataLoader ):
                   classes = 101,
                   dim = 224,
                   timesteps = 10,
-                  numThreads = 1,
                   maxsize=10,
                   numSegments = 25,
                   stream = 'temporal',
                   smallBatches = 1 ):
-        super( TestLoader , self ).__init__( dataDir,
-                                             filenames,
-                                             lblFilename,
-                                             classes,
-                                             dim,
-                                             timesteps, 
-                                             numThreads,
-                                             maxsize,
-                                             ranges = True )
+        super( TestLoader , self ).__init__( dataDir     = dataDir,
+                                             filenames   = filenames,
+                                             lblFilename = lblFilename,
+                                             classes     = classes,
+                                             dim         = dim,
+                                             timesteps   = timesteps,
+                                             numThreads  = 1,
+                                             maxsize     = maxsize,
+                                             ranges      = True )
         self._numSegments = numSegments
         self._stream = stream
         self._smallBatches = smallBatches
+        self._smallBatchesMutex = Lock()
         self._videoPaths  = self._getVideoPaths()
         
  
@@ -156,6 +156,7 @@ class TestLoader( DataLoader.DataLoader ):
             batchTuple2 = self.getFlippedBatch( batchTuple1 )
 
             batchStep = len( batchTuple1[0] ) // self._smallBatches
+            self._smallBatchesMutex.acquire()
             for i in range( self._smallBatches ):
                 sBatchTuple1 = ( batchTuple1[0][ i * batchStep : (i+1) * batchStep ],
                                  batchTuple1[1][ i * batchStep : (i+1) * batchStep ] )
@@ -163,6 +164,7 @@ class TestLoader( DataLoader.DataLoader ):
                                  batchTuple2[1][ i * batchStep : (i+1) * batchStep ] )
                 self._batchQueue.put( sBatchTuple1 )
                 self._batchQueue.put( sBatchTuple2 )
+            self._smallBatchesMutex.release()
 
     
     def toFiles( self, batch, prefix='' ):

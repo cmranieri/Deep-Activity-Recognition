@@ -20,8 +20,8 @@ class TemporalLSTM( NetworkBase ):
                   timesteps = 8,
                   classes   = 101,
                   batchSize = 16,
-                  dataDir  = '/home/olorin/Documents/caetano/datasets/UCF-101_flow',
-                  modelDir = '/media/olorin/Documentos/caetano/ucf101/models',
+                  dataDir  = '/home/cmranieri/datasets/UCF-101_flow',
+                  modelDir = '/home/cmranieri/models/ucf101',
                   modelName = 'model-lstm-final',
                   numThreads = 2,
                   maxsizeTrain = 4,
@@ -103,8 +103,9 @@ class TemporalLSTM( NetworkBase ):
 
 
 if __name__ == '__main__':
-    #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
+    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalLSTM( restoreModel = False )
-    #network.evaluate()
-    network.train( epochs = 800000 )
+    network = TemporalLSTM( restoreModel = True,
+                            storeTests   = True)
+    network.evaluate()
+    #network.train( epochs = 800000 )

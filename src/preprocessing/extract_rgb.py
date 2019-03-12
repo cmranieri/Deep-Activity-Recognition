@@ -62,8 +62,8 @@ def process_video( input_dir , output_dir , raw_filename ):
 def process_ucf101():
     input_dir  = '/home/cmranieri/datasets/UCF-101'
     output_dir = '/home/cmranieri/datasets/UCF-101_rgb'
-    trainlist = list(np.load( '../splits/ucf101/trainlist01.npy' ))
-    testlist = list(np.load( '../splits/ucf101/testlist01.npy' ))
+    trainlist = list(np.load( '../../splits/ucf101/trainlist01.npy' ))
+    testlist = list(np.load( '../../splits/ucf101/testlist01.npy' ))
 
     for filename in trainlist+testlist:
         t = time.time()
@@ -74,8 +74,8 @@ def process_ucf101():
 def process_multimodal():
     input_dir  = '/home/cmranieri/datasets/multimodal_dataset/video'
     output_dir = '/home/cmranieri/datasets/multimodal_dataset_rgb'
-    trainlist = list(np.load( '../splits/multimodal_dataset/trainlist01.npy' ))
-    testlist = list(np.load( '../splits/multimodal_dataset/testlist01.npy' ))
+    trainlist = list(np.load( '../../splits/multimodal_dataset/trainlist01.npy' ))
+    testlist = list(np.load( '../../splits/multimodal_dataset/testlist01.npy' ))
 
     for filename in trainlist+testlist:
         t = time.time()
