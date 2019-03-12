@@ -7,26 +7,28 @@ from PIL import Image
 from threading import Thread, Lock
 import queue
 
-class DataLoader:
+class LoaderBase:
 
     def __init__( self,
                   dataDir,
                   filenames,
                   lblFilename,
-                  classes = 101,
-                  dim = 224,
-                  timesteps = 10,
+                  classes    = 101,
+                  dim        = 224,
+                  timesteps  = 10,
                   numThreads = 1,
-                  maxsize = 10,
-                  ranges = True,
-                  tshape = True ):
-        self.dataDir     = dataDir
+                  maxsize    = 10,
+                  normalize  = False,
+                  ranges     = True,
+                  tshape     = True ):
+        self.dataDir      = dataDir
         self.filenames    = filenames
         self._classes     = classes
         self.dim          = dim
         self._timesteps   = timesteps
         self._numThreads  = numThreads
         self._length      = filenames.shape[ 0 ]
+        self._normalize   = normalize
         self._ranges      = ranges
         self._tshape      = tshape
         
@@ -35,7 +37,6 @@ class DataLoader:
 
         self._produce = True
         self._batchQueue = queue.Queue( maxsize = maxsize )
-        self._indexMutex = Lock()
         self._threadsList = list()
  
 
@@ -75,8 +76,9 @@ class DataLoader:
             cv2.normalize( u, u, u_range[0], u_range[1], cv2.NORM_MINMAX )
             cv2.normalize( v, v, v_range[0], v_range[1], cv2.NORM_MINMAX )
 
-        #u = u / max( np.max( np.abs( u ) ) , 0.0001 ) 
-        #v = v / max( np.max( np.abs( v ) ) , 0.0001 ) 
+        if self._normalize:
+            u = u / max( np.max( np.abs( u ) ) , 1e-4 ) 
+            v = v / max( np.max( np.abs( v ) ) , 1e-4 ) 
         return u, v
 
 

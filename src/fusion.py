@@ -1,10 +1,10 @@
 import numpy as np
 import pickle
 
-a = 2
-b = 1
-out_a = pickle.load( open ('../outputs/model-norm.pickle', 'rb') )
-out_b = pickle.load( open ('../outputs/model-ucf101-spatial.pickle', 'rb') )
+a = 1
+b = 2
+out_a = pickle.load( open ('../outputs/model-ucf101-spatial.pickle', 'rb') )
+out_b = pickle.load( open ('../outputs/model-tcn-final.pickle', 'rb') )
 correct_list = list()
 
 for i in range( len( out_a['labels'] ) ):

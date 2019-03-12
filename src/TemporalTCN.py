@@ -16,45 +16,33 @@ from tcn import TCN
 class TemporalTCN( NetworkBase ):
     
     def __init__( self,
-                  restoreModel,
-                  dim = 224,
-                  timesteps = 8,
-                  classes   = 101,
-                  batchSize = 16,
-                  dataDir  = '/home/cmranieri/datasets/UCF-101_flow',
-                  modelDir = '/home/cmranieri/models/ucf101',
-                  modelName = 'model-tcn-final',
-                  numThreads = 2,
-                  maxsizeTrain = 4,
-                  maxsizeTest  = 4,
-                  numSegments  = 25,
-                  smallBatches = 5,
+                  restoreModel = False,
+                  dim          = 224,
+                  timesteps    = 8,
+                  classes      = 101,
+                  dataDir      = '/home/cmranieri/datasets/UCF-101_flow',
+                  modelDir     = '/home/cmranieri/models/ucf101',
+                  modelName    = 'model-tcn-final',
                   lblFilename  = '../classInd.txt',
                   splitsDir    = '../splits/ucf101',
-                  split_n = '01',
-                  tl = False,
-                  tlSuffix = '',
-                  storeTests = False ):
+                  split_n      = '01',
+                  tl           = False,
+                  tlSuffix     = '',
+                  stream       = 'temporal' ):
 
         super( TemporalTCN , self ).__init__( restoreModel = restoreModel,
-                                           dim          = dim,
-                                           timesteps    = timesteps,
-                                           classes      = classes,
-                                           batchSize    = batchSize,
-                                           dataDir      = dataDir,
-                                           modelDir     = modelDir,
-                                           modelName    = modelName,
-                                           numThreads   = numThreads,
-                                           maxsizeTrain = maxsizeTrain,
-                                           maxsizeTest  = maxsizeTest,
-                                           numSegments  = numSegments,
-                                           smallBatches = smallBatches,
-                                           lblFilename  = lblFilename,
-                                           splitsDir    = splitsDir,
-                                           split_n      = split_n,
-                                           tl           = tl,
-                                           tlSuffix     = tlSuffix,
-                                           storeTests   = storeTests )
+                                              dim          = dim,
+                                              timesteps    = timesteps,
+                                              classes      = classes,
+                                              dataDir      = dataDir,
+                                              modelDir     = modelDir,
+                                              modelName    = modelName,
+                                              lblFilename  = lblFilename,
+                                              splitsDir    = splitsDir,
+                                              split_n      = split_n,
+                                              tl           = tl,
+                                              tlSuffix     = tlSuffix,
+                                              stream       = 'temporal' )
 
 
    
@@ -109,7 +97,10 @@ class TemporalTCN( NetworkBase ):
 if __name__ == '__main__':
     os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalTCN( restoreModel = True,
-                           storeTests   = True )
-    network.evaluate()
-    #network.train( epochs = 600000 )
+    network = TemporalTCN( restoreModel = True )
+
+    network.evaluate( numSegments  = 25,
+                      smallBatches = 5,
+                      storeTests   = True )
+    #network.train( steps = 600000,
+    #               batchSize = 16 )  

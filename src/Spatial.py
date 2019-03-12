@@ -15,38 +15,25 @@ class Spatial( NetworkBase ):
                   restoreModel,
                   dim = 224,
                   classes   = 101,
-                  batchSize = 32,
                   dataDir  = '/home/cmranieri/datasets/UCF-101_rgb',
                   modelDir =  '/home/cmranieri/models/ucf101',
                   modelName = 'model-ucf101-spatial',
-                  numThreads = 2,
-                  maxsizeTrain = 16,
-                  maxsizeTest  = 16,
-                  numSegments  = 25,
-                  smallBatches = 5,
                   lblFilename  = '../classInd.txt',
                   splitsDir    = '../splits/ucf101',
                   split_n      = '01',
-                  storeTests   = False ):
+                  stream       = 'spatial' ):
 
         super( Spatial , self ).__init__( restoreModel = restoreModel,
                                           dim          = dim,
                                           timesteps    = None,
                                           classes      = classes,
-                                          batchSize    = batchSize,
                                           dataDir      = dataDir,
                                           modelDir     = modelDir,
                                           modelName    = modelName,
-                                          numThreads   = numThreads,
-                                          maxsizeTrain = maxsizeTrain,
-                                          maxsizeTest  = maxsizeTest,
-                                          numSegments  = numSegments,
-                                          smallBatches = smallBatches,
                                           lblFilename  = lblFilename,
                                           splitsDir    = splitsDir,
                                           split_n      = split_n,
-                                          stream       = 'spatial',
-                                          storeTests   = storeTests )
+                                          stream       = stream )
 
 
 
@@ -75,7 +62,10 @@ class Spatial( NetworkBase ):
 if __name__ == '__main__':
     os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = Spatial( restoreModel = True,
-                       storeTests   = True )
-    network.evaluate()
-    #network.train( epochs = 40000 )
+    network = Spatial( restoreModel = True )
+
+    network.evaluate( numSegments  = 25,
+                      smallBatches = 5,
+                      storeTests   = True )
+    #network.train( steps = 600000,
+    #               batchSize = 32 )   

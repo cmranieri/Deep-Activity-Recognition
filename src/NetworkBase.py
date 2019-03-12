@@ -18,37 +18,25 @@ class NetworkBase:
                   dim,
                   timesteps,
                   classes,
-                  batchSize,
                   dataDir,
                   modelDir,
                   modelName,
-                  numThreads,
-                  maxsizeTrain,
-                  maxsizeTest,
-                  numSegments  = 5,
-                  smallBatches = 1,
                   lblFilename  = '../classInd.txt',
                   splitsDir    = '../splits/ucf101',
                   split_n      = '01',
                   tl           = False,
                   tlSuffix     = '',
                   stream       = 'temporal',
-                  storeTests   = False ):
+                  normalize    = False ):
         self._dim = dim
         self._timesteps    = timesteps
         self._classes      = classes
-        self._batchSize    = batchSize
         self._dataDir      = dataDir
         self._modelDir     = modelDir
         self._modelName    = modelName
-        self._numThreads   = numThreads
-        self._maxsizeTrain = maxsizeTrain
-        self._maxsizeTest  = maxsizeTest
-        self._numSegments  = numSegments
-        self._smallBatches = smallBatches
         self._tlSuffix     = tlSuffix
         self._stream       = stream
-        self._storeTests   = storeTests
+        self._normalize    = normalize
         
         self._lblFilename = lblFilename
         self._trainFilenames = np.load( os.path.join( splitsDir,
@@ -103,29 +91,37 @@ class NetworkBase:
 
 
 
-    def _generateTrainLoader( self ):
-        return TrainLoader( self._dataDir,
-                            self._trainFilenames,
-                            self._lblFilename,
-                            classes    = self._classes,
-                            dim        = self._dim,
-                            batchSize  = self._batchSize,
-                            timesteps  = self._timesteps,
-                            numThreads = self._numThreads,
-                            maxsize    = self._maxsizeTrain,
-                            stream     = self._stream )
+    def _generateTrainLoader( self,
+                              batchSize,
+                              numThreads,
+                              maxsize ):
+        return TrainLoader( dataDir     = self._dataDir,
+                            filenames   = self._trainFilenames,
+                            lblFilename = self._lblFilename,
+                            classes     = self._classes,
+                            dim         = self._dim,
+                            batchSize   = batchSize,
+                            timesteps   = self._timesteps,
+                            numThreads  = numThreads,
+                            maxsize     = maxsize,
+                            stream      = self._stream,
+                            normalize   = self._normalize )
 
-    def _generateTestLoader( self ):
-        return TestLoader( self._dataDir,
-                           self._testFilenames,
-                           self._lblFilename,
+    def _generateTestLoader( self,
+                             maxsize,
+                             numSegments,
+                             smallBatches ):
+        return TestLoader( dataDir      = self._dataDir,
+                           filenames    = self._testFilenames,
+                           lblFilename  =self._lblFilename,
                            classes      = self._classes,
                            dim          = self._dim,
-                           numSegments  = self._numSegments,
+                           numSegments  = numSegments,
                            timesteps    = self._timesteps,
-                           maxsize      = self._maxsizeTest,
+                           maxsize      = maxsize,
                            stream       = self._stream,
-                           smallBatches = self._smallBatches)
+                           smallBatches = smallBatches,
+                           normalize    = self._normalize )
 
 
 
@@ -148,15 +144,20 @@ class NetworkBase:
 
 
     def train( self,
-               epochs,
+               steps,
+               batchSize         = 16,
+               numThreads        = 2,
+               maxsize           = 6,
                stepsToTrainError = 100,
-               stepsToEval = 20000 ):
+               stepsToEval       = 20000):
         train_acc_list  = list()
         train_loss_list = list()
         trainFlag = True
 
-        while self._step < epochs:
-            with self._generateTrainLoader() as trainLoader:
+        while self._step < steps:
+            with self._generateTrainLoader( batchSize  = batchSize,
+                                            numThreads = numThreads,
+                                            maxsize    = maxsize ) as trainLoader:
                 # saves and evaluates every n steps 
                 while self._step % stepsToEval or trainFlag:
                     trainFlag = False
@@ -178,8 +179,8 @@ class NetworkBase:
                         print( 'step %d, training accuracy %g, cross entropy %g'%(
                                self._step, train_accuracy, train_loss ) )
                         self._storeResult( 'train.txt', str(self._step) + ' ' +
-                                                       str(train_accuracy) + ' ' +
-                                                       str(train_loss) + '\n' )
+                                                        str(train_accuracy) + ' ' +
+                                                        str(train_loss) + '\n' )
                         train_acc_list  = list()
                         train_loss_list = list()
 
@@ -192,8 +193,11 @@ class NetworkBase:
             trainFlag = True
 
 
-
-    def evaluate( self ):
+    def evaluate( self,
+                  maxsize      = 8,
+                  numSegments  = 5,
+                  smallBatches = 1,
+                  storeTests   = False ):
         t = time.time()
         test_acc_list  = list()
         video_outs     = list()
@@ -201,8 +205,9 @@ class NetworkBase:
         labels_list    = list()
         i = 0
         print( 'Evaluating...' )
-        print(self.model.metrics_names)
-        with self._generateTestLoader() as testLoader:
+        with self._generateTestLoader( maxsize      = maxsize,
+                                       numSegments  = numSegments,
+                                       smallBatches = smallBatches ) as testLoader:
             while not testLoader.endOfData():
                 if not i % 200:
                     print( 'Evaluating video', i )
@@ -214,7 +219,7 @@ class NetworkBase:
                 # mean scores of each video
                 video_outs += list( y_ )
                
-                if not (i+1) % (self._smallBatches * 2):
+                if not (i+1) % (smallBatches * 2):
                     mean = np.mean( np.array( video_outs ), 0 )
                     video_outs = list()
                     # check whether the prediction is correct
@@ -224,7 +229,7 @@ class NetworkBase:
                     test_acc_list.append( correct_prediction )
 
                     # store outputs
-                    if self._storeTests:
+                    if storeTests:
                         preds_list.append( mean )
                         labels_list.append( testLabels[0] )
                 i += 1
@@ -234,7 +239,7 @@ class NetworkBase:
         print( 'test accuracy:', test_accuracy )
         self._storeResult( 'test.txt', str(self._step) + ' ' +
                                       str( test_accuracy ) + '\n' )
-        if self._storeTests:
+        if storeTests:
             with open( self._outputsPath, 'wb' ) as f:
                 pickle.dump( dict( { 'predictions': np.array( preds_list ),
                                      'labels'     : np.array( labels_list ) } ), f )

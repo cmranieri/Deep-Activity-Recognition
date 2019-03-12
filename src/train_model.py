@@ -1,4 +1,4 @@
-import Spatial.Spatial as Network
+from Spatial import Spatial as Network
 import os
 import sys
 
@@ -13,10 +13,9 @@ network = Network( restoreModel = True,
                    modelDir     = '/home/cmranieri/models/multimodal',
                    modelName    = 'model-multi-spatial-l' + str(split),
                    lblFilename  = '../classIndMulti.txt',
-                   numSegments  = 5,
-                   smallBatches = 1,
                    splitsDir    = '../splits/multimodal_10',
                    split_n      = split_f )
 
-#network.train( epochs = 40000 )
-network.evaluate()
+network.train( steps        = 40000,
+               numThreads   = 2 )
+#network.evaluate()

@@ -6,34 +6,37 @@ import pickle
 from PIL import Image
 from threading import Thread, Lock
 import queue
-from DataLoader import DataLoader
+from LoaderBase import LoaderBase
 
-class TrainLoader( DataLoader ):
+class TrainLoader( LoaderBase ):
 
     def __init__( self,
                   dataDir,
                   filenames,
                   lblFilename,
-                  classes = 101,
-                  dim = 224,
-                  timesteps = 10,
+                  classes    = 101,
+                  dim        = 224,
+                  timesteps  = 10,
+                  batchSize  = 16,
                   numThreads = 1,
-                  maxsize = 10,
-                  batchSize = 16,
-                  stream = 'temporal' ):
+                  maxsize    = 10,
+                  stream     = 'temporal',
+                  normalize  = False ):
         
-        super( TrainLoader , self ).__init__( dataDir,
-                                              filenames,
-                                              lblFilename,
-                                              classes,
-                                              dim,
-                                              timesteps,
-                                              numThreads,
-                                              maxsize,
-                                              ranges = True )
+        super( TrainLoader , self ).__init__( dataDir     = dataDir,
+                                              filenames   = filenames,
+                                              lblFilename = lblFilename,
+                                              classes     = classes,
+                                              dim         = dim,
+                                              timesteps   = timesteps,
+                                              numThreads  = numThreads,
+                                              maxsize     = maxsize,
+                                              normalize   = normalize,
+                                              ranges      = True )
         self.setBatchSize( batchSize )
-        self._stream = stream
-        self._flip   = False
+        self._stream     = stream
+        self._flip       = False
+        self._indexMutex = Lock()
  
 
     def _reset( self ):

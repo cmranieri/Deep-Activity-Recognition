@@ -16,43 +16,31 @@ class TemporalLSTM( NetworkBase ):
     
     def __init__( self,
                   restoreModel = True,
-                  dim = 224,
-                  timesteps = 8,
-                  classes   = 101,
-                  batchSize = 16,
-                  dataDir  = '/home/cmranieri/datasets/UCF-101_flow',
-                  modelDir = '/home/cmranieri/models/ucf101',
-                  modelName = 'model-lstm-final',
-                  numThreads = 2,
-                  maxsizeTrain = 4,
-                  maxsizeTest  = 4,
-                  numSegments  = 25,
-                  smallBatches = 5,
+                  dim          = 224,
+                  timesteps    = 8,
+                  classes      = 101,
+                  dataDir      = '/home/cmranieri/datasets/UCF-101_flow',
+                  modelDir     = '/home/cmranieri/models/ucf101',
+                  modelName    = 'model-lstm-final',
                   lblFilename  = '../classInd.txt',
                   splitsDir    = '../splits/ucf101',
                   split_n      = '01',
                   tl           = False,
                   tlSuffix     = '',
-                  storeTests   = False ):
+                  stream       = 'temporal' ):
         super( TemporalLSTM , self ).__init__( restoreModel = restoreModel,
                                                dim          = dim,
                                                timesteps    = timesteps,
                                                classes      = classes,
-                                               batchSize    = batchSize,
                                                dataDir      = dataDir,
                                                modelDir     = modelDir,
                                                modelName    = modelName,
-                                               numThreads   = numThreads,
-                                               maxsizeTrain = maxsizeTrain,
-                                               maxsizeTest  = maxsizeTest,
-                                               numSegments  = numSegments,
-                                               smallBatches = smallBatches,
                                                lblFilename  = lblFilename,
                                                splitsDir    = splitsDir,
                                                split_n      = split_n,
                                                tl           = tl,
                                                tlSuffix     = tlSuffix,
-                                               storeTests   = storeTests )
+                                               stream       = stream )
 
 
     def _defineNetwork( self ):
@@ -105,7 +93,10 @@ class TemporalLSTM( NetworkBase ):
 if __name__ == '__main__':
     os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalLSTM( restoreModel = True,
-                            storeTests   = True)
-    network.evaluate()
-    #network.train( epochs = 800000 )
+    network = TemporalLSTM( restoreModel = True )
+
+    network.evaluate( numSegments  = 25,
+                      smallBatches = 5,
+                      storeTests   = True )
+    #network.train( steps = 600000,
+    #               batchSize = 16 )
