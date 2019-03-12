@@ -30,15 +30,16 @@ class TestLoader( DataLoader.DataLoader ):
                                              numThreads  = 1,
                                              maxsize     = maxsize,
                                              ranges      = True )
-        self._numSegments = numSegments
-        self._stream = stream
-        self._smallBatches = smallBatches
+        self._numSegments       = numSegments
+        self._stream            = stream
+        self._smallBatches      = smallBatches
         self._smallBatchesMutex = Lock()
-        self._videoPaths  = self._getVideoPaths()
+        self._videoPaths        = self._getVideoPaths()
+        self._totalProcessed    = 0
         
  
     def _processedAll( self ):
-        return self._index >= self._length
+        return self._totalProcessed >= self._length
 
 
     def endOfData( self ):
@@ -164,6 +165,7 @@ class TestLoader( DataLoader.DataLoader ):
                                  batchTuple2[1][ i * batchStep : (i+1) * batchStep ] )
                 self._batchQueue.put( sBatchTuple1 )
                 self._batchQueue.put( sBatchTuple2 )
+            self._totalProcessed += self._smallBatches
             self._smallBatchesMutex.release()
 
     
