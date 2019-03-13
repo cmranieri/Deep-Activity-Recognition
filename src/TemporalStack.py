@@ -3,7 +3,9 @@ import os
 from NetworkBase import NetworkBase
 
 #from keras.applications.inception_v3 import InceptionV3 as BaseModel
-from keras.applications.mobilenet import MobileNet as BaseModel
+#from keras.applications.mobilenet import MobileNet as BaseModel
+#from keras.applications.inception_resnet_v2 import InceptionResNetV2 as BaseModel
+from keras.applications.mobilenet_v2 import MobileNetV2 as BaseModel
 from keras.layers import Input, Dense 
 from keras.optimizers import SGD
 from keras.models import Model
@@ -61,14 +63,14 @@ class TemporalStack( NetworkBase ):
 
 
 if __name__ == '__main__':
-    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
+    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
     
     network = TemporalStack( restoreModel = False,
-                             normalize = True )
+                             normalize    = True )
 
     #network.evaluate( numSegments  = 25,
     #                  smallBatches = 5,
     #                  storeTests   = True )
-    network.train( steps = 800000,
+    network.train( steps     = 800000,
                    batchSize = 16,
-                   maxsize = 16 )
+                   maxsize   = 16 )
