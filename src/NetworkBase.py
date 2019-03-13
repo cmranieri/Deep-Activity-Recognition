@@ -152,16 +152,13 @@ class NetworkBase:
                stepsToEval       = 20000):
         train_acc_list  = list()
         train_loss_list = list()
-        trainFlag = True
 
         while self._step < steps:
             with self._generateTrainLoader( batchSize  = batchSize,
                                             numThreads = numThreads,
                                             maxsize    = maxsize ) as trainLoader:
-                # saves and evaluates every n steps 
-                while self._step % stepsToEval or trainFlag:
-                    trainFlag = False
-
+                # train stepsToEval before saving and evaluating
+                for i in range( stepsToEval ):
                     batch , labels = trainLoader.getBatch()
                     batch = self._prepareBatch( batch )
                     # train the selected batch
@@ -185,12 +182,10 @@ class NetworkBase:
                         train_loss_list = list()
 
                     self._step += 1
+            # save and evaluate model
             self._saveModel()
-            
-            # evaluate model
             print( 'STEP %d: TEST'%( self._step ) )
             self.evaluate()
-            trainFlag = True
 
 
     def evaluate( self,

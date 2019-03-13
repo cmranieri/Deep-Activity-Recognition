@@ -32,7 +32,6 @@ class TemporalStack( NetworkBase ):
                                                 dim          = dim,
                                                 timesteps    = timesteps,
                                                 classes      = classes,
-                                                batchSize    = batchSize,
                                                 dataDir      = dataDir,
                                                 modelDir     = modelDir,
                                                 modelName    = modelName,
@@ -64,11 +63,12 @@ class TemporalStack( NetworkBase ):
 if __name__ == '__main__':
     os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalStack( restoreModel = True )
+    network = TemporalStack( restoreModel = False,
+                             normalize = True )
 
     #network.evaluate( numSegments  = 25,
     #                  smallBatches = 5,
     #                  storeTests   = True )
     network.train( steps = 800000,
                    batchSize = 16,
-                   normalize = True )
+                   maxsize = 16 )

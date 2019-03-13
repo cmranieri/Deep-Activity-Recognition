@@ -64,8 +64,8 @@ if __name__ == '__main__':
     
     network = Spatial( restoreModel = True )
 
-    network.evaluate( numSegments  = 25,
-                      smallBatches = 5,
-                      storeTests   = True )
+    network.evaluate( numSegments  = 5,
+                      smallBatches = 1,
+                      storeTests   = False )
     #network.train( steps = 600000,
     #               batchSize = 32 )   
