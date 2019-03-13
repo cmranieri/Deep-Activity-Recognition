@@ -187,14 +187,14 @@ class TestLoader( LoaderBase ):
 
 
 if __name__ == '__main__':
-    dataDir = '/home/cmranieri/datasets/UCF-101_rgb'
+    dataDir = '/lustre/cranieri/datasets/UCF-101_flow'
     # dataDir = '/lustre/cranieri/UCF-101_flow'
     filenames   = np.load( '../splits/trainlist011.npy' )
     lblFilename = '../classInd.txt'
     
     with TestLoader( dataDir, filenames, lblFilename,
-                     stream = 'spatial',
-                     numSegments = 25, smallBatches = 5 ) as testLoader:
+                     stream = 'temporal',
+                     numSegments = 5, smallBatches = 1 ) as testLoader:
          for i in range(100):
          # while not testLoader.endOfData():
             t = time.time()
