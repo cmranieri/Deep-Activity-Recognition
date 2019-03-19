@@ -19,8 +19,7 @@ class LoaderBase:
                   numThreads = 1,
                   maxsize    = 10,
                   normalize  = False,
-                  ranges     = True,
-                  tshape     = True ):
+                  ranges     = True ):
         self.dataDir      = dataDir
         self.filenames    = filenames
         self._classes     = classes
@@ -30,7 +29,6 @@ class LoaderBase:
         self._length      = filenames.shape[ 0 ]
         self._normalize   = normalize
         self._ranges      = ranges
-        self._tshape      = tshape
         
         self._reset()
         self._generateLabelsDict( lblFilename )
@@ -66,6 +64,14 @@ class LoaderBase:
         raise NotImplementedError( 'Please implement this method' )
 
 
+    def loadRgb( self, video, index ):
+        frame = np.asarray( Image.open( video[ index ] ),
+                            dtype = 'float32' )
+        frame = frame[ ... , [ 2 , 1 , 0 ] ]
+        frame = frame / 255.0
+        return frame
+
+
     def loadFlow( self, video, index ):
         u = np.asarray( Image.open( video ['u'] [index] ) , dtype = 'float32' )
         v = np.asarray( Image.open( video ['v'] [index] ) , dtype = 'float32' )
@@ -88,16 +94,8 @@ class LoaderBase:
             u, v = self.loadFlow( video, i )
             flowList.append( np.array( [ u , v ] ) )
         stack = np.array( flowList )
-        if self._tshape:
-            # [ u, v, 2, t ]
-            stack = np.transpose( stack , [ 2 , 3 , 1 , 0 ] )
-        else:
-            # [ u, v, t, 2 ]
-            stack = np.transpose( stack , [ 2 , 3 , 0 , 1 ] )
-            #stack = np.reshape( stack , [ stack.shape[ 0 ],
-            #                              stack.shape[ 1 ],
-            #                              self._timesteps * 2 ] )
-        #stack = stack / np.max( np.abs( stack ) )
+        # [ u, v, 2, t ]
+        stack = np.transpose( stack , [ 2 , 3 , 0 , 1 ] )
         return stack
 
 
