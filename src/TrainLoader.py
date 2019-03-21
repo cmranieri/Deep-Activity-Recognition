@@ -104,10 +104,7 @@ class TrainLoader( LoaderBase ):
             video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
 
             frameId = np.random.randint( len( video ) )
-            
-            frame = np.asarray( Image.open( video[ frameId ] ),
-                                dtype = 'float32' )
-            frame = frame / 255.0
+            frame = self.loadRgb( video, frameId )
             frame = self._randomCrop( frame )
             frame = self._randomFlip( frame )
 

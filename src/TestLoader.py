@@ -77,11 +77,7 @@ class TestLoader( LoaderBase ):
 
             elif self._stream == 'spatial':
                 space = len( video ) // self._numSegments
-                frame = np.asarray( Image.open( video [ i * space ] ),
-                                    dtype = 'float32' )
-                #frame = frame[ ... , [2,1,0] ]
-                frame = frame / 255.0
-                batch.append( frame )
+                batch.append( self.loadRgb( video, i*space ) )
         
         batch = np.array( batch, dtype = 'float32' )
         batch = self.getCrops( batch )
@@ -187,14 +183,14 @@ class TestLoader( LoaderBase ):
 
 
 if __name__ == '__main__':
-    dataDir = '/lustre/cranieri/datasets/UCF-101_flow'
+    dataDir = '/home/cmranieri/datasets/UCF-101_flow'
     # dataDir = '/lustre/cranieri/UCF-101_flow'
-    filenames   = np.load( '../splits/trainlist011.npy' )
+    filenames   = np.load( '../splits/ucf101/testlist01.npy' )
     lblFilename = '../classInd.txt'
     
     with TestLoader( dataDir, filenames, lblFilename,
                      stream = 'temporal',
-                     numSegments = 5, smallBatches = 1 ) as testLoader:
+                     numSegments = 5, smallBatches = 5 ) as testLoader:
          for i in range(100):
          # while not testLoader.endOfData():
             t = time.time()
