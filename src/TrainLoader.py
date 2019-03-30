@@ -33,36 +33,58 @@ class TrainLoader( LoaderBase ):
                                               maxsize     = maxsize,
                                               normalize   = normalize,
                                               ranges      = True )
-        self.setBatchSize( batchSize )
+        self._batchSize  = batchSize
         self._stream     = stream
-        self._flip       = False
         self._indexMutex = Lock()
+        self._resetMutex = Lock()
  
 
     def _reset( self ):
         self._ids = np.arange( self._length )
         np.random.shuffle( self._ids )
         self._index = 0
+        return 0
 
 
-    def setBatchSize( self , batchSize ):
-        self.batchSize = batchSize
+    def _resetSafe( self ):
+        self._resetMutex.acquire()
+        self._resetUnsafe()
+        self._resetMutex.release()
+        return 0
+
+
+    def getIndex( self ):
+        self._resetMutex.acquire()
+        index = self._index
+        ids   = self._ids
+        self._resetMutex.release()
+        return index, ids
 
 
     def _incIndex( self ):
-        self._index += self.batchSize
-        if self._index >= self._length:
-            self._reset()
+        self._resetMutex.acquire()
+        newIndex = self._index + self._batchSize
+        if newIndex + self._batchSize >= self._length:
+            newIndex = self._reset()
+        self._index = newIndex
+        self._resetMutex.release()
+        return newIndex
+
+
+    def _popIndex( self ):
+        self._indexMutex.acquire()
+        index, ids = self.getIndex()
+        self._incIndex()
+        self._indexMutex.release()
+        return index, ids
 
 
     def _selectBatchPaths( self ):
-        if self._index + self.batchSize > self._length:
-            self._incIndex()
+        index, ids = self._popIndex()
         batchPaths = list()
-        endIndex = self._index + self.batchSize
-        for i in range( self._index , endIndex ):
-            batchPaths += [ self.filenames[ self._ids[ i ] ].split('.')[0] ]
-        self._incIndex()
+        endIndex = index + self._batchSize
+        for i in range( index , endIndex ):
+            batchPaths += [ self.filenames[ ids[ i ] ].split('.')[0] ]
         return batchPaths
 
 
@@ -79,10 +101,8 @@ class TrainLoader( LoaderBase ):
 
 
     def _randomFlip( self , img ):
-        #if np.random.random() > 0.5:
-        if self._flip:
+        if np.random.random() > 0.5:
             img = np.flip( img , 1 )
-        self._flip = not self._flip
         return img
 
 
@@ -94,9 +114,7 @@ class TrainLoader( LoaderBase ):
 
 
     def generateRgbBatch( self ):
-        self._indexMutex.acquire()
         batchPaths = self._selectBatchPaths()
-        self._indexMutex.release()
         batch  = list()
         labels = list()
         for batchPath in batchPaths:
@@ -124,11 +142,10 @@ class TrainLoader( LoaderBase ):
 
 
     def generateFlowBatch( self ):
-        self._indexMutex.acquire()
         batchPaths = self._selectBatchPaths()
-        self._indexMutex.release()
         batch  = list()
         labels = list()
+
         for batchPath in batchPaths:
             fullPath  = os.path.join( self.dataDir, batchPath )
             video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
@@ -164,15 +181,14 @@ class TrainLoader( LoaderBase ):
 if __name__ == '__main__':
     #dataDir    = '/lustre/cranieri/UCF-101_flow'
     dataDir     = '/home/cmranieri/datasets/UCF-101_flow'
-    filenames   = np.load( '../splits/ucf101/trainlist01.npy' )
+    filenames   = np.load( '../splits/ucf101/testlist01.npy' )
     lblFilename = '../classInd.txt'
-    with TrainLoader( dataDir, filenames, lblFilename, numThreads = 1,
+    with TrainLoader( dataDir, filenames, lblFilename, numThreads = 3,
                       stream = 'temporal' ) as trainLoader:
-        for i in range( 10 ):
+        for i in range( 100000 ):
             t = time.time()
             batch, labels =  trainLoader.getBatch()
             print( i , batch.shape , labels.shape )
-
             #for i, frame in enumerate(batch):
             #    cv2.imwrite(str(i)+'u.jpeg', frame[...,0])
             #    cv2.imwrite(str(i)+'v.jpeg', frame[...,1])

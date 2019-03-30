@@ -1,8 +1,8 @@
 import numpy as np
 
-d = 'hmdb51'
+d = 'multimodal_10'
 
-for fold in range(3):
+for fold in range(10):
     fold_id = '{:02d}'.format(fold+1)
 
     sfile = open( d + '/trainlist'+fold_id+'.txt' , 'r' )

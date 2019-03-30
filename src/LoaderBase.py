@@ -48,6 +48,8 @@ class LoaderBase:
         for i, t in enumerate( self._threadsList ):
             t.join(1)
             print( 'Finished thread %d' % ( i ) )
+        if not self._batchQueue.empty():
+            self._batchQueue.get()
 
 
     def _generateLabelsDict( self, filename ):
