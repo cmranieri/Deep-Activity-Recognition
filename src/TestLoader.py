@@ -125,7 +125,7 @@ class TestLoader( LoaderBase ):
 
         batch = self.getVideoBatch( videoPath )
 
-        labels = np.zeros( ( 5 * self._numSegments, 101 ), dtype = 'float32' )
+        labels = np.zeros( ( 5 * self._numSegments, self.classes ), dtype = 'float32' )
         className = videoPath.split('/')[ -2 ]
         labels[ :, int( self._labelsDict[ className ] ) - 1 ] = 1.0
         self._labels = labels
