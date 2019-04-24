@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-from NetworkBase import NetworkBase
+from NetworkBase1 import NetworkBase
 
 #from keras.applications.inception_v3 import InceptionV3 as BaseModel
 #from keras.applications.mobilenet import MobileNet as BaseModel
@@ -73,7 +73,7 @@ class TemporalTCN( NetworkBase ):
             y = TCN( nb_filters = 128,
                      return_sequences = False,
                      nb_stacks = 1,
-                     dilations = [ 1, 2, 4 ],
+                     dilations = [ 1, 2 ],
                      dropout_rate = 0.3 )( merge )
             y = Dense( self._classes, activation='softmax' )( y )
             

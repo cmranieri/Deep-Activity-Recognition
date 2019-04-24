@@ -1,6 +1,6 @@
 import numpy as np
 
-d = 'multimodal_10'
+d = 'multimodalb_10'
 
 for fold in range(10):
     fold_id = '{:02d}'.format(fold+1)

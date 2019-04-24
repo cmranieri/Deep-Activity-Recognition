@@ -2,10 +2,12 @@ import os
 
 from NetworkBase import NetworkBase
 
-#from keras.applications.inception_v3 import InceptionV3 as BaseModel
+#from keras.applications.vgg16 import VGG16 as BaseModel
+from keras.applications.inception_v3 import InceptionV3 as BaseModel
 #from keras.applications.mobilenet import MobileNet as BaseModel
 #from keras.applications.inception_resnet_v2 import InceptionResNetV2 as BaseModel
-from keras.applications.mobilenet_v2 import MobileNetV2 as BaseModel
+#from keras.applications.resnet50 import ResNet50 as BaseModel
+#from keras.applications.mobilenet_v2 import MobileNetV2 as BaseModel
 from keras.layers import Input, Dense 
 from keras.optimizers import SGD
 from keras.models import Model
@@ -21,7 +23,7 @@ class TemporalStack( NetworkBase ):
                   classes      = 101,
                   dataDir      = '/home/cmranieri/datasets/UCF-101_flow',
                   modelDir     =  '/home/cmranieri/models/ucf101',
-                  modelName    = 'model-ucf101-stack',
+                  modelName    = 'model-ucf101-stack-inres',
                   lblFilename  = '../classInd.txt',
                   splitsDir    = '../splits/ucf101',
                   split_n      = '01',
@@ -65,12 +67,13 @@ class TemporalStack( NetworkBase ):
 if __name__ == '__main__':
     os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
     
-    network = TemporalStack( restoreModel = False,
-                             normalize    = True )
+    network = TemporalStack( restoreModel = True,
+                             normalize = False )
 
-    #network.evaluate( numSegments  = 25,
-    #                  smallBatches = 5,
-    #                  storeTests   = True )
-    network.train( steps     = 800000,
-                   batchSize = 16,
-                   maxsize   = 16 )
+    network.evaluate( numSegments  = 25,
+                      smallBatches = 5,
+                      storeTests   = True )
+    #network.train( steps     = 260000,
+    #               batchSize = 16,
+    #               numThreads = 2,
+    #               maxsize   = 16 )

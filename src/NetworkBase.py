@@ -44,10 +44,10 @@ class NetworkBase:
         self._testFilenames  = np.load( os.path.join( splitsDir,
                                         'testlist'  + split_n + '.npy' ) )
         self._resultsDir = '../results'
-        self._outputsPath = os.path.join( '../outputs', modelName + '.pickle' )
         self._step = 0
 
         self.loadModel( restoreModel , tl )
+        self._outputsPath = os.path.join( '../outputs', self._modelName + '.pickle' )
 
 
     def _defineNetwork( self ):
@@ -67,7 +67,7 @@ class NetworkBase:
         optimizer  = SGD( lr = 1e-3,
                           momentum = 0.9,
                           nesterov = True,
-                          decay = 1e-4 )
+                          decay = 1e-5 )
         model.compile( loss = 'categorical_crossentropy',
                        optimizer = optimizer,
                        metrics = [ 'acc' ] )

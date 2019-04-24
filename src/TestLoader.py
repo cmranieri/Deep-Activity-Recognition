@@ -31,12 +31,12 @@ class TestLoader( LoaderBase ):
                                              numThreads  = 1,
                                              maxsize     = maxsize,
                                              normalize   = normalize )
+        self._classes        = classes
         self._numSegments    = numSegments
         self._stream         = stream
         self._smallBatches   = smallBatches
         self._batchesMutex   = Lock()
         self._videoPaths     = self._getVideoPaths()
-        self._totalProcessed = 0
         
  
     def _processedAll( self ):
@@ -50,6 +50,7 @@ class TestLoader( LoaderBase ):
     
     def _reset( self ):
         self._index = 0
+        self._totalProcessed = 0
 
 
     def _incIndex( self ):
@@ -125,7 +126,7 @@ class TestLoader( LoaderBase ):
 
         batch = self.getVideoBatch( videoPath )
 
-        labels = np.zeros( ( 5 * self._numSegments, self.classes ), dtype = 'float32' )
+        labels = np.zeros( ( 5 * self._numSegments, self._classes ), dtype = 'float32' )
         className = videoPath.split('/')[ -2 ]
         labels[ :, int( self._labelsDict[ className ] ) - 1 ] = 1.0
         self._labels = labels

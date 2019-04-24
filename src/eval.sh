@@ -1,3 +1,11 @@
 #!/bin/bash
-python TemporalTCN.py
-python TemporalLSTM.py
+python eval_model.py '01'
+python eval_model.py '02'
+python eval_model.py '03'
+python eval_model.py '04'
+python eval_model.py '05'
+python eval_model.py '06'
+python eval_model.py '07'
+python eval_model.py '08'
+python eval_model.py '09'
+python eval_model.py '10'
