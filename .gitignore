@@ -1,0 +1,6 @@
+outputs/*
+results/*
+src/__pycache__/*
+euler/*
+src/test.py
+src/train_model2.py
