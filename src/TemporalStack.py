@@ -16,7 +16,7 @@ from keras.models import Model
 class TemporalStack( NetworkBase ):
     
     def __init__( self, **kwargs ):
-        super( TemporalStack , self ).__init__( stream = stream, **kwargs )
+        super( TemporalStack , self ).__init__( stream = 'temporal', **kwargs )
 
 
     def _defineNetwork( self ):
@@ -40,9 +40,9 @@ if __name__ == '__main__':
     
     network = TemporalStack( dataDir      = '/lustre/cranieri/datasets/UCF-101_flow',
                              modelDir     =  '/lustre/cranieri/models/ucf101',
-                             modelName    = 'model-ucf101-stack-inception',
-                             timesteps    = 8,
-                             restoreModel = False
+                             modelName    = 'model-ucf101-optflow-inception',
+                             timesteps    = 1,
+                             restoreModel = False,
                              normalize    = False )
 
     #network.evaluate( numSegments  = 25,

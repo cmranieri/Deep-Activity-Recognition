@@ -17,7 +17,7 @@ class NetworkBase:
                   dataDir,
                   modelDir,
                   modelName,
-                  restoreModel, = False
+                  restoreModel  = False,
                   dim           = 224,
                   timesteps     = 8,
                   classes       = 101,

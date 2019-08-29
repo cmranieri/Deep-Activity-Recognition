@@ -13,7 +13,7 @@ class TrainLoader( LoaderBase ):
     def __init__( self,
                   batchSize = 16,
                   stream    = 'temporal',
-                  **kwargs ) 
+                  **kwargs ): 
         super( TrainLoader , self ).__init__( **kwargs )
         self._batchSize  = batchSize
         self._stream     = stream

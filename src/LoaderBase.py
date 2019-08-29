@@ -90,8 +90,10 @@ class LoaderBase:
             cv2.normalize( v, v, v_range[0], v_range[1], cv2.NORM_MINMAX )
 
         if self._clip:
-            u[ u > self.pxClipTh ] = self.pxClipTh
-            v[ v > self.pxClipTh ] = self.pxClipTh
+            u[ u >  self.pxClipTh ] =  self.pxClipTh
+            u[ u < -self.pxClipTh ] = -self.pxClipTh
+            v[ v >  self.pxClipTh ] =  self.pxClipTh
+            v[ v < -self.pxClipTh ] = -self.pxClipTh
 
         if self._normalize:
             u = u / max( np.max( np.abs( u ) ) , 1e-4 ) 
