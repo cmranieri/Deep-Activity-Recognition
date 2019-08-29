@@ -2,51 +2,21 @@ import os
 
 from NetworkBase import NetworkBase
 
-#from keras.applications.vgg16 import VGG16 as BaseModel
 from keras.applications.inception_v3 import InceptionV3 as BaseModel
 #from keras.applications.mobilenet import MobileNet as BaseModel
 #from keras.applications.inception_resnet_v2 import InceptionResNetV2 as BaseModel
 #from keras.applications.resnet50 import ResNet50 as BaseModel
 #from keras.applications.mobilenet_v2 import MobileNetV2 as BaseModel
 from keras.layers import Input, Dense 
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adam
 from keras.models import Model
 
 
 
 class TemporalStack( NetworkBase ):
     
-    def __init__( self,
-                  restoreModel = False,
-                  dim          = 224,
-                  timesteps    = 8,
-                  classes      = 101,
-                  dataDir      = '/home/cmranieri/datasets/UCF-101_flow',
-                  modelDir     =  '/home/cmranieri/models/ucf101',
-                  modelName    = 'model-ucf101-stack-inres',
-                  lblFilename  = '../classInd.txt',
-                  splitsDir    = '../splits/ucf101',
-                  split_n      = '01',
-                  tl           = False,
-                  tlSuffix     = '',
-                  stream       = 'temporal',
-                  normalize    = False):
-
-        super( TemporalStack , self ).__init__( restoreModel = restoreModel,
-                                                dim          = dim,
-                                                timesteps    = timesteps,
-                                                classes      = classes,
-                                                dataDir      = dataDir,
-                                                modelDir     = modelDir,
-                                                modelName    = modelName,
-                                                lblFilename  = lblFilename,
-                                                splitsDir    = splitsDir,
-                                                split_n      = split_n,
-                                                tl           = tl,
-                                                tlSuffix     = tlSuffix,
-                                                stream       = stream,
-                                                normalize    = normalize)
-
+    def __init__( self, **kwargs ):
+        super( TemporalStack , self ).__init__( stream = stream, **kwargs )
 
 
     def _defineNetwork( self ):
@@ -56,7 +26,8 @@ class TemporalStack( NetworkBase ):
                            weights = None,
                            classes = self._classes )
         optimizer = SGD( lr = 1e-2, momentum = 0.9,
-                         nesterov = True, decay = 1e-4 )
+                         nesterov = True, decay = 1e-5 )
+        # optimizer = Adam ( lr = 1e-2, decay = 1e-4 )
         model.compile( loss = 'categorical_crossentropy',
                        optimizer = optimizer,
                        metrics   = [ 'acc' ] ) 
@@ -65,15 +36,19 @@ class TemporalStack( NetworkBase ):
 
 
 if __name__ == '__main__':
-    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
+    #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
     
-    network = TemporalStack( restoreModel = True,
-                             normalize = False )
+    network = TemporalStack( dataDir      = '/lustre/cranieri/datasets/UCF-101_flow',
+                             modelDir     =  '/lustre/cranieri/models/ucf101',
+                             modelName    = 'model-ucf101-stack-inception',
+                             timesteps    = 8,
+                             restoreModel = False
+                             normalize    = False )
 
-    network.evaluate( numSegments  = 25,
-                      smallBatches = 5,
-                      storeTests   = True )
-    #network.train( steps     = 260000,
-    #               batchSize = 16,
-    #               numThreads = 2,
-    #               maxsize   = 16 )
+    #network.evaluate( numSegments  = 25,
+    #                  smallBatches = 5,
+    #                  storeTests   = True )
+    network.train( steps     = 800000,
+                   batchSize = 64,
+                   numThreads = 12,
+                   maxsize   = 32 )

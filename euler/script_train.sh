@@ -1,4 +1,4 @@
-#PBS -N train_lstm
+#PBS -N train_stack
 #PBS -l ngpus=1
 #PBS -l walltime=300:00:00
 
@@ -11,5 +11,4 @@ source ~/venv2/bin/activate
 
 cd ~/Deep-Activity-Recognition/src
 
-python TemporalLSTM.py
-
+python TemporalStack.py

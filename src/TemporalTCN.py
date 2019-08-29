@@ -1,12 +1,12 @@
 import numpy as np
 import os
 
-from NetworkBase1 import NetworkBase
+from NetworkBase import NetworkBase
 
-#from keras.applications.inception_v3 import InceptionV3 as BaseModel
+from keras.applications.inception_v3 import InceptionV3 as BaseModel
 #from keras.applications.mobilenet import MobileNet as BaseModel
 #from keras.applications.inception_resnet_v2 import InceptionResNetV2 as BaseModel
-from keras.applications.mobilenet_v2 import MobileNetV2 as BaseModel
+#from keras.applications.mobilenet_v2 import MobileNetV2 as BaseModel
 from keras.layers import Input, Dense 
 from keras.layers import concatenate, Reshape, Permute
 from keras.optimizers import SGD
@@ -17,36 +17,8 @@ from tcn import TCN
 
 class TemporalTCN( NetworkBase ):
     
-    def __init__( self,
-                  restoreModel = False,
-                  dim          = 224,
-                  timesteps    = 8,
-                  classes      = 101,
-                  dataDir      = '/lustre/cranieri/datasets/UCF-101_flow',
-                  modelDir     = '/lustre/cranieri/models/ucf101',
-                  modelName    = 'model-ucf101-tcn',
-                  lblFilename  = '../classInd.txt',
-                  splitsDir    = '../splits/ucf101',
-                  split_n      = '01',
-                  tl           = False,
-                  tlSuffix     = '',
-                  stream       = 'temporal',
-                  normalize    = False ):
-
-        super( TemporalTCN , self ).__init__( restoreModel = restoreModel,
-                                              dim          = dim,
-                                              timesteps    = timesteps,
-                                              classes      = classes,
-                                              dataDir      = dataDir,
-                                              modelDir     = modelDir,
-                                              modelName    = modelName,
-                                              lblFilename  = lblFilename,
-                                              splitsDir    = splitsDir,
-                                              split_n      = split_n,
-                                              tl           = tl,
-                                              tlSuffix     = tlSuffix,
-                                              stream       = 'temporal',
-                                              normalize    = normalize )
+    def __init__( self, **kwargs ):
+        super( TemporalTCN , self ).__init__( stream = 'temporal', **kwargs )
 
 
    
@@ -101,12 +73,16 @@ class TemporalTCN( NetworkBase ):
 if __name__ == '__main__':
     #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalTCN( restoreModel = False )
+    network = TemporalTCN( dataDir      = '/lustre/cranieri/datasets/UCF-101_flow',
+                           modelDir     = '/lustre/cranieri/models/ucf101',
+                           modelName    = 'model-ucf101-tcn-inception',
+                           restoreModel = False,
+                           normalize    = False)
 
     #network.evaluate( numSegments  = 25,
     #                  smallBatches = 5,
     #                  storeTests   = True )
     network.train( steps      = 800000,
                    batchSize  = 16,
-                   numThreads = 12,
-                   maxsize    = 32 )  
+                   numThreads = 8,
+                   maxsize    = 24 )  

@@ -19,6 +19,7 @@ class LoaderBase:
                   numThreads = 1,
                   maxsize    = 10,
                   normalize  = False,
+                  clip       = True,
                   ranges     = True ):
         self.dataDir      = dataDir
         self.filenames    = filenames
@@ -28,7 +29,11 @@ class LoaderBase:
         self._numThreads  = numThreads
         self._length      = filenames.shape[ 0 ]
         self._normalize   = normalize
+        self._clip        = clip
         self._ranges      = ranges
+
+        self.pxClipTh = 20
+        self.framePeriod = 2
         
         self._reset()
         self._generateLabelsDict( lblFilename )
@@ -84,6 +89,10 @@ class LoaderBase:
             cv2.normalize( u, u, u_range[0], u_range[1], cv2.NORM_MINMAX )
             cv2.normalize( v, v, v_range[0], v_range[1], cv2.NORM_MINMAX )
 
+        if self._clip:
+            u[ u > self.pxClipTh ] = self.pxClipTh
+            v[ v > self.pxClipTh ] = self.pxClipTh
+
         if self._normalize:
             u = u / max( np.max( np.abs( u ) ) , 1e-4 ) 
             v = v / max( np.max( np.abs( v ) ) , 1e-4 ) 
@@ -92,7 +101,9 @@ class LoaderBase:
 
     def stackFlow( self, video, start ):
         flowList = list()
-        for i in range( start, start + self._timesteps ):
+        for i in range( start,
+                        start + self._timesteps * self.framePeriod,
+                        self.framePeriod ):
             u, v = self.loadFlow( video, i )
             flowList.append( np.array( [ u , v ] ) )
         stack = np.array( flowList )

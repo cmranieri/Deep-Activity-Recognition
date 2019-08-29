@@ -11,32 +11,16 @@ from LoaderBase import LoaderBase
 class TestLoader( LoaderBase ):
 
     def __init__( self,
-                  dataDir,
-                  filenames,
-                  lblFilename,
-                  classes      = 101,
-                  dim          = 224,
-                  timesteps    = 10,
-                  maxsize      = 10,
                   numSegments  = 25,
                   smallBatches = 1,
                   stream       = 'temporal',
-                  normalize    = False ):
-        super( TestLoader , self ).__init__( dataDir     = dataDir,
-                                             filenames   = filenames,
-                                             lblFilename = lblFilename,
-                                             classes     = classes,
-                                             dim         = dim,
-                                             timesteps   = timesteps,
-                                             numThreads  = 1,
-                                             maxsize     = maxsize,
-                                             normalize   = normalize )
-        self._classes        = classes
-        self._numSegments    = numSegments
-        self._stream         = stream
-        self._smallBatches   = smallBatches
-        self._batchesMutex   = Lock()
-        self._videoPaths     = self._getVideoPaths()
+                  **kwargs ):
+        super( TestLoader , self ).__init__( **kwargs )
+        self._numSegments  = numSegments
+        self._stream       = stream
+        self._smallBatches = smallBatches
+        self._batchesMutex = Lock()
+        self._videoPaths   = self._getVideoPaths()
         
  
     def _processedAll( self ):
@@ -69,10 +53,10 @@ class TestLoader( LoaderBase ):
         for i in range( self._numSegments):
             if self._stream == 'temporal':
                 space = len( video[ 'u' ] ) // self._numSegments
-                if i * space + self._timesteps < len( video[ 'u' ] ):
+                if i * space + self._timesteps * self.framePeriod < len( video[ 'u' ] ):
                     start = i * space
                 else:
-                    start = len( video[ 'u' ] ) - 1 - self._timesteps
+                    start = len( video[ 'u' ] ) - 1 - self._timesteps * self.framePeriod
                 # [ b, h, w, 2, t ]
                 batch.append( self.stackFlow( video, start ) )
 
@@ -126,7 +110,8 @@ class TestLoader( LoaderBase ):
 
         batch = self.getVideoBatch( videoPath )
 
-        labels = np.zeros( ( 5 * self._numSegments, self._classes ), dtype = 'float32' )
+        labels = np.zeros( ( 5 * self._numSegments, self._classes ), 
+                           dtype = 'float32' )
         className = videoPath.split('/')[ -2 ]
         labels[ :, int( self._labelsDict[ className ] ) - 1 ] = 1.0
         self._labels = labels
@@ -189,9 +174,12 @@ if __name__ == '__main__':
     filenames   = np.load( '../splits/ucf101/testlist01.npy' )
     lblFilename = '../classInd.txt'
     
-    with TestLoader( dataDir, filenames, lblFilename,
+    with TestLoader( dataDir = dataDir,
+                     filenames = filenames,
+                     lblFilename = lblFilename,
                      stream = 'temporal',
-                     numSegments = 5, smallBatches = 5 ) as testLoader:
+                     numSegments = 5,
+                     smallBatches = 5 ) as testLoader:
          for i in range(100):
          # while not testLoader.endOfData():
             t = time.time()

@@ -11,28 +11,10 @@ from LoaderBase import LoaderBase
 class TrainLoader( LoaderBase ):
 
     def __init__( self,
-                  dataDir,
-                  filenames,
-                  lblFilename,
-                  classes    = 101,
-                  dim        = 224,
-                  timesteps  = 10,
-                  batchSize  = 16,
-                  numThreads = 1,
-                  maxsize    = 10,
-                  stream     = 'temporal',
-                  normalize  = False ):
-        
-        super( TrainLoader , self ).__init__( dataDir     = dataDir,
-                                              filenames   = filenames,
-                                              lblFilename = lblFilename,
-                                              classes     = classes,
-                                              dim         = dim,
-                                              timesteps   = timesteps,
-                                              numThreads  = numThreads,
-                                              maxsize     = maxsize,
-                                              normalize   = normalize,
-                                              ranges      = True )
+                  batchSize = 16,
+                  stream    = 'temporal',
+                  **kwargs ) 
+        super( TrainLoader , self ).__init__( **kwargs )
         self._batchSize  = batchSize
         self._stream     = stream
         self._indexMutex = Lock()
@@ -150,7 +132,8 @@ class TrainLoader( LoaderBase ):
             fullPath  = os.path.join( self.dataDir, batchPath )
             video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
 
-            start = np.random.randint( len( video[ 'u' ] ) - self._timesteps )
+            start = np.random.randint( len( video[ 'u' ] ) -
+                        self._timesteps * self.framePeriod )
             batch.append( self.stackFlow( video, start ) )
             labels.append( self._getLabelArray( batchPath ) )
 
@@ -183,7 +166,10 @@ if __name__ == '__main__':
     dataDir     = '/home/cmranieri/datasets/UCF-101_flow'
     filenames   = np.load( '../splits/ucf101/testlist01.npy' )
     lblFilename = '../classInd.txt'
-    with TrainLoader( dataDir, filenames, lblFilename, numThreads = 3,
+    with TrainLoader( dataDir     = dataDir,
+                      filenames   = filenames,
+                      lblFilename = lblFilename,
+                      numThreads  = 3,
                       stream = 'temporal' ) as trainLoader:
         for i in range( 100000 ):
             t = time.time()

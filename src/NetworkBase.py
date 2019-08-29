@@ -14,20 +14,20 @@ from keras.metrics import binary_accuracy
 class NetworkBase:
     
     def __init__( self,
-                  restoreModel,
-                  dim,
-                  timesteps,
-                  classes,
                   dataDir,
                   modelDir,
                   modelName,
-                  lblFilename  = '../classInd.txt',
-                  splitsDir    = '../splits/ucf101',
-                  split_n      = '01',
-                  tl           = False,
-                  tlSuffix     = '',
-                  stream       = 'temporal',
-                  normalize    = False ):
+                  restoreModel, = False
+                  dim           = 224,
+                  timesteps     = 8,
+                  classes       = 101,
+                  lblFilename   = '../classInd.txt',
+                  splitsDir     = '../splits/ucf101',
+                  split_n       = '01',
+                  tl            = False,
+                  tlSuffix      = '',
+                  stream        = 'temporal',
+                  normalize     = False ):
         self._dim = dim
         self._timesteps    = timesteps
         self._classes      = classes
@@ -113,7 +113,7 @@ class NetworkBase:
                              smallBatches ):
         return TestLoader( dataDir      = self._dataDir,
                            filenames    = self._testFilenames,
-                           lblFilename  =self._lblFilename,
+                           lblFilename  = self._lblFilename,
                            classes      = self._classes,
                            dim          = self._dim,
                            numSegments  = numSegments,
