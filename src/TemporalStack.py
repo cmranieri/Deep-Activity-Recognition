@@ -39,7 +39,7 @@ if __name__ == '__main__':
     #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
     
     network = TemporalStack( dataDir      = '/lustre/cranieri/datasets/UCF-101_flow',
-                             modelDir     =  '/lustre/cranieri/models/ucf101',
+                             modelDir     = '/lustre/cranieri/models/ucf101',
                              modelName    = 'model-ucf101-optflow-inception',
                              timesteps    = 1,
                              restoreModel = False,

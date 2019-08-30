@@ -16,42 +16,24 @@ from keras.models import Model
 
 
 class TemporalH_LSTM( TemporalH ):
-    
     def __init__( self, **kwargs ):
         super( TemporalH_LSTM , self ).__init__( **kwargs )
 
 
     def _defineNetwork( self ):
-        inputs_list = list()
-        feats_list  = list()
-
-        for i in range( self._timesteps ):
-            inp = Input( shape = (self._dim, self._dim, 2) )
-            inputs_list.append( inp )
-            base_model = BaseModel( input_tensor = inp,
-                                    weights = None,
-                                    include_top = False,
-                                    pooling = 'avg' )
-            for layer in base_model.layers:
-                layer.name = layer.name + '_n' + str(i)
-            feats_list.append( base_model.outputs[0] )
-
-        merge = concatenate( feats_list )
-        num_feats = int(merge.shape[ 1 ]) // self._timesteps
-        merge = Reshape( [ num_feats , self._timesteps ] )( merge )
-        merge = Permute( (2, 1) )( merge )
-        
+        num_feats = int( self.cnnModel.output.shape[1] )
+        inp = Input( shape = (self._timesteps, num_feats) )
         y = LSTM( units = 64,
                   return_sequences = False,
                   dropout = 0.3,
-                  unroll = True )( merge )
+                  unroll = True )( inp )
         y = Dense( self._classes, activation='softmax' )( y )
         
-        model = Model( inputs_list, y )
+        model = Model( inp, y )
         optimizer = SGD( lr = 1e-2,
                          momentum = 0.9,
                          nesterov = True,
-                         decay = 1e-4 )
+                         decay = 1e-5 )
         model.compile( loss = 'categorical_crossentropy',
                        optimizer = optimizer,
                        metrics   = [ 'acc' ] ) 
@@ -59,27 +41,19 @@ class TemporalH_LSTM( TemporalH ):
 
 
 
-    def _prepareBatch( self, batch ):
-        batch = np.reshape( batch, [ batch.shape[0],
-                                     self._dim, self._dim,
-                                     2, self._timesteps ] )
-        batch = list( np.transpose( batch, [ 4, 0, 1, 2, 3 ] ) )
-        return batch
-
-
-
 if __name__ == '__main__':
-    #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
+    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalLSTM( dataDir      = '/lustre/cranieri/datasets/UCF-101_flow',
-                            modelDir     = '/lustre/cranieri/models/ucf101',
-                            modelName    = 'model-ucf101-lstm-inception',
-                            restoreModel = False,
-                            normalize    = False )
+    network = TemporalH_LSTM( dataDir      = '/home/cmranieri/datasets/UCF-101_flow',
+                              modelDir     = '/home/cmranieri/models/ucf101',
+                              modelName    = 'model-ucf101-hlstm-inception',
+                              cnnModelName = 'model-ucf101-optflow-inception',
+                              restoreModel = False,
+                              normalize    = False )
 
     #network.evaluate( numSegments  = 25,
     #                  smallBatches = 5 )
     network.train( steps      = 800000,
                    batchSize  = 16,
-                   numThreads = 8,
-                   maxsize    = 24 )
+                   numThreads = 2,
+                   maxsize    = 8 )

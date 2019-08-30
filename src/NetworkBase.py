@@ -86,8 +86,6 @@ class NetworkBase:
             self._changeTop()
             self._saveModel()
         print( 'Model loaded!' )
-        nparams = self.model.count_params()
-        print( str(nparams) + ' parameters.' )
 
 
 
