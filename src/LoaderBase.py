@@ -33,7 +33,7 @@ class LoaderBase:
         self._ranges      = ranges
 
         self.pxClipTh = 20
-        self.framePeriod = 2
+        self.framePeriod = 1
         
         self._reset()
         self._generateLabelsDict( lblFilename )

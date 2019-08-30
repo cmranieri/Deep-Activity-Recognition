@@ -40,8 +40,8 @@ if __name__ == '__main__':
     
     network = TemporalStack( dataDir      = '/lustre/cranieri/datasets/UCF-101_flow',
                              modelDir     = '/lustre/cranieri/models/ucf101',
-                             modelName    = 'model-ucf101-optflow-inception',
-                             timesteps    = 1,
+                             modelName    = 'model-ucf101-stack-inception',
+                             timesteps    = 8,
                              restoreModel = False,
                              normalize    = False )
 
