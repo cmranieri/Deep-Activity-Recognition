@@ -3,11 +3,6 @@ import os
 
 from TemporalH import TemporalH
 
-from keras.applications.inception_v3 import InceptionV3 as BaseModel
-#from keras.applications.mobilenet import MobileNet as BaseModel
-#from keras.applications.inception_resnet_v2 import InceptionResNetV2 as BaseModel
-#from keras.applications.resnet50 import ResNet50 as BaseModel
-#from keras.applications.mobilenet_v2 import MobileNetV2 as BaseModel
 from keras.layers import Input, Dense, LSTM
 from keras.layers import concatenate, Reshape, Permute
 from keras.optimizers import SGD
@@ -32,8 +27,8 @@ class TemporalH_LSTM( TemporalH ):
         model = Model( inp, y )
         optimizer = SGD( lr = 1e-2,
                          momentum = 0.9,
-                         nesterov = True,
-                         decay = 1e-5 )
+                         nesterov = False,
+                         decay = 1e-7 )
         model.compile( loss = 'categorical_crossentropy',
                        optimizer = optimizer,
                        metrics   = [ 'acc' ] ) 
@@ -44,16 +39,17 @@ class TemporalH_LSTM( TemporalH ):
 if __name__ == '__main__':
     os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalH_LSTM( dataDir      = '/home/cmranieri/datasets/UCF-101_flow',
-                              modelDir     = '/home/cmranieri/models/ucf101',
+    network = TemporalH_LSTM( dataDir      = '/lustre/cranieri/datasets/UCF-101_flow',
+                              modelDir     = '/lustre/cranieri/models/ucf101',
                               modelName    = 'model-ucf101-hlstm-inception',
                               cnnModelName = 'model-ucf101-optflow-inception',
+                              timesteps    = 8,
                               restoreModel = False,
                               normalize    = False )
 
     #network.evaluate( numSegments  = 25,
     #                  smallBatches = 5 )
-    network.train( steps      = 800000,
+    network.train( steps      = 200000,
                    batchSize  = 16,
-                   numThreads = 2,
-                   maxsize    = 8 )
+                   numThreads = 12,
+                   maxsize    = 32 )

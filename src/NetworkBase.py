@@ -6,10 +6,10 @@ import pickle
 from TrainLoader import TrainLoader
 from TestLoader  import TestLoader
 
-from keras.layers import Dense
-from keras.models import Model, load_model
-from keras.optimizers import SGD
-from keras.metrics import binary_accuracy
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.optimizers import SGD
+
 
 class NetworkBase:
     
@@ -27,18 +27,20 @@ class NetworkBase:
                   tl            = False,
                   tlSuffix      = '',
                   stream        = 'temporal',
-                  normalize     = False ):
-        self._dim = dim
-        self._timesteps    = timesteps
-        self._classes      = classes
-        self._dataDir      = dataDir
-        self._modelDir     = modelDir
-        self._modelName    = modelName
-        self._tlSuffix     = tlSuffix
-        self._stream       = stream
-        self._normalize    = normalize
+                  normalize     = False,
+                  **kwargs ):
+        self.__dict__.update( kwargs )
+        self.dim = dim
+        self.timesteps    = timesteps
+        self.classes      = classes
+        self.dataDir      = dataDir
+        self.modelDir     = modelDir
+        self.modelName    = modelName
+        self.tlSuffix     = tlSuffix
+        self.stream       = stream
+        self.normalize    = normalize
         
-        self._lblFilename = lblFilename
+        self.lblFilename = lblFilename
         self._trainFilenames = np.load( os.path.join( splitsDir,
                                         'trainlist' + split_n + '.npy' ) )
         self._testFilenames  = np.load( os.path.join( splitsDir,
@@ -47,7 +49,7 @@ class NetworkBase:
         self._step = 0
 
         self.loadModel( restoreModel , tl )
-        self._outputsPath = os.path.join( '../outputs', self._modelName + '.pickle' )
+        self._outputsPath = os.path.join( '../outputs', self.modelName + '.pickle' )
 
 
     def _defineNetwork( self ):
@@ -58,7 +60,7 @@ class NetworkBase:
         base_model = self.model
         base_model.layers.pop()
         y = base_model.layers[-1].output
-        y = Dense( self._classes, activation='softmax' )( y )
+        y = Dense( self.classes, activation='softmax' )( y )
         model = Model( inputs = base_model.input , outputs = y )
 
         for layer in base_model.layers:
@@ -79,10 +81,10 @@ class NetworkBase:
         if not ( restoreModel or tl ):
             self.model = self._defineNetwork()
         else:
-            self.model = load_model( os.path.join( self._modelDir,
-                                                   str(self._modelName) + '.h5' ) )
+            self.model = load_model( os.path.join( self.modelDir,
+                                                   str(self.modelName) + '.h5' ) )
         if tl:
-            self._modelName = self._modelName + self._tlSuffix
+            self.modelName = self.modelName + self.tlSuffix
             self._changeTop()
             self._saveModel()
         print( 'Model loaded!' )
@@ -93,39 +95,39 @@ class NetworkBase:
                               batchSize,
                               numThreads,
                               maxsize ):
-        return TrainLoader( dataDir     = self._dataDir,
+        return TrainLoader( dataDir     = self.dataDir,
                             filenames   = self._trainFilenames,
-                            lblFilename = self._lblFilename,
-                            classes     = self._classes,
-                            dim         = self._dim,
                             batchSize   = batchSize,
-                            timesteps   = self._timesteps,
                             numThreads  = numThreads,
                             maxsize     = maxsize,
-                            stream      = self._stream,
-                            normalize   = self._normalize )
+                            classes     = self.classes,
+                            dim         = self.dim,
+                            lblFilename = self.lblFilename,
+                            timesteps   = self.timesteps,
+                            stream      = self.stream,
+                            normalize   = self.normalize )
 
     def _generateTestLoader( self,
                              maxsize,
                              numSegments,
                              smallBatches ):
-        return TestLoader( dataDir      = self._dataDir,
+        return TestLoader( dataDir      = dataDir,
                            filenames    = self._testFilenames,
-                           lblFilename  = self._lblFilename,
-                           classes      = self._classes,
-                           dim          = self._dim,
                            numSegments  = numSegments,
-                           timesteps    = self._timesteps,
                            maxsize      = maxsize,
-                           stream       = self._stream,
                            smallBatches = smallBatches,
-                           normalize    = self._normalize )
+                           classes      = self.classes,
+                           dim          = self.dim,
+                           lblFilename  = self.lblFilename,
+                           timesteps    = self.timesteps,
+                           stream       = self.stream,
+                           normalize    = self.normalize )
 
 
 
     def _storeResult( self, filename, data ):
         f = open( os.path.join( self._resultsDir,
-                                self._modelName + '_' + filename ), 'a' )
+                                self.modelName + '_' + filename ), 'a' )
         f.write( data )
         f.close()
 
@@ -136,8 +138,8 @@ class NetworkBase:
 
     def _saveModel( self ):
         print( 'Saving model...' )
-        self.model.save( os.path.join( self._modelDir,
-                                       str(self._modelName) + '.h5' ) )
+        self.model.save( os.path.join( self.modelDir,
+                                       str(self.modelName) + '.h5' ) )
         print( 'Model saved!' )
 
 

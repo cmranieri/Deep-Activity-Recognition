@@ -2,14 +2,11 @@ import os
 
 from NetworkBase import NetworkBase
 
-from keras.applications.inception_v3 import InceptionV3 as BaseModel
-#from keras.applications.mobilenet import MobileNet as BaseModel
-#from keras.applications.inception_resnet_v2 import InceptionResNetV2 as BaseModel
-#from keras.applications.resnet50 import ResNet50 as BaseModel
-#from keras.applications.mobilenet_v2 import MobileNetV2 as BaseModel
-from keras.layers import Input, Dense 
-from keras.optimizers import SGD, Adam
-from keras.models import Model
+from tensorflow.keras.applications.inception_v3 import InceptionV3 as BaseModel
+from tensorflow.keras.layers import Input, Dense 
+from tensorflow.keras.optimizers import SGD, Adam
+from tensorflow.keras.optimizers.schedules import ExponentialDecay
+from tensorflow.keras.models import Model
 
 
 
@@ -20,14 +17,18 @@ class TemporalStack( NetworkBase ):
 
 
     def _defineNetwork( self ):
-        input_tensor = Input( shape = ( self._dim, self._dim,
-                                        2 * self._timesteps ) )
+        input_tensor = Input( shape = ( self.dim, self.dim,
+                                        2 * self.timesteps ) )
         model = BaseModel( input_tensor = input_tensor,
                            weights = None,
-                           classes = self._classes )
-        optimizer = SGD( lr = 1e-2, momentum = 0.9,
-                         nesterov = True, decay = 1e-5 )
-        # optimizer = Adam ( lr = 1e-2, decay = 1e-4 )
+                           classes = self.classes )
+
+        initial_learning_rate = 1e-2
+        lr_schedule = ExponentialDecay( initial_learning_rate,
+                                        decay_steps = 4000,
+                                        decay_rate  = 0.92,
+                                        staircase   = True )
+        optimizer = SGD( learning_rate = lr_schedule, momentum = 0.9 )
         model.compile( loss = 'categorical_crossentropy',
                        optimizer = optimizer,
                        metrics   = [ 'acc' ] ) 
@@ -40,15 +41,17 @@ if __name__ == '__main__':
     
     network = TemporalStack( dataDir      = '/lustre/cranieri/datasets/UCF-101_flow',
                              modelDir     = '/lustre/cranieri/models/ucf101',
-                             modelName    = 'model-ucf101-stack-inception',
-                             timesteps    = 8,
+                             modelName    = 'model-ucf101-optflow-inception',
+                             timesteps    = 1,
+                             clipTh       = 20,
+                             framePeriod  = 2,
                              restoreModel = False,
                              normalize    = False )
 
     #network.evaluate( numSegments  = 25,
     #                  smallBatches = 5,
     #                  storeTests   = True )
-    network.train( steps     = 800000,
-                   batchSize = 64,
+    network.train( steps     = 400000,
+                   batchSize = 16,
                    numThreads = 12,
                    maxsize   = 32 )

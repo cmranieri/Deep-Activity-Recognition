@@ -13,14 +13,16 @@ class LoaderBase:
                   dataDir,
                   filenames,
                   lblFilename,
-                  classes    = 101,
-                  dim        = 224,
-                  timesteps  = 10,
-                  numThreads = 1,
-                  maxsize    = 10,
-                  normalize  = False,
-                  clip       = True,
-                  ranges     = True ):
+                  classes     = 101,
+                  dim         = 224,
+                  timesteps   = 10,
+                  numThreads  = 1,
+                  maxsize     = 10,
+                  framePeriod = 1,
+                  clipTh      = 20,
+                  normalize   = False,
+                  ranges      = True,
+                  **kwargs ):
         self.dataDir      = dataDir
         self.filenames    = filenames
         self._classes     = classes
@@ -29,11 +31,10 @@ class LoaderBase:
         self._numThreads  = numThreads
         self._length      = filenames.shape[ 0 ]
         self._normalize   = normalize
-        self._clip        = clip
         self._ranges      = ranges
 
-        self.pxClipTh = 20
-        self.framePeriod = 1
+        self.clipTh = clipTh
+        self.framePeriod = framePeriod
         
         self._reset()
         self._generateLabelsDict( lblFilename )
@@ -89,11 +90,11 @@ class LoaderBase:
             cv2.normalize( u, u, u_range[0], u_range[1], cv2.NORM_MINMAX )
             cv2.normalize( v, v, v_range[0], v_range[1], cv2.NORM_MINMAX )
 
-        if self._clip:
-            u[ u >  self.pxClipTh ] =  self.pxClipTh
-            u[ u < -self.pxClipTh ] = -self.pxClipTh
-            v[ v >  self.pxClipTh ] =  self.pxClipTh
-            v[ v < -self.pxClipTh ] = -self.pxClipTh
+        if self.clipTh is not None:
+            u[ u >  self.clipTh ] =  self.clipTh
+            u[ u < -self.clipTh ] = -self.clipTh
+            v[ v >  self.clipTh ] =  self.clipTh
+            v[ v < -self.clipTh ] = -self.clipTh
 
         if self._normalize:
             u = u / max( np.max( np.abs( u ) ) , 1e-4 ) 

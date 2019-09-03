@@ -1,4 +1,4 @@
-#PBS -N train_stack
+#PBS -N train_optflow
 #PBS -l ngpus=1
 #PBS -l walltime=300:00:00
 

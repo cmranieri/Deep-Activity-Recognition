@@ -3,10 +3,6 @@ import os
 
 from TemporalH import TemporalH
 
-from keras.applications.inception_v3 import InceptionV3 as BaseModel
-#from keras.applications.mobilenet import MobileNet as BaseModel
-#from keras.applications.inception_resnet_v2 import InceptionResNetV2 as BaseModel
-#from keras.applications.mobilenet_v2 import MobileNetV2 as BaseModel
 from keras.layers import Input, Dense 
 from keras.layers import concatenate, Reshape, Permute
 from keras.optimizers import SGD
