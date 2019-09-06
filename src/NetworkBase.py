@@ -3,8 +3,8 @@ import os
 import time
 import pickle
 
-from TrainLoader import TrainLoader
-from TestLoader  import TestLoader
+from TrainDataProvider import TrainDataProvider
+from TestDataProvider  import TestDataProvider
 
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model, load_model
@@ -14,9 +14,11 @@ from tensorflow.keras.optimizers import SGD
 class NetworkBase:
     
     def __init__( self,
-                  dataDir,
                   modelDir,
                   modelName,
+                  flowDataDir   = '',
+                  rgbDataDir    = '',
+                  imuDataDir    = '',
                   restoreModel  = False,
                   dim           = 224,
                   timesteps     = 8,
@@ -93,11 +95,11 @@ class NetworkBase:
 
 
 
-    def _generateTrainLoader( self,
+    def _generateTrainDataProvider( self,
                               batchSize,
                               numThreads,
                               maxsize ):
-        return TrainLoader( dataDir     = self.dataDir,
+        return TrainDataProvider( dataDir     = self.dataDir,
                             filenames   = self._trainFilenames,
                             batchSize   = batchSize,
                             numThreads  = numThreads,
@@ -111,11 +113,11 @@ class NetworkBase:
                             framePeriod = self.framePeriod,
                             clipTh      = self.clipTh )
 
-    def _generateTestLoader( self,
+    def _generateTestDataProvider( self,
                              maxsize,
                              numSegments,
                              smallBatches ):
-        return TestLoader( dataDir      = self.dataDir,
+        return TestDataProvider( dataDir      = self.dataDir,
                            filenames    = self._testFilenames,
                            numSegments  = numSegments,
                            maxsize      = maxsize,
@@ -160,12 +162,12 @@ class NetworkBase:
         train_loss_list = list()
 
         while self._step < steps:
-            with self._generateTrainLoader( batchSize  = batchSize,
+            with self._generateTrainDataProvider( batchSize  = batchSize,
                                             numThreads = numThreads,
-                                            maxsize    = maxsize ) as trainLoader:
+                                            maxsize    = maxsize ) as trainDataProvider:
                 # train stepsToEval before saving and evaluating
                 for i in range( stepsToEval ):
-                    batch , labels = trainLoader.getBatch()
+                    batch , labels = trainDataProvider.getBatch()
                     batch = self._prepareBatch( batch )
                     # train the selected batch
                     tr = self.model.train_on_batch( batch,
@@ -206,14 +208,14 @@ class NetworkBase:
         labels_list    = list()
         i = 0
         print( 'Evaluating...' )
-        with self._generateTestLoader( maxsize      = maxsize,
+        with self._generateTestDataProvider( maxsize      = maxsize,
                                        numSegments  = numSegments,
-                                       smallBatches = smallBatches ) as testLoader:
-            while not testLoader.endOfData():
+                                       smallBatches = smallBatches ) as testDataProvider:
+            while not testDataProvider.endOfData():
                 if not i % 200:
                     print( 'Evaluating video', i )
 
-                testBatch , testLabels = testLoader.getBatch()
+                testBatch , testLabels = testDataProvider.getBatch()
                 testBatch = self._prepareBatch( testBatch )
 
                 y_ = self.model.predict_on_batch( testBatch )

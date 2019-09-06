@@ -71,7 +71,7 @@ class TemporalLSTM( NetworkBase ):
 if __name__ == '__main__':
     #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalLSTM( dataDir      = '/lustre/cranieri/datasets/UCF-101_flow',
+    network = TemporalLSTM( flowDataDir  = '/lustre/cranieri/datasets/UCF-101_flow',
                             modelDir     = '/lustre/cranieri/models/ucf101',
                             modelName    = 'model-ucf101-lstm-inception',
                             restoreModel = False,

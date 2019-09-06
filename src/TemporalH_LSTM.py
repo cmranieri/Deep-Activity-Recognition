@@ -39,7 +39,7 @@ class TemporalH_LSTM( TemporalH ):
 if __name__ == '__main__':
     os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalH_LSTM( dataDir      = '/lustre/cranieri/datasets/UCF-101_flow',
+    network = TemporalH_LSTM( flowDataDir  = '/lustre/cranieri/datasets/UCF-101_flow',
                               modelDir     = '/lustre/cranieri/models/ucf101',
                               modelName    = 'model-ucf101-hlstm-inception',
                               cnnModelName = 'model-ucf101-optflow-inception',

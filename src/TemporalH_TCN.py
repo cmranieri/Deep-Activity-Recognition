@@ -42,7 +42,7 @@ class TemporalH_TCN( TemporalH ):
 if __name__ == '__main__':
     #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalTCN( dataDir      = '/lustre/cranieri/datasets/UCF-101_flow',
+    network = TemporalTCN( flowDataDir  = '/lustre/cranieri/datasets/UCF-101_flow',
                            modelDir     = '/lustre/cranieri/models/ucf101',
                            modelName    = 'model-ucf101-tcn-inception',
                            restoreModel = False,
@@ -51,6 +51,7 @@ if __name__ == '__main__':
     #network.evaluate( numSegments  = 25,
     #                  smallBatches = 5,
     #                  storeTests   = True )
+
     network.train( steps      = 800000,
                    batchSize  = 16,
                    numThreads = 8,

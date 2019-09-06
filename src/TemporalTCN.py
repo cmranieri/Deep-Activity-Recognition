@@ -73,7 +73,7 @@ class TemporalTCN( NetworkBase ):
 if __name__ == '__main__':
     #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalTCN( dataDir      = '/lustre/cranieri/datasets/UCF-101_flow',
+    network = TemporalTCN( flowDataDir  = '/lustre/cranieri/datasets/UCF-101_flow',
                            modelDir     = '/lustre/cranieri/models/ucf101',
                            modelName    = 'model-ucf101-tcn-inception',
                            restoreModel = False,
