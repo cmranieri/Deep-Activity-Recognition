@@ -17,7 +17,8 @@ class DataProvider:
                   imuDataDir  = '',
                   classes     = 101,
                   dim         = 224,
-                  timesteps   = 10,
+                  flowSteps   = 10,
+                  imuSteps    = 20,
                   numThreads  = 1,
                   maxsize     = 10,
                   framePeriod = 1,
@@ -28,9 +29,10 @@ class DataProvider:
         self.rgbDataDir  = rgbDataDir
         self.imuDataDir  = imuDataDir
         self.filenames   = filenames
-        self._classes    = classes
+        self.classes     = classes
         self.dim         = dim
-        self._timesteps  = timesteps
+        self.flowSteps   = flowSteps
+        self.imuSteps    = imuSteps
         self._numThreads = numThreads
         self._length     = filenames.shape[ 0 ]
         self._normalize  = normalize
@@ -41,7 +43,7 @@ class DataProvider:
         
         self._reset()
         self._generateLabelsDict( lblFilename )
-        self.inertialDict = self.inertialLoader( dataDir = imuDataDir )
+        self.imuDict = self.loadImuData( dataDir = imuDataDir )
 
         self._produce = True
         self._batchQueue = queue.Queue( maxsize = maxsize )
@@ -68,6 +70,7 @@ class DataProvider:
         for line in f.readlines():
             self._labelsDict[ line.split()[ 1 ] ] = line.split()[ 0 ]
 
+
     def _reset( self ):
         raise NotImplementedError( 'Please implement this method' )
 
@@ -76,15 +79,11 @@ class DataProvider:
         raise NotImplementedError( 'Please implement this method' )
 
 
-    def loadInertialData( self, dataDir ):
+    def loadImuData( self, dataDir ):
         if dataDir == '':
             return None
-        inertialDict = InertialLoader().load_multimodal( data_dir = dataDir )
-        return inertialDict
-
-
-    def provideImuFrame( self, name, index ):
-        return self.inertialDict[ name ][ index ]
+        imuDict = InertialLoader().load_multimodal( data_dir = dataDir )
+        return imuDict
 
 
     def provideRgbFrame( self, video, index ):
@@ -117,10 +116,16 @@ class DataProvider:
         return u, v
 
 
+    def stackImu( self, key, start ):
+        window = self.imuDict[ key ][ start : start + self.imuSteps ]
+        # [ t, f ]
+        return np.array( window )
+
+
     def stackFlow( self, video, start ):
         flowList = list()
         for i in range( start,
-                        start + self._timesteps * self.framePeriod,
+                        start + self.flowSteps * self.framePeriod,
                         self.framePeriod ):
             u, v = self.provideFlowFrame( video, i )
             flowList.append( np.array( [ u , v ] ) )

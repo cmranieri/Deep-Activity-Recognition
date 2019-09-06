@@ -43,7 +43,7 @@ if __name__ == '__main__':
                               modelDir     = '/lustre/cranieri/models/ucf101',
                               modelName    = 'model-ucf101-hlstm-inception',
                               cnnModelName = 'model-ucf101-optflow-inception',
-                              timesteps    = 8,
+                              flowSteps    = 8,
                               restoreModel = False,
                               normalize    = False )
 

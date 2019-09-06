@@ -90,13 +90,12 @@ class TrainDataProvider( DataProvider ):
 
     def _getLabelArray( self, path ):
         className = path.split('/')[ 0 ]
-        label = np.zeros(( self._classes ) , dtype = 'float32')
+        label = np.zeros(( self.classes ) , dtype = 'float32')
         label[ int( self._labelsDict[ className ] ) - 1 ] = 1.0
         return label
 
 
-    def generateRgbBatch( self ):
-        batchPaths = self._selectBatchPaths()
+    def generateRgbBatch( self, batchPaths ):
         batch  = list()
         labels = list()
         for batchPath in batchPaths:
@@ -115,7 +114,8 @@ class TrainDataProvider( DataProvider ):
         labels = np.array( labels )
         return ( batch , labels )
 
-
+    
+    # Override
     def stackFlow( self, video, start ):
         stack = super( TrainDataProvider, self ).stackFlow( video, start )
         stack = self._randomCrop( stack )
@@ -123,16 +123,14 @@ class TrainDataProvider( DataProvider ):
         return stack
 
 
-    def generateFlowBatch( self ):
-        batchPaths = self._selectBatchPaths()
+    def generateFlowBatch( self, batchPaths ):
         batch  = list()
         labels = list()
-
         for batchPath in batchPaths:
             fullPath  = os.path.join( self.flowDataDir, batchPath )
             video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
             start = np.random.randint( len( video[ 'u' ] ) -
-                        self._timesteps * self.framePeriod )
+                        self.flowSteps * self.framePeriod )
             batch.append( self.stackFlow( video, start ) )
             labels.append( self._getLabelArray( batchPath ) )
 
@@ -140,18 +138,35 @@ class TrainDataProvider( DataProvider ):
         batch = np.reshape( batch , [ len( batchPaths ), 
                                       self.dim,
                                       self.dim,
-                                      2 * self._timesteps] )
+                                      2 * self.flowSteps] )
         labels = np.array( labels, dtype='float32' )
         return ( batch , labels )
 
 
+    def generateImuBatch( self, batchPaths ):
+        batch  = list()
+        labels = list()
+        for batchPath in batchPaths:
+            key = batchPath.split('.')[ 0 ]
+            seq = self.imuDict[ key ]
+            start = np.random.randint( len( seq ) - self.imuSteps )
+            batch.append( stackImu( key, start ) )
+            labels.append( self._getLabelArray( batchPath ) )
+
+        batch  = np.array( batch,  dtype = 'float32' )
+        labels = np.array( labels, dtype = 'float32' )
+        return ( batch , labels )
+
 
     def _batchThread( self ):
         while self._produce:
+            batchPaths = self._selectBatchPaths()
             if self._stream == 'temporal':
-                batchTuple = self.generateFlowBatch()
+                batchTuple = self.generateFlowBatch( batchPaths )
             elif self._stream == 'spatial':
-                batchTuple = self.generateRgbBatch()
+                batchTuple = self.generateRgbBatch( batchPaths )
+            elif self._stream == 'inertial':
+                batchTuple = self.generateImuBatch( batchPaths )
             self._batchQueue.put( batchTuple )
 
 

@@ -21,7 +21,8 @@ class NetworkBase:
                   imuDataDir    = '',
                   restoreModel  = False,
                   dim           = 224,
-                  timesteps     = 8,
+                  flowSteps     = 8,
+                  imuSteps      = 20,
                   classes       = 101,
                   lblFilename   = '../classInd.txt',
                   splitsDir     = '../splits/ucf101',
@@ -33,7 +34,8 @@ class NetworkBase:
                   framePeriod   = 1,
                   clipTh        = 20 ):
         self.dim = dim
-        self.timesteps    = timesteps
+        self.flowSteps    = flowSteps
+        self.imuSteps     = imuSteps
         self.classes      = classes
         self.dataDir      = dataDir
         self.modelDir     = modelDir
@@ -107,7 +109,8 @@ class NetworkBase:
                             classes     = self.classes,
                             dim         = self.dim,
                             lblFilename = self.lblFilename,
-                            timesteps   = self.timesteps,
+                            flowSteps   = self.flowSteps,
+                            imuSteps    = self.imuSteps,
                             stream      = self.stream,
                             normalize   = self.normalize,
                             framePeriod = self.framePeriod,
@@ -125,7 +128,8 @@ class NetworkBase:
                            classes      = self.classes,
                            dim          = self.dim,
                            lblFilename  = self.lblFilename,
-                           timesteps    = self.timesteps,
+                           flowSteps    = self.flowSteps,
+                           imuSteps     = self.imuSteps,
                            stream       = self.stream,
                            normalize    = self.normalize,
                            framePeriod  = self.framePeriod,

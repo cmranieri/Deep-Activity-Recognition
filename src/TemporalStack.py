@@ -41,7 +41,7 @@ if __name__ == '__main__':
     network = TemporalStack( flowDataDir  = '/home/cmranieri/datasets/UCF-101_flow',
                              modelDir     = '/home/cmranieri/models/ucf101',
                              modelName    = 'model-ucf101-stack-inception',
-                             timesteps    = 15,
+                             flowSteps    = 15,
                              clipTh       = 20,
                              framePeriod  = 1,
                              restoreModel = False,
