@@ -21,8 +21,7 @@ class LoaderBase:
                   framePeriod = 1,
                   clipTh      = 20,
                   normalize   = False,
-                  ranges      = True,
-                  **kwargs ):
+                  ranges      = True ):
         self.dataDir      = dataDir
         self.filenames    = filenames
         self._classes     = classes

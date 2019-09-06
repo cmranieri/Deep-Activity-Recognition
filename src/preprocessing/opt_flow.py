@@ -59,6 +59,8 @@ def convert_video( video_path, out_dir, ext ):
         ret, frame2 = cap.read()
         if not ret:
             break
+        
+        count += 1
         next = cv2.cvtColor( frame2,cv2.COLOR_BGR2GRAY )
         next = cv2.UMat( next )
 
@@ -80,7 +82,6 @@ def convert_video( video_path, out_dir, ext ):
         vr_list += [ v_range ]
 
         prev = next
-        count += 1
 
     video_name = video_path.split('/')[-1]
     store_video_flow( u_list, v_list, ur_list, vr_list, out_dir, video_name )
@@ -104,8 +105,8 @@ def process_video( input_dir , output_dir , raw_filename ):
 
 
 def process_ucf101():
-    input_dir  = '/home/cranieri/datasets/UCF-101'
-    output_dir = '/home/cranieri/datasets/UCF-101_flow'
+    input_dir  = '/home/cmranieri/datasets/UCF-101'
+    output_dir = '/home/cmranieri/datasets/UCF-101_flow'
     trainlist = list(np.load( '../../splits/ucf101/trainlist01.npy' ))
     testlist = list(np.load( '../../splits/ucf101/testlist01.npy' ))
 
@@ -116,8 +117,8 @@ def process_ucf101():
         
 
 def process_multimodal():
-    input_dir  = '/home/cranieri/datasets/multimodal_dataset/video'
-    output_dir = '/home/cranieri/datasets/multimodal_dataset_flow'
+    input_dir  = '/home/cmranieri/datasets/multimodal_dataset/video'
+    output_dir = '/home/cmranieri/datasets/multimodal_dataset_flow'
     trainlist = list(np.load( '../../splits/multimodal_dataset/trainlist01.npy' ))
     testlist = list(np.load( '../../splits/multimodal_dataset/testlist01.npy' ))
 
@@ -128,7 +129,7 @@ def process_multimodal():
     
 
 if __name__ == '__main__':
-    #process_ucf101()
-    process_multimodal()
+    process_ucf101()
+    #process_multimodal()
 
 

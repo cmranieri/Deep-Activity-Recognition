@@ -28,8 +28,8 @@ class NetworkBase:
                   tlSuffix      = '',
                   stream        = 'temporal',
                   normalize     = False,
-                  **kwargs ):
-        self.__dict__.update( kwargs )
+                  framePeriod   = 1,
+                  clipTh        = 20 ):
         self.dim = dim
         self.timesteps    = timesteps
         self.classes      = classes
@@ -39,6 +39,8 @@ class NetworkBase:
         self.tlSuffix     = tlSuffix
         self.stream       = stream
         self.normalize    = normalize
+        self.framePeriod  = framePeriod
+        self.clipTh       = clipTh
         
         self.lblFilename = lblFilename
         self._trainFilenames = np.load( os.path.join( splitsDir,
@@ -105,13 +107,15 @@ class NetworkBase:
                             lblFilename = self.lblFilename,
                             timesteps   = self.timesteps,
                             stream      = self.stream,
-                            normalize   = self.normalize )
+                            normalize   = self.normalize,
+                            framePeriod = self.framePeriod,
+                            clipTh      = self.clipTh )
 
     def _generateTestLoader( self,
                              maxsize,
                              numSegments,
                              smallBatches ):
-        return TestLoader( dataDir      = dataDir,
+        return TestLoader( dataDir      = self.dataDir,
                            filenames    = self._testFilenames,
                            numSegments  = numSegments,
                            maxsize      = maxsize,
@@ -121,7 +125,9 @@ class NetworkBase:
                            lblFilename  = self.lblFilename,
                            timesteps    = self.timesteps,
                            stream       = self.stream,
-                           normalize    = self.normalize )
+                           normalize    = self.normalize,
+                           framePeriod  = self.framePeriod,
+                           clipTh       = self.clipTh )
 
 
 

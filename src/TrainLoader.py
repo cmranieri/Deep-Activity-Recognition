@@ -131,7 +131,6 @@ class TrainLoader( LoaderBase ):
         for batchPath in batchPaths:
             fullPath  = os.path.join( self.dataDir, batchPath )
             video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
-
             start = np.random.randint( len( video[ 'u' ] ) -
                         self._timesteps * self.framePeriod )
             batch.append( self.stackFlow( video, start ) )
