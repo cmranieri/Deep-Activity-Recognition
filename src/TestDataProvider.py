@@ -45,7 +45,7 @@ class TestDataProvider( DataProvider ):
     #    return super( TestDataProvider , self ).stackFlow( video, start )
 
 
-    def generateFlowBatch( self, path, flip = False )
+    def generateFlowBatch( self, path, flip = False ):
         batch = list()
         fullPath  = os.path.join( self.flowDataDir, path )
         video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
@@ -84,15 +84,17 @@ class TestDataProvider( DataProvider ):
             else:
                 start = len( seq ) - 1 - self.imuSteps
             # [ b, t, f ]
-            batch.append( self.stackImu( video, start ) )
+            batch.append( self.stackImu( key, start ) )
         return batch
 
 
     def generateBatch( self, path, flip = False ):
         if self._stream == 'temporal':
-            batch = generateFlowBatch( path, flip )
+            batch = self.generateFlowBatch( path, flip )
         elif self._stream == 'spatial':
-            batch = generateRgbBatch( path, flip )
+            batch = self.generateRgbBatch( path, flip )
+        elif self._stream == 'inertial':
+            batch = self.generateImuBatch( path )
         return batch
 
 
@@ -162,17 +164,20 @@ class TestDataProvider( DataProvider ):
         while True:
             self._batchesMutex.acquire()
             batchTuple1 = self.nextBatch()
-            if batchTuple1 is None: break
-            batchTuple2 = self.getFlippedBatch( batchTuple1 )
+            if batchTuple1 is None:
+                self._batchesMutex.release()
+                break
+            
+            batchTuples = [ batchTuple1 ]
+            if self._stream in [ 'temporal', 'spatial' ]:
+                batchTuples.append( self.getFlippedBatch( batchTuple1 ) )
 
             batchStep = len( batchTuple1[0] ) // self._smallBatches
             for i in range( self._smallBatches ):
-                sBatchTuple1 = ( batchTuple1[0][ i * batchStep : (i+1) * batchStep ],
-                                 batchTuple1[1][ i * batchStep : (i+1) * batchStep ] )
-                sBatchTuple2 = ( batchTuple2[0][ i * batchStep : (i+1) * batchStep ],
-                                 batchTuple2[1][ i * batchStep : (i+1) * batchStep ] )
-                self._batchQueue.put( sBatchTuple1 )
-                self._batchQueue.put( sBatchTuple2 )
+                for batchTuple in batchTuples:
+                    sBatchTuple = ( batchTuple1[0][ i * batchStep : (i+1) * batchStep ],
+                                    batchTuple1[1][ i * batchStep : (i+1) * batchStep ] )
+                    self._batchQueue.put( sBatchTuple )
             self._totalProcessed += 1
             self._batchesMutex.release()
 
@@ -195,18 +200,20 @@ class TestDataProvider( DataProvider ):
 
 
 if __name__ == '__main__':
-    dataDir = '/home/cmranieri/datasets/UCF-101_flow'
+    flowDataDir = '/home/cmranieri/datasets/multimodal_dataset_flow'
+    imuDataDir  = '/home/cmranieri/datasets/multimodal_inertial'
     # dataDir = '/lustre/cranieri/UCF-101_flow'
-    filenames   = np.load( '../splits/ucf101/testlist01.npy' )
-    lblFilename = '../classInd.txt'
+    filenames   = np.load( '../splits/multimodal_10/testlist01.npy' )
+    lblFilename = '../classIndMulti.txt'
     
-    with TestDataProvider( dataDir = dataDir,
-                           filenames = filenames,
-                           lblFilename = lblFilename,
-                           stream = 'temporal',
-                           numSegments = 5,
-                           smallBatches = 5 ) as testDataProvider:
-         for i in range(100):
+    with TestDataProvider( flowDataDir  = flowDataDir,
+                           imuDataDir   = imuDataDir,
+                           filenames    = filenames,
+                           lblFilename  = lblFilename,
+                           stream       = 'inertial',
+                           numSegments  = 5,
+                           smallBatches = 1 ) as testDataProvider:
+         for i in range(10):
          # while not testDataProvider.endOfData():
             t = time.time()
             batch, labels = testDataProvider.getBatch()

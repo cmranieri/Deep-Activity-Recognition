@@ -34,7 +34,7 @@ class InertialLoader:
                 act_num = '{:02d}'.format( act_id+1 )
                 seq_num = '{:02d}'.format( seq_id+1 )
                 filename = 'act' + act_num + 'seq' + seq_num + '.csv'
-                with open( os.path.join(dataset_dir, filename), 'r' ) as f:
+                with open( os.path.join(data_dir, filename), 'r' ) as f:
                     inp = list( csv.reader(f, quoting=csv.QUOTE_NONNUMERIC) )
                     if max_len is not None:
                         inp = self.fix_seq_size( inp, max_len )

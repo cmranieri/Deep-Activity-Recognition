@@ -150,7 +150,7 @@ class TrainDataProvider( DataProvider ):
             key = batchPath.split('.')[ 0 ]
             seq = self.imuDict[ key ]
             start = np.random.randint( len( seq ) - self.imuSteps )
-            batch.append( stackImu( key, start ) )
+            batch.append( self.stackImu( key, start ) )
             labels.append( self._getLabelArray( batchPath ) )
 
         batch  = np.array( batch,  dtype = 'float32' )
@@ -176,15 +176,16 @@ class TrainDataProvider( DataProvider ):
 
 
 if __name__ == '__main__':
-    #dataDir    = '/lustre/cranieri/UCF-101_flow'
-    dataDir     = '/home/cmranieri/datasets/UCF-101_flow'
-    filenames   = np.load( '../splits/ucf101/testlist01.npy' )
-    lblFilename = '../classInd.txt'
-    with TrainDataProvider( flowDataDir = dataDir,
+    flowDataDir = '/home/cmranieri/datasets/multimodal_dataset_flow'
+    imuDataDir  = '/home/cmranieri/datasets/multimodal_inertial'
+    filenames   = np.load( '../splits/multimodal_10/trainlist01.npy' )
+    lblFilename = '../classIndMulti.txt'
+    with TrainDataProvider( flowDataDir = flowDataDir,
+                            imuDataDir  = imuDataDir,
                             filenames   = filenames,
                             lblFilename = lblFilename,
-                            numThreads  = 3,
-                            stream = 'temporal' ) as trainDataProvider:
+                            numThreads  = 1,
+                            stream = 'inertial' ) as trainDataProvider:
         for i in range( 100000 ):
             t = time.time()
             batch, labels =  trainDataProvider.getBatch()

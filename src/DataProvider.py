@@ -6,6 +6,7 @@ import pickle
 from PIL import Image
 from threading import Thread, Lock
 import queue
+from InertialLoader import InertialLoader
 
 class DataProvider:
 
