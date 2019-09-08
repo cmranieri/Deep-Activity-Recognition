@@ -17,14 +17,14 @@ class TemporalStack( NetworkBase ):
 
     def _defineNetwork( self ):
         input_tensor = Input( shape = ( self.dim, self.dim,
-                                        2 * self.timesteps ) )
+                                        2 * self.flowSteps ) )
         model = BaseModel( input_tensor = input_tensor,
                            weights = None,
                            classes = self.classes )
 
         initial_learning_rate = 1e-2
         lr_schedule = ExponentialDecay( initial_learning_rate,
-                                        decay_steps = 2000,
+                                        decay_steps = 4000,
                                         decay_rate  = 0.96,
                                         staircase   = True )
         optimizer = SGD( learning_rate = lr_schedule, momentum = 0.9 )
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     #network.evaluate( numSegments  = 25,
     #                  smallBatches = 5,
     #                  storeTests   = True )
-    network.train( steps     = 200000,
-                   batchSize = 16,
-                   numThreads = 4,
-                   maxsize   = 12 )
+    network.train( steps      = 400000,
+                   batchSize  = 16,
+                   numThreads = 2,
+                   maxsize    = 12 )

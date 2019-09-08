@@ -33,18 +33,20 @@ class NetworkBase:
                   normalize     = False,
                   framePeriod   = 1,
                   clipTh        = 20 ):
-        self.dim = dim
-        self.flowSteps    = flowSteps
-        self.imuSteps     = imuSteps
-        self.classes      = classes
-        self.dataDir      = dataDir
-        self.modelDir     = modelDir
-        self.modelName    = modelName
-        self.tlSuffix     = tlSuffix
-        self.stream       = stream
-        self.normalize    = normalize
-        self.framePeriod  = framePeriod
-        self.clipTh       = clipTh
+        self.dim         = dim
+        self.flowSteps   = flowSteps
+        self.imuSteps    = imuSteps
+        self.classes     = classes
+        self.flowDataDir = flowDataDir
+        self.rgbDataDir  = rgbDataDir
+        self.imuDataDir  = imuDataDir
+        self.modelDir    = modelDir
+        self.modelName   = modelName
+        self.tlSuffix    = tlSuffix
+        self.stream      = stream
+        self.normalize   = normalize
+        self.framePeriod = framePeriod
+        self.clipTh      = clipTh
         
         self.lblFilename = lblFilename
         self._trainFilenames = np.load( os.path.join( splitsDir,
@@ -98,42 +100,46 @@ class NetworkBase:
 
 
     def _generateTrainDataProvider( self,
-                              batchSize,
-                              numThreads,
-                              maxsize ):
-        return TrainDataProvider( dataDir     = self.dataDir,
-                            filenames   = self._trainFilenames,
-                            batchSize   = batchSize,
-                            numThreads  = numThreads,
-                            maxsize     = maxsize,
-                            classes     = self.classes,
-                            dim         = self.dim,
-                            lblFilename = self.lblFilename,
-                            flowSteps   = self.flowSteps,
-                            imuSteps    = self.imuSteps,
-                            stream      = self.stream,
-                            normalize   = self.normalize,
-                            framePeriod = self.framePeriod,
-                            clipTh      = self.clipTh )
+                                    batchSize,
+                                    numThreads,
+                                    maxsize ):
+        return TrainDataProvider( flowDataDir = self.flowDataDir,
+                                  rgbDataDir  = self.rgbDataDir,
+                                  imuDataDir  = self.imuDataDir,
+                                  filenames   = self._trainFilenames,
+                                  batchSize   = batchSize,
+                                  numThreads  = numThreads,
+                                  maxsize     = maxsize,
+                                  classes     = self.classes,
+                                  dim         = self.dim,
+                                  lblFilename = self.lblFilename,
+                                  flowSteps   = self.flowSteps,
+                                  imuSteps    = self.imuSteps,
+                                  stream      = self.stream,
+                                  normalize   = self.normalize,
+                                  framePeriod = self.framePeriod,
+                                  clipTh      = self.clipTh )
 
     def _generateTestDataProvider( self,
-                             maxsize,
-                             numSegments,
-                             smallBatches ):
-        return TestDataProvider( dataDir      = self.dataDir,
-                           filenames    = self._testFilenames,
-                           numSegments  = numSegments,
-                           maxsize      = maxsize,
-                           smallBatches = smallBatches,
-                           classes      = self.classes,
-                           dim          = self.dim,
-                           lblFilename  = self.lblFilename,
-                           flowSteps    = self.flowSteps,
-                           imuSteps     = self.imuSteps,
-                           stream       = self.stream,
-                           normalize    = self.normalize,
-                           framePeriod  = self.framePeriod,
-                           clipTh       = self.clipTh )
+                                   maxsize,
+                                   numSegments,
+                                   smallBatches ):
+        return TestDataProvider( flowDataDir  = self.flowDataDir,
+                                 rgbDataDir   = self.rgbDataDir,
+                                 imuDataDir   = self.imuDataDir,
+                                 filenames    = self._testFilenames,
+                                 numSegments  = numSegments,
+                                 maxsize      = maxsize,
+                                 smallBatches = smallBatches,
+                                 classes      = self.classes,
+                                 dim          = self.dim,
+                                 lblFilename  = self.lblFilename,
+                                 flowSteps    = self.flowSteps,
+                                 imuSteps     = self.imuSteps,
+                                 stream       = self.stream,
+                                 normalize    = self.normalize,
+                                 framePeriod  = self.framePeriod,
+                                 clipTh       = self.clipTh )
 
 
 
