@@ -8,16 +8,12 @@ from threading import Thread, Lock
 import queue
 from DataProvider import DataProvider
 
-class TestDataProvider( DataProvider ):
 
-    def __init__( self,
-                  numSegments  = 25,
-                  smallBatches = 1,
-                  stream       = 'temporal',
-                  **kwargs ):
+class TestDataProvider( DataProvider ):
+    def __init__( self, streams, numSegments, smallBatches, streams, **kwargs ):
         super( TestDataProvider , self ).__init__( **kwargs )
         self._numSegments  = numSegments
-        self._stream       = stream
+        self.streams       = streams
         self._smallBatches = smallBatches
         self._batchesMutex = Lock()
         self._paths = self._getPaths()
@@ -41,8 +37,10 @@ class TestDataProvider( DataProvider ):
         self._index += 1
 
 
-    #def stackFlow( self, video, start ):
-    #    return super( TestDataProvider , self ).stackFlow( video, start )
+    # Override
+    def stackFlow( self, video, start ):
+        stack = super( TestDataProvider , self ).stackFlow( video, start )
+        return self.getCrops( inp = stack, stream = 'temporal' )
 
 
     def generateFlowBatch( self, path, flip = False ):
@@ -68,7 +66,7 @@ class TestDataProvider( DataProvider ):
             space = len( video ) // self._numSegments
             batch.append( self.loadRgb( video, i*space ) )
         batch = np.array( batch, dtype = 'float32' )
-        batch = self.getCrops( batch )
+        batch = self.getCrops( inp = batch, stream = 'spatial' )
         return batch
 
 
@@ -89,11 +87,11 @@ class TestDataProvider( DataProvider ):
 
 
     def generateBatch( self, path, flip = False ):
-        if self._stream == 'temporal':
+        if 'temporal' in self.streams:
             batch = self.generateFlowBatch( path, flip )
-        elif self._stream == 'spatial':
+        elif 'spatial' in self.streams:
             batch = self.generateRgbBatch( path, flip )
-        elif self._stream == 'inertial':
+        elif 'inertial' in self.streams:
             batch = self.generateImuBatch( path )
         return batch
 
@@ -106,7 +104,7 @@ class TestDataProvider( DataProvider ):
         return paths
 
 
-    def getCrops( self , inp ):
+    def getCrops( self , inp, stream ):
         dim = self.dim
         marginX = ( inp.shape[ 2 ] - dim ) // 2
         marginY = ( inp.shape[ 1 ] - dim ) // 2
@@ -119,12 +117,12 @@ class TestDataProvider( DataProvider ):
         crops += [ inp[ :, marginY : marginY + dim,
                            marginX : marginX + dim ] ]
         crops = np.array( crops, dtype = 'float32' )
-        if self._stream == 'temporal':
+        if stream == 'temporal':
             # [ c * b, h, w, 2t ]
             crops = np.reshape( crops, [ 5 * self._numSegments,
                                          self.dim, self.dim,
                                          2 * self.flowSteps ] )
-        elif self._stream == 'spatial':
+        elif stream == 'spatial':
             # [ c * b, h, w, 3 ]
             crops = np.reshape( crops, [ 5 * self._numSegments,
                                          self.dim, self.dim, 3 ] )
@@ -169,7 +167,7 @@ class TestDataProvider( DataProvider ):
                 break
             
             batchTuples = [ batchTuple1 ]
-            if self._stream in [ 'temporal', 'spatial' ]:
+            if set( self.streams ).intersection( [ 'temporal', 'spatial' ] ):
                 batchTuples.append( self.getFlippedBatch( batchTuple1 ) )
 
             batchStep = len( batchTuple1[0] ) // self._smallBatches
@@ -182,7 +180,7 @@ class TestDataProvider( DataProvider ):
             self._batchesMutex.release()
 
     
-    def toFiles( self, batch, prefix='' ):
+    def toFiles( self, batch, prefix = '' ):
         i = 0
         for instance in batch:
                 frame = instance * 255

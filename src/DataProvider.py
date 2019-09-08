@@ -18,12 +18,12 @@ class DataProvider:
                   imuDataDir  = '',
                   classes     = 101,
                   dim         = 224,
-                  flowSteps   = 10,
+                  flowSteps   = 1,
                   imuSteps    = 20,
-                  numThreads  = 1,
-                  maxsize     = 10,
                   framePeriod = 1,
                   clipTh      = 20,
+                  numThreads  = 1,
+                  maxsize     = 10,
                   normalize   = False,
                   ranges      = True ):
         self.flowDataDir = flowDataDir

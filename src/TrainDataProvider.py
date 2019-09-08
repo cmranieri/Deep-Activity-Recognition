@@ -10,13 +10,10 @@ from DataProvider import DataProvider
 
 class TrainDataProvider( DataProvider ):
 
-    def __init__( self,
-                  batchSize = 16,
-                  stream    = 'temporal',
-                  **kwargs ): 
+    def __init__( self, batchSize, streams, **kwargs ): 
         super( TrainDataProvider , self ).__init__( **kwargs )
-        self._batchSize  = batchSize
-        self._stream     = stream
+        self.batchSize   = batchSize
+        self.streams     = streams
         self._indexMutex = Lock()
         self._resetMutex = Lock()
  
@@ -45,8 +42,8 @@ class TrainDataProvider( DataProvider ):
 
     def _incIndex( self ):
         self._resetMutex.acquire()
-        newIndex = self._index + self._batchSize
-        if newIndex + self._batchSize >= self._length:
+        newIndex = self._index + self.batchSize
+        if newIndex + self.batchSize >= self._length:
             newIndex = self._reset()
         self._index = newIndex
         self._resetMutex.release()
@@ -64,7 +61,7 @@ class TrainDataProvider( DataProvider ):
     def _selectBatchPaths( self ):
         index, ids = self._popIndex()
         batchPaths = list()
-        endIndex = index + self._batchSize
+        endIndex = index + self.batchSize
         for i in range( index , endIndex ):
             batchPaths += [ self.filenames[ ids[ i ] ].split('.')[0] ]
         return batchPaths
@@ -95,14 +92,22 @@ class TrainDataProvider( DataProvider ):
         return label
 
 
-    def generateRgbBatch( self, batchPaths ):
+    # Override
+    def stackFlow( self, video, start ):
+        stack = super( TrainDataProvider, self ).stackFlow( video, start )
+        stack = self._randomCrop( stack )
+        stack = self._randomFlip( stack )
+        return stack
+
+
+    def generateRgbBatch( self, batchPaths, startsList ):
         batch  = list()
         labels = list()
-        for batchPath in batchPaths:
+        for i, batchPath in enumerate( batchPaths ):
             fullPath  = os.path.join( self.rgbDataDir, batchPath )
             video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
-
-            frameId = np.random.randint( len( video ) )
+            frameId = int( startsList[i] * len( video ) )
+            # frameId = np.random.randint( len( video ) )
             frame = self.provideRgbFrame( video, frameId )
             frame = self._randomCrop( frame )
             frame = self._randomFlip( frame )
@@ -115,22 +120,16 @@ class TrainDataProvider( DataProvider ):
         return ( batch , labels )
 
     
-    # Override
-    def stackFlow( self, video, start ):
-        stack = super( TrainDataProvider, self ).stackFlow( video, start )
-        stack = self._randomCrop( stack )
-        stack = self._randomFlip( stack )
-        return stack
-
-
-    def generateFlowBatch( self, batchPaths ):
+    def generateFlowBatch( self, batchPaths, startsList ):
         batch  = list()
         labels = list()
-        for batchPath in batchPaths:
+        for i, batchPath in enumerate( batchPaths ):
             fullPath  = os.path.join( self.flowDataDir, batchPath )
             video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
-            start = np.random.randint( len( video[ 'u' ] ) -
-                        self.flowSteps * self.framePeriod )
+            start = int( startsList[i] * ( len( video['u'] ) -
+                         self.flowSteps * self.framePeriod ) )
+            #start = np.random.randint( len( video[ 'u' ] ) -
+            #            self.flowSteps * self.framePeriod )
             batch.append( self.stackFlow( video, start ) )
             labels.append( self._getLabelArray( batchPath ) )
 
@@ -143,13 +142,14 @@ class TrainDataProvider( DataProvider ):
         return ( batch , labels )
 
 
-    def generateImuBatch( self, batchPaths ):
+    def generateImuBatch( self, batchPaths, startsList ):
         batch  = list()
         labels = list()
-        for batchPath in batchPaths:
+        for i, batchPath in enumerate( batchPaths ):
             key = batchPath.split('.')[ 0 ]
             seq = self.imuDict[ key ]
-            start = np.random.randint( len( seq ) - self.imuSteps )
+            start = int( startsList[i] * ( len(seq) - self.iuSteps ) )
+            #start = np.random.randint( len( seq ) - self.imuSteps )
             batch.append( self.stackImu( key, start ) )
             labels.append( self._getLabelArray( batchPath ) )
 
@@ -161,11 +161,11 @@ class TrainDataProvider( DataProvider ):
     def _batchThread( self ):
         while self._produce:
             batchPaths = self._selectBatchPaths()
-            if self._stream == 'temporal':
+            if 'temporal' in self.streams:
                 batchTuple = self.generateFlowBatch( batchPaths )
-            elif self._stream == 'spatial':
+            elif 'spatial' in self.streams:
                 batchTuple = self.generateRgbBatch( batchPaths )
-            elif self._stream == 'inertial':
+            elif 'inertial' in self.streams:
                 batchTuple = self.generateImuBatch( batchPaths )
             self._batchQueue.put( batchTuple )
 
@@ -185,7 +185,7 @@ if __name__ == '__main__':
                             filenames   = filenames,
                             lblFilename = lblFilename,
                             numThreads  = 1,
-                            stream = 'inertial' ) as trainDataProvider:
+                            streams = [ 'inertial' ] ) as trainDataProvider:
         for i in range( 100000 ):
             t = time.time()
             batch, labels =  trainDataProvider.getBatch()
