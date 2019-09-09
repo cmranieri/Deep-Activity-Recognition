@@ -12,7 +12,11 @@ from tensorflow.keras.optimizers.schedules import ExponentialDecay
 class TemporalStack( NetworkBase ):
     
     def __init__( self, **kwargs ):
-        super( TemporalStack , self ).__init__( stream = 'temporal', **kwargs )
+        super( TemporalStack , self ).__init__( streams = ['temporal'], **kwargs )
+
+
+    def _prepareBatch( self, batch ):
+        
 
 
     def _defineNetwork( self ):
@@ -24,7 +28,7 @@ class TemporalStack( NetworkBase ):
 
         initial_learning_rate = 1e-2
         lr_schedule = ExponentialDecay( initial_learning_rate,
-                                        decay_steps = 4000,
+                                        decay_steps = 2000,
                                         decay_rate  = 0.96,
                                         staircase   = True )
         optimizer = SGD( learning_rate = lr_schedule, momentum = 0.9 )
@@ -50,7 +54,7 @@ if __name__ == '__main__':
     #network.evaluate( numSegments  = 25,
     #                  smallBatches = 5,
     #                  storeTests   = True )
-    network.train( steps      = 400000,
+    network.train( steps      = 300000,
                    batchSize  = 16,
                    numThreads = 2,
                    maxsize    = 12 )

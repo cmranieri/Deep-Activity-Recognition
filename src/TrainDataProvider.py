@@ -85,11 +85,15 @@ class TrainDataProvider( DataProvider ):
         return img
 
 
-    def _getLabelArray( self, path ):
-        className = path.split('/')[ 0 ]
-        label = np.zeros(( self.classes ) , dtype = 'float32')
-        label[ int( self._labelsDict[ className ] ) - 1 ] = 1.0
-        return label
+    def _getLabelArray( self, batchPaths ):
+        labels = list()
+        for path in batchPaths:
+            className = path.split('/')[ 0 ]
+            label = np.zeros(( self.classes ) , dtype = 'float32')
+            label[ int( self._labelsDict[ className ] ) - 1 ] = 1.0
+            labels.append( label )
+        labels = np.array( labels )
+        return labels
 
 
     # Override
@@ -102,71 +106,62 @@ class TrainDataProvider( DataProvider ):
 
     def generateRgbBatch( self, batchPaths, startsList ):
         batch  = list()
-        labels = list()
         for i, batchPath in enumerate( batchPaths ):
             fullPath  = os.path.join( self.rgbDataDir, batchPath )
             video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
-            frameId = int( startsList[i] * len( video ) )
-            # frameId = np.random.randint( len( video ) )
+            frameId = int( startsList[i] * ( len( video ) -
+                           self.flowSteps * self.framePeriod ) )
             frame = self.provideRgbFrame( video, frameId )
             frame = self._randomCrop( frame )
             frame = self._randomFlip( frame )
-
             batch.append( frame )
-            labels.append( self._getLabelArray( batchPath ) )
-
         batch  = np.array( batch, dtype = 'float32' )
-        labels = np.array( labels )
-        return ( batch , labels )
+        return batch
 
     
     def generateFlowBatch( self, batchPaths, startsList ):
         batch  = list()
-        labels = list()
         for i, batchPath in enumerate( batchPaths ):
             fullPath  = os.path.join( self.flowDataDir, batchPath )
             video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
             start = int( startsList[i] * ( len( video['u'] ) -
                          self.flowSteps * self.framePeriod ) )
-            #start = np.random.randint( len( video[ 'u' ] ) -
-            #            self.flowSteps * self.framePeriod )
             batch.append( self.stackFlow( video, start ) )
-            labels.append( self._getLabelArray( batchPath ) )
-
         batch = np.array( batch, dtype = 'float32' )
         batch = np.reshape( batch , [ len( batchPaths ), 
                                       self.dim,
                                       self.dim,
                                       2 * self.flowSteps] )
-        labels = np.array( labels, dtype='float32' )
-        return ( batch , labels )
+        return batch
 
 
     def generateImuBatch( self, batchPaths, startsList ):
         batch  = list()
-        labels = list()
         for i, batchPath in enumerate( batchPaths ):
             key = batchPath.split('.')[ 0 ]
             seq = self.imuDict[ key ]
-            start = int( startsList[i] * ( len(seq) - self.iuSteps ) )
-            #start = np.random.randint( len( seq ) - self.imuSteps )
+            start = int( startsList[i] * ( len(seq) - self.imuSteps ) )
             batch.append( self.stackImu( key, start ) )
-            labels.append( self._getLabelArray( batchPath ) )
-
         batch  = np.array( batch,  dtype = 'float32' )
-        labels = np.array( labels, dtype = 'float32' )
-        return ( batch , labels )
+        return batch
 
 
     def _batchThread( self ):
         while self._produce:
+            batchDict = dict()
             batchPaths = self._selectBatchPaths()
+            startsList = np.random.random( self.batchSize )
             if 'temporal' in self.streams:
-                batchTuple = self.generateFlowBatch( batchPaths )
-            elif 'spatial' in self.streams:
-                batchTuple = self.generateRgbBatch( batchPaths )
-            elif 'inertial' in self.streams:
-                batchTuple = self.generateImuBatch( batchPaths )
+                batch, labels = self.generateFlowBatch( batchPaths, startsList )
+                batchDict[ 'temporal' ] = batch
+            if 'spatial' in self.streams:
+                batch, labels = self.generateRgbBatch( batchPaths, startsList )
+                batchDict[ 'spatial' ] = batch
+            if 'inertial' in self.streams:
+                batch, labels = self.generateImuBatch( batchPaths, startsList )
+                batchDict[ 'temporal' ] = batch
+            labels = self._getLabelArray( batchPaths )
+            batchTuple = ( batchDict, labels )
             self._batchQueue.put( batchTuple )
 
 

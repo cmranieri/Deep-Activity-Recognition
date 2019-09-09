@@ -1,38 +1,37 @@
 import numpy as np
 import os
 import time
+
 import pickle
-
-from TrainDataProvider import TrainDataProvider
-from TestDataProvider  import TestDataProvider
-
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import SGD
 
+from TrainDataProvider import TrainDataProvider
+from TestDataProvider  import TestDataProvider
+
 
 class NetworkBase:
-    
     def __init__( self,
                   modelDir,
                   modelName,
+                  streams,
                   flowDataDir   = '',
                   rgbDataDir    = '',
                   imuDataDir    = '',
                   restoreModel  = False,
+                  classes       = 101,
                   dim           = 224,
                   flowSteps     = 8,
                   imuSteps      = 20,
-                  classes       = 101,
+                  framePeriod   = 1,
+                  clipTh        = 20,
                   lblFilename   = '../classInd.txt',
                   splitsDir     = '../splits/ucf101',
                   split_n       = '01',
                   tl            = False,
                   tlSuffix      = '',
-                  stream        = 'temporal',
-                  normalize     = False,
-                  framePeriod   = 1,
-                  clipTh        = 20 ):
+                  normalize     = False ):
         self.dim         = dim
         self.flowSteps   = flowSteps
         self.imuSteps    = imuSteps
@@ -43,7 +42,7 @@ class NetworkBase:
         self.modelDir    = modelDir
         self.modelName   = modelName
         self.tlSuffix    = tlSuffix
-        self.stream      = stream
+        self.streams     = streams
         self.normalize   = normalize
         self.framePeriod = framePeriod
         self.clipTh      = clipTh
@@ -115,7 +114,7 @@ class NetworkBase:
                                   lblFilename = self.lblFilename,
                                   flowSteps   = self.flowSteps,
                                   imuSteps    = self.imuSteps,
-                                  stream      = self.stream,
+                                  streams     = self.streams,
                                   normalize   = self.normalize,
                                   framePeriod = self.framePeriod,
                                   clipTh      = self.clipTh )
@@ -136,7 +135,7 @@ class NetworkBase:
                                  lblFilename  = self.lblFilename,
                                  flowSteps    = self.flowSteps,
                                  imuSteps     = self.imuSteps,
-                                 stream       = self.stream,
+                                 streams      = self.streams,
                                  normalize    = self.normalize,
                                  framePeriod  = self.framePeriod,
                                  clipTh       = self.clipTh )
@@ -151,7 +150,7 @@ class NetworkBase:
 
 
     def _prepareBatch( self, batch ):
-        return batch
+        raise NotImplementedError( 'Please implement this method' )
 
 
     def _saveModel( self ):
@@ -180,8 +179,7 @@ class NetworkBase:
                     batch , labels = trainDataProvider.getBatch()
                     batch = self._prepareBatch( batch )
                     # train the selected batch
-                    tr = self.model.train_on_batch( batch,
-                                                    labels )
+                    tr = self.model.train_on_batch( batch, labels )
                     batch_loss = tr[ 0 ]
                     batch_acc  = tr[ 1 ]
                     train_acc_list  += [ batch_acc ]

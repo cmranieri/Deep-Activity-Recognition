@@ -10,7 +10,7 @@ from DataProvider import DataProvider
 
 
 class TestDataProvider( DataProvider ):
-    def __init__( self, streams, numSegments, smallBatches, streams, **kwargs ):
+    def __init__( self, streams, numSegments, smallBatches, **kwargs ):
         super( TestDataProvider , self ).__init__( **kwargs )
         self._numSegments  = numSegments
         self.streams       = streams
@@ -37,10 +37,13 @@ class TestDataProvider( DataProvider ):
         self._index += 1
 
 
-    # Override
-    def stackFlow( self, video, start ):
-        stack = super( TestDataProvider , self ).stackFlow( video, start )
-        return self.getCrops( inp = stack, stream = 'temporal' )
+    def _getLabelArray( self, path ):
+        labels = np.zeros( ( 5 * self._numSegments, self.classes ), 
+                           dtype = 'float32' )
+        className = path.split('/')[ -2 ]
+        labels[ :, int( self._labelsDict[ className ] ) - 1 ] = 1.0
+        self._labels = labels
+        return labels
 
 
     def generateFlowBatch( self, path, flip = False ):
@@ -55,6 +58,8 @@ class TestDataProvider( DataProvider ):
                 start = len( video[ 'u' ] ) - 1 - self.flowSteps * self.framePeriod
             # [ b, h, w, 2, t ]
             batch.append( self.stackFlow( video, start ) )
+        batch = np.array( batch, dtype = 'float32' )
+        batch = self.getCrops( inp = batch, stream = 'temporal' )
         return batch
 
 
@@ -83,17 +88,24 @@ class TestDataProvider( DataProvider ):
                 start = len( seq ) - 1 - self.imuSteps
             # [ b, t, f ]
             batch.append( self.stackImu( key, start ) )
+        batch = np.array( batch, dtype = 'float32' )
+        batch = self.replicateImu( batch )
         return batch
 
 
     def generateBatch( self, path, flip = False ):
+        batchDict = dict()
         if 'temporal' in self.streams:
             batch = self.generateFlowBatch( path, flip )
-        elif 'spatial' in self.streams:
+            batchDict['temporal'] = batch
+        if 'spatial' in self.streams:
             batch = self.generateRgbBatch( path, flip )
-        elif 'inertial' in self.streams:
+            batchDict['spatial'] = batch
+        if 'inertial' in self.streams:
             batch = self.generateImuBatch( path )
-        return batch
+            batchDict['inertial'] = batch
+        labels = self._getLabelArray( path )
+        return ( batchDict, labels )
 
 
     def _getPaths( self ):
@@ -102,6 +114,14 @@ class TestDataProvider( DataProvider ):
             name = filename.split('.')[0] 
             paths += [ name ]
         return paths
+
+
+    def replicateImu( self, inp ):
+        rep_inp = list( inp )
+        if set( self.streams ).intersection( ['temporal', 'spatial'] ):
+            # center + crops
+            rep_inp = rep_inp * 5
+        return np.array( rep_inp, dtype = 'float32' )
 
 
     def getCrops( self , inp, stream ):
@@ -134,16 +154,8 @@ class TestDataProvider( DataProvider ):
             return None
         path = self._paths[ self._index ]
         self._incIndex()
-
-        batch = self.generateBatch( path )
-
-        labels = np.zeros( ( 5 * self._numSegments, self.classes ), 
-                           dtype = 'float32' )
-        className = path.split('/')[ -2 ]
-        labels[ :, int( self._labelsDict[ className ] ) - 1 ] = 1.0
-        self._labels = labels
-
-        return ( batch , labels )
+        batchDict, labels = self.generateBatch( path )
+        return ( batchDict, labels )
 
 
     def getFlips( self , inp ):
@@ -151,11 +163,17 @@ class TestDataProvider( DataProvider ):
         return inp
 
 
-    def getFlippedBatch( self , batchTuple ):
-        batch, labels = batchTuple
-        fbatch = batch.copy()
-        fbatch = self.getFlips( fbatch )
-        return ( fbatch , labels )
+    def getFlippedBatch( self, batchTuple ):
+        batchDict, labels = batchTuple
+        newBatchDict = dict()
+        for stream in self.streams:
+            if stream in [ 'temporal', 'spatial' ]:
+                batch = batchDict[ stream ].copy()
+                fbatch = self.getFlips( batch )
+                newBatchDict[ stream ] = fbatch
+            elif stream == 'inertial':
+                newBatchDict[ stream ] = batchDict[ stream ].copy()
+        return ( newBatchDict, labels )
 
 
     def _batchThread( self ):
@@ -166,16 +184,12 @@ class TestDataProvider( DataProvider ):
                 self._batchesMutex.release()
                 break
             
-            batchTuples = [ batchTuple1 ]
+            batchTuples = [ batchTuples1 ]
             if set( self.streams ).intersection( [ 'temporal', 'spatial' ] ):
                 batchTuples.append( self.getFlippedBatch( batchTuple1 ) )
-
-            batchStep = len( batchTuple1[0] ) // self._smallBatches
-            for i in range( self._smallBatches ):
-                for batchTuple in batchTuples:
-                    sBatchTuple = ( batchTuple1[0][ i * batchStep : (i+1) * batchStep ],
-                                    batchTuple1[1][ i * batchStep : (i+1) * batchStep ] )
-                    self._batchQueue.put( sBatchTuple )
+                
+            for batchTuple in batchTuples:
+                self._batchQueue.put( batchTuple )
             self._totalProcessed += 1
             self._batchesMutex.release()
 
@@ -208,7 +222,7 @@ if __name__ == '__main__':
                            imuDataDir   = imuDataDir,
                            filenames    = filenames,
                            lblFilename  = lblFilename,
-                           stream       = 'inertial',
+                           streams      = 'temporal',
                            numSegments  = 5,
                            smallBatches = 1 ) as testDataProvider:
          for i in range(10):
