@@ -59,7 +59,9 @@ class TestDataProvider( DataProvider ):
             # [ b, h, w, 2, t ]
             batch.append( self.stackFlow( video, start ) )
         batch = np.array( batch, dtype = 'float32' )
+        print(batch.shape)
         batch = self.getCrops( inp = batch, stream = 'temporal' )
+        print(batch.shape)
         return batch
 
 
@@ -184,7 +186,7 @@ class TestDataProvider( DataProvider ):
                 self._batchesMutex.release()
                 break
             
-            batchTuples = [ batchTuples1 ]
+            batchTuples = [ batchTuple1 ]
             if set( self.streams ).intersection( [ 'temporal', 'spatial' ] ):
                 batchTuples.append( self.getFlippedBatch( batchTuple1 ) )
                 
@@ -195,13 +197,12 @@ class TestDataProvider( DataProvider ):
 
     
     def toFiles( self, batch, prefix = '' ):
-        i = 0
-        for instance in batch:
-                frame = instance * 255
-            #for frame in instance.transpose( 2,0,1 ):
+        for i, flow in enumerate(batch['temporal']):
+            for j in range( self.flowSteps ):
+                frame = flow[ ..., j ].copy()
+                frame = cv2.normalize( frame, frame, 0, 255, cv2.NORM_MINMAX )
                 frame = np.array(frame, dtype='uint8')
-                cv2.imwrite( 'test/' + str(prefix) + str(i) + '.jpeg', frame )
-                i += 1
+                cv2.imwrite( 'test/%s_%d_%d.jpeg' % (prefix,i,j), frame )
 
 
     def getBatch( self ):
@@ -212,24 +213,25 @@ class TestDataProvider( DataProvider ):
 
 
 if __name__ == '__main__':
-    flowDataDir = '/home/cmranieri/datasets/multimodal_dataset_flow'
-    imuDataDir  = '/home/cmranieri/datasets/multimodal_inertial'
+    flowDataDir = '/home/caetano'
+    #imuDataDir  = '/home/cmranieri/datasets/multimodal_inertial'
     # dataDir = '/lustre/cranieri/UCF-101_flow'
-    filenames   = np.load( '../splits/multimodal_10/testlist01.npy' )
-    lblFilename = '../classIndMulti.txt'
+    filenames   = np.load( '../splits/ucf101/trainlist01.npy' )
+    lblFilename = '../classInd.txt'
     
     with TestDataProvider( flowDataDir  = flowDataDir,
-                           imuDataDir   = imuDataDir,
+                           #imuDataDir   = imuDataDir,
                            filenames    = filenames,
                            lblFilename  = lblFilename,
-                           streams      = 'temporal',
+                           streams      = ['temporal'],
+                           flowSteps    = 10,
                            numSegments  = 5,
                            smallBatches = 1 ) as testDataProvider:
-         for i in range(10):
+         for i in range(40):
          # while not testDataProvider.endOfData():
             t = time.time()
             batch, labels = testDataProvider.getBatch()
-            #testDataProvider.toFiles( batch, '{:02d}'.format(i) + '_' )
+            testDataProvider.toFiles( batch, '{:02d}'.format(i) + '_' )
             print( testDataProvider._totalProcessed, 'Total time:' , time.time() - t )
 
 
