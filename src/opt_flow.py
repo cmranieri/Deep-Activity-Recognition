@@ -6,8 +6,9 @@ from PIL import Image
 from io import BytesIO
 import pickle
 
-algorithm = 'tvl1'
-outsize   = (256,454)
+algorithm = 'brox'
+#outsize   = (256,454)
+outsize   = (256,341)
 
 def make_dir( path ):
     if not os.path.exists( path ):
@@ -30,8 +31,6 @@ def prep_flow_frame( u, v ):
     v = cv2.normalize( v, v, 0, 255, cv2.NORM_MINMAX )
     u = u.astype( 'uint8' )
     v = v.astype( 'uint8' )
-    u = cv2.resize( u, outsize, interpolation=cv2.INTER_AREA )
-    v = cv2.resize( v, outsize, interpolation=cv2.INTER_AREA )
     img_u = Image.fromarray( u )
     img_v = Image.fromarray( v )
     u_out = BytesIO()
@@ -45,8 +44,10 @@ def convert_video( video_path, out_dir, ext ):
  
     cap = cv2.VideoCapture( video_path + ext )
     ret, frame1 = cap.read()
+    frame1 = cv2.resize( frame1, outsize, interpolation=cv2.INTER_AREA )
     prev = cv2.cvtColor( frame1 , cv2.COLOR_BGR2GRAY )
-    prev = cv2.UMat( prev )
+    if algorithm == 'brox':
+        prev = np.float32( prev ) / 255.0
 
     u_list  = list()
     v_list  = list()
@@ -61,15 +62,17 @@ def convert_video( video_path, out_dir, ext ):
             break
         
         count += 1
-        next = cv2.cvtColor( frame2,cv2.COLOR_BGR2GRAY )
-        next = cv2.UMat( next )
+        frame2 = cv2.resize( frame2, outsize, interpolation=cv2.INTER_AREA )
+        next = cv2.cvtColor( frame2, cv2.COLOR_BGR2GRAY )
 
-        if algorithm == 'tvl1':
+        if algorithm == 'brox':
+            next = np.float32( next ) / 255.0
+            flow = cv2.pythoncuda.gpuOpticalFlowBrox( prev, next, None )
+        elif algorithm == 'tvl1':
             flow = optical_flow.calc( prev, next, None )
         elif algorithm == 'farneback':
-            flow = cv2.calcOpticalFlowFarneback( prev, next, None )
+            flow = cv2.pythoncuda.gpuOpticalFlowFarneback( prev, next, None, 0.5, 3, 15, 3, 5, 1.2, 0 )
 
-        flow = flow.get()
         u_out, v_out = prep_flow_frame( flow[ ... , 0 ].copy(),
                                         flow[ ... , 1 ].copy() )
         u_list += [ u_out ]
