@@ -27,8 +27,8 @@ class NetworkBase:
                   framePeriod   = 1,
                   clipTh        = 20,
                   lblFilename   = '../classInd.txt',
-                  splitsDir     = '../splits/ucf101',
-                  split_n       = '01',
+                  trainListPath = '../splits/ucf101/trainlist01.txt',
+                  testListPath  = '../splits/ucf101/testlist01.txt',
                   tl            = False,
                   tlSuffix      = '',
                   normalize     = False ):
@@ -45,26 +45,32 @@ class NetworkBase:
         self.streams     = streams
         self.normalize   = normalize
         self.framePeriod = framePeriod
-        self.clipTh      = clipTh
-        
+        self.clipTh      = clipTh 
         self.lblFilename = lblFilename
-        self._trainFilenames = np.load( os.path.join( splitsDir,
-                                        'trainlist' + split_n + '.npy' ) )
-        self._testFilenames  = np.load( os.path.join( splitsDir,
-                                        'testlist'  + split_n + '.npy' ) )
-        self._resultsDir = '../results'
+
+        self._trainFilenames = self._loadSplitNames( trainListPath )
+        self._testFilenames  = self._loadSplitNames( testListPath )
+        self._resultsDir  = '../results'
+        self._outputsPath = os.path.join( '../outputs', self.modelName + '.pickle' )
+
+        self.model = self.loadModel( restoreModel , tl )
         self._step = 0
 
-        self.loadModel( restoreModel , tl )
-        self._outputsPath = os.path.join( '../outputs', self.modelName + '.pickle' )
+
+
+    def _loadSplitNames( self, filename ):
+        namesList = list()
+        with open( filename, 'r' ) as f:
+            for line in f:
+                namesList.append( line.split(' ')[0].strip('\n') )
+        return np.array( namesList )
 
 
     def _defineNetwork( self ):
         raise NotImplementedError( 'Please implement this method' )
 
 
-    def _changeTop( self ):
-        base_model = self.model
+    def _updateForTL( self, base_model ):
         base_model.layers.pop()
         y = base_model.layers[-1].output
         y = Dense( self.classes, activation='softmax' )( y )
@@ -80,21 +86,22 @@ class NetworkBase:
         model.compile( loss = 'categorical_crossentropy',
                        optimizer = optimizer,
                        metrics = [ 'acc' ] )
-        self.model = model
+        return model
 
 
     def loadModel( self, restoreModel, tl ):
         print( 'Loading model...' )
         if not ( restoreModel or tl ):
-            self.model = self._defineNetwork()
+            model = self._defineNetwork()
         else:
-            self.model = load_model( os.path.join( self.modelDir,
-                                                   str(self.modelName) + '.h5' ) )
+            model = load_model( os.path.join( self.modelDir,
+                                              str(self.modelName) + '.h5' ) )
         if tl:
-            self.modelName = self.modelName + self.tlSuffix
-            self._changeTop()
+            modelName = self.modelName + self.tlSuffix
+            model = self._updateForTL( model )
             self._saveModel()
         print( 'Model loaded!' )
+        return model
 
 
 
@@ -176,8 +183,8 @@ class NetworkBase:
                                             maxsize    = maxsize ) as trainDataProvider:
                 # train stepsToEval before saving and evaluating
                 for i in range( stepsToEval ):
-                    batch , labels = trainDataProvider.getBatch()
-                    batch = self._prepareBatch( batch )
+                    batchDict , labels = trainDataProvider.getBatch()
+                    batch = self._prepareBatch( batchDict )
                     # train the selected batch
                     tr = self.model.train_on_batch( batch, labels )
                     batch_loss = tr[ 0 ]
@@ -189,7 +196,7 @@ class NetworkBase:
                     if not self._step % stepsToTrainError:
                         train_accuracy = np.mean( train_acc_list  )
                         train_loss     = np.mean( train_loss_list )
-                        print( 'step %d, training accuracy %g, cross entropy %g'%(
+                        print( 'Step: %d | Train acc: %g | Loss: %g'%(
                                self._step, train_accuracy, train_loss ) )
                         self._storeResult( 'train.txt', str(self._step) + ' ' +
                                                         str(train_accuracy) + ' ' +
@@ -210,10 +217,10 @@ class NetworkBase:
                   smallBatches = 1,
                   storeTests   = False ):
         t = time.time()
-        test_acc_list  = list()
-        video_outs     = list()
-        preds_list     = list()
-        labels_list    = list()
+        test_acc_list = list()
+        outs          = list()
+        preds_list    = list()
+        labels_list   = list()
         i = 0
         print( 'Evaluating...' )
         with self._generateTestDataProvider( maxsize      = maxsize,
@@ -221,33 +228,33 @@ class NetworkBase:
                                        smallBatches = smallBatches ) as testDataProvider:
             while not testDataProvider.endOfData():
                 if not i % 200:
-                    print( 'Evaluating video', i )
+                    print( 'Evaluating sample', i )
 
-                testBatch , testLabels = testDataProvider.getBatch()
-                testBatch = self._prepareBatch( testBatch )
+                batchDict , labels = testDataProvider.getBatch()
+                batch = self._prepareBatch( batchDict )
 
-                y_ = self.model.predict_on_batch( testBatch )
-                # mean scores of each video
-                video_outs += list( y_ )
+                y_ = self.model.predict_on_batch( batch )
+                # mean scores of each sample
+                outs += list( y_ )
                
                 if not (i+1) % (smallBatches * 2):
-                    mean = np.mean( np.array( video_outs ), 0 )
-                    video_outs = list()
+                    mean = np.mean( np.array( outs ), 0 )
+                    outs = list()
                     # check whether the prediction is correct
                     # assumes the label is the same for all small batches
                     correct_prediction = np.equal( np.argmax( mean ),
-                                                   np.argmax( testLabels[0] ) )
+                                                   np.argmax( labels[0] ) )
                     test_acc_list.append( correct_prediction )
 
                     # store outputs
                     if storeTests:
                         preds_list.append( mean )
-                        labels_list.append( testLabels[0] )
+                        labels_list.append( labels[0] )
                 i += 1
             
         test_accuracy = np.mean( test_acc_list )
         print( 'Time elapsed:', time.time() - t )
-        print( 'test accuracy:', test_accuracy )
+        print( 'Test accuracy:', test_accuracy )
         self._storeResult( 'test.txt', str(self._step) + ' ' +
                                       str( test_accuracy ) + '\n' )
         if storeTests:

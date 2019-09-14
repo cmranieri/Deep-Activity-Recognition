@@ -152,13 +152,13 @@ class TrainDataProvider( DataProvider ):
             batchPaths = self._selectBatchPaths()
             startsList = np.random.random( self.batchSize )
             if 'temporal' in self.streams:
-                batch, labels = self.generateFlowBatch( batchPaths, startsList )
+                batch = self.generateFlowBatch( batchPaths, startsList )
                 batchDict[ 'temporal' ] = batch
             if 'spatial' in self.streams:
-                batch, labels = self.generateRgbBatch( batchPaths, startsList )
+                batch = self.generateRgbBatch( batchPaths, startsList )
                 batchDict[ 'spatial' ] = batch
             if 'inertial' in self.streams:
-                batch, labels = self.generateImuBatch( batchPaths, startsList )
+                batch = self.generateImuBatch( batchPaths, startsList )
                 batchDict[ 'temporal' ] = batch
             labels = self._getLabelArray( batchPaths )
             batchTuple = ( batchDict, labels )
@@ -171,20 +171,22 @@ class TrainDataProvider( DataProvider ):
 
 
 if __name__ == '__main__':
-    flowDataDir = '/home/cmranieri/datasets/multimodal_dataset_flow'
+    flowDataDir = '/home/cmranieri/datasets/UCF-101_flow'
     imuDataDir  = '/home/cmranieri/datasets/multimodal_inertial'
-    filenames   = np.load( '../splits/multimodal_10/trainlist01.npy' )
-    lblFilename = '../classIndMulti.txt'
+    filenames   = np.load( '../splits/ucf101/trainlist01.npy' )
+    lblFilename = '../classInd.txt'
     with TrainDataProvider( flowDataDir = flowDataDir,
                             imuDataDir  = imuDataDir,
-                            filenames   = filenames,
                             lblFilename = lblFilename,
-                            numThreads  = 1,
-                            streams = [ 'inertial' ] ) as trainDataProvider:
+                            filenames   = filenames,
+                            batchSize   = 16,
+                            flowSteps   = 1,
+                            numThreads  = 2,
+                            streams = [ 'temporal' ] ) as trainDataProvider:
         for i in range( 100000 ):
             t = time.time()
             batch, labels =  trainDataProvider.getBatch()
-            print( i , batch.shape , labels.shape )
+            print( i , batch['temporal'].shape , labels.shape )
             #for i, frame in enumerate(batch):
             #    cv2.imwrite(str(i)+'u.jpeg', frame[...,0])
             #    cv2.imwrite(str(i)+'v.jpeg', frame[...,1])

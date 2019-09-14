@@ -15,7 +15,8 @@ class TemporalStack( NetworkBase ):
         super( TemporalStack , self ).__init__( streams = ['temporal'], **kwargs )
 
 
-    def _prepareBatch( self, batch ):
+    def _prepareBatch( self, batchDict ):
+        return batchDict[ 'temporal' ]
         
 
 
@@ -40,21 +41,21 @@ class TemporalStack( NetworkBase ):
 
 
 if __name__ == '__main__':
-    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
+    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
     network = TemporalStack( flowDataDir  = '/home/cmranieri/datasets/UCF-101_flow',
                              modelDir     = '/home/cmranieri/models/ucf101',
-                             modelName    = 'model-ucf101-stack-inception',
-                             flowSteps    = 15,
+                             modelName    = 'model-ucf101-optflow-inception',
+                             flowSteps    = 1,
                              clipTh       = 20,
                              framePeriod  = 1,
-                             restoreModel = False,
+                             restoreModel = True,
                              normalize    = False )
 
     #network.evaluate( numSegments  = 25,
     #                  smallBatches = 5,
     #                  storeTests   = True )
-    network.train( steps      = 300000,
+    network.train( steps      = 140000,
                    batchSize  = 16,
-                   numThreads = 2,
+                   numThreads = 3,
                    maxsize    = 12 )

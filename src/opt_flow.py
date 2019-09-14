@@ -35,8 +35,8 @@ def prep_flow_frame( u, v ):
     img_v = Image.fromarray( v )
     u_out = BytesIO()
     v_out = BytesIO()
-    img_u.save( u_out , format='jpeg' , quality=100 )
-    img_v.save( v_out , format='jpeg' , quality=100 )
+    img_u.save( u_out , format='jpeg' , quality=90 )
+    img_v.save( v_out , format='jpeg' , quality=90 )
     return u_out, v_out
 
 
@@ -107,11 +107,19 @@ def process_video( input_dir , output_dir , raw_filename ):
     print( 'Done' )
 
 
+def read_fileslist( path ):
+    namesList = list()
+    with open( path, 'r' ) as f:
+        for line in f:
+            namesList.append( line.split(' ')[0].strip('\n') )
+    return namesList
+
+
 def process_ucf101():
     input_dir  = '/home/cmranieri/datasets/UCF-101'
     output_dir = '/home/cmranieri/datasets/UCF-101_flow'
-    trainlist = list(np.load( '../../splits/ucf101/trainlist01.npy' ))
-    testlist = list(np.load( '../../splits/ucf101/testlist01.npy' ))
+    trainlist  = read_fileslist( '../splits/ucf101/trainlist01.txt' )
+    testlist   = read_fileslist( '../splits/ucf101/testlist01.txt' )
 
     for filename in trainlist+testlist:
         t = time.time()
@@ -122,8 +130,8 @@ def process_ucf101():
 def process_multimodal():
     input_dir  = '/home/cmranieri/datasets/multimodal_dataset/video'
     output_dir = '/home/cmranieri/datasets/multimodal_dataset_flow'
-    trainlist = list(np.load( '../../splits/multimodal_dataset/trainlist01.npy' ))
-    testlist = list(np.load( '../../splits/multimodal_dataset/testlist01.npy' ))
+    trainlist  = read_fileslist( '../splits/multimodal_datasetucf101/trainlist01.txt' )
+    testlist   = read_fileslist( '../splits/multimodal_dataset/testlist01.txt' )
 
     for filename in trainlist+testlist:
         t = time.time()

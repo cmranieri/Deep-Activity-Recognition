@@ -59,9 +59,7 @@ class TestDataProvider( DataProvider ):
             # [ b, h, w, 2, t ]
             batch.append( self.stackFlow( video, start ) )
         batch = np.array( batch, dtype = 'float32' )
-        print(batch.shape)
         batch = self.getCrops( inp = batch, stream = 'temporal' )
-        print(batch.shape)
         return batch
 
 
