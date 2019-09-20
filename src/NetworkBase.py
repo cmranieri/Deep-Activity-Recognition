@@ -32,24 +32,24 @@ class NetworkBase:
                   tl            = False,
                   tlSuffix      = '',
                   normalize     = False ):
-        self.dim         = dim
-        self.flowSteps   = flowSteps
-        self.imuSteps    = imuSteps
-        self.classes     = classes
-        self.flowDataDir = flowDataDir
-        self.rgbDataDir  = rgbDataDir
-        self.imuDataDir  = imuDataDir
-        self.modelDir    = modelDir
-        self.modelName   = modelName
-        self.tlSuffix    = tlSuffix
-        self.streams     = streams
-        self.normalize   = normalize
-        self.framePeriod = framePeriod
-        self.clipTh      = clipTh 
-        self.lblFilename = lblFilename
+        self.dim           = dim
+        self.flowSteps     = flowSteps
+        self.imuSteps      = imuSteps
+        self.classes       = classes
+        self.flowDataDir   = flowDataDir
+        self.rgbDataDir    = rgbDataDir
+        self.imuDataDir    = imuDataDir
+        self.modelDir      = modelDir
+        self.modelName     = modelName
+        self.tlSuffix      = tlSuffix
+        self.streams       = streams
+        self.normalize     = normalize
+        self.framePeriod   = framePeriod
+        self.clipTh        = clipTh 
+        self.lblFilename   = lblFilename
+        self.trainListPath = trainListPath
+        self.testListPath  = testListPath
 
-        self._trainFilenames = self._loadSplitNames( trainListPath )
-        self._testFilenames  = self._loadSplitNames( testListPath )
         self._resultsDir  = '../results'
         self._outputsPath = os.path.join( '../outputs', self.modelName + '.pickle' )
 
@@ -57,22 +57,22 @@ class NetworkBase:
         self._step = 0
 
 
-
+    """
     def _loadSplitNames( self, filename ):
         namesList = list()
         with open( filename, 'r' ) as f:
             for line in f:
                 namesList.append( line.split(' ')[0].strip('\n') )
         return np.array( namesList )
+    """
 
-
-    def _defineNetwork( self ):
+    def defineNetwork( self ):
         raise NotImplementedError( 'Please implement this method' )
 
 
     def _updateForTL( self, base_model ):
-        base_model.layers.pop()
-        y = base_model.layers[-1].output
+        #base_model.layers.pop()
+        y = base_model.layers[-2].output
         y = Dense( self.classes, activation='softmax' )( y )
         model = Model( inputs = base_model.input , outputs = y )
 
@@ -92,7 +92,7 @@ class NetworkBase:
     def loadModel( self, restoreModel, tl ):
         print( 'Loading model...' )
         if not ( restoreModel or tl ):
-            model = self._defineNetwork()
+            model = self.defineNetwork()
         else:
             model = load_model( os.path.join( self.modelDir,
                                               str(self.modelName) + '.h5' ) )
@@ -112,7 +112,7 @@ class NetworkBase:
         return TrainDataProvider( flowDataDir = self.flowDataDir,
                                   rgbDataDir  = self.rgbDataDir,
                                   imuDataDir  = self.imuDataDir,
-                                  filenames   = self._trainFilenames,
+                                  namesFilePath = self.trainListPath,
                                   batchSize   = batchSize,
                                   numThreads  = numThreads,
                                   maxsize     = maxsize,
@@ -128,15 +128,13 @@ class NetworkBase:
 
     def _generateTestDataProvider( self,
                                    maxsize,
-                                   numSegments,
-                                   smallBatches ):
+                                   numSegments ):
         return TestDataProvider( flowDataDir  = self.flowDataDir,
                                  rgbDataDir   = self.rgbDataDir,
                                  imuDataDir   = self.imuDataDir,
-                                 filenames    = self._testFilenames,
+                                 namesFilePath = self.testListPath,
                                  numSegments  = numSegments,
                                  maxsize      = maxsize,
-                                 smallBatches = smallBatches,
                                  classes      = self.classes,
                                  dim          = self.dim,
                                  lblFilename  = self.lblFilename,
@@ -214,44 +212,43 @@ class NetworkBase:
     def evaluate( self,
                   maxsize      = 8,
                   numSegments  = 5,
-                  smallBatches = 1,
                   storeTests   = False ):
         t = time.time()
         test_acc_list = list()
         outs          = list()
         preds_list    = list()
         labels_list   = list()
-        i = 0
         print( 'Evaluating...' )
-        with self._generateTestDataProvider( maxsize      = maxsize,
-                                       numSegments  = numSegments,
-                                       smallBatches = smallBatches ) as testDataProvider:
+        i = 0
+        with self._generateTestDataProvider( maxsize = maxsize,
+                                             numSegments  = numSegments ) as testDataProvider:
             while not testDataProvider.endOfData():
                 if not i % 200:
                     print( 'Evaluating sample', i )
 
+                # load and prepare batch and its flipped version
                 batchDict , labels = testDataProvider.getBatch()
                 batch = self._prepareBatch( batchDict )
-
-                y_ = self.model.predict_on_batch( batch )
+                flipBatchDict, _ = testDataProvider.getBatch()
+                flipBatch = self._prepareBatch( flipBatchDict )
+                # concatenate batch and flipped batch
+                batch = np.concatenate( ( batch, flipBatch ), axis = 0 )
+                # predict the data of an entire video
+                y_ = self.model.predict( batch, batch_size=75 )
                 # mean scores of each sample
-                outs += list( y_ )
-               
-                if not (i+1) % (smallBatches * 2):
-                    mean = np.mean( np.array( outs ), 0 )
-                    outs = list()
-                    # check whether the prediction is correct
-                    # assumes the label is the same for all small batches
-                    correct_prediction = np.equal( np.argmax( mean ),
-                                                   np.argmax( labels[0] ) )
-                    test_acc_list.append( correct_prediction )
+                mean = np.mean( np.array( y_ ), 0 )
+                # check whether the prediction is correct
+                # assumes the label is the same for all instances on the batch
+                correct_prediction = np.equal( np.argmax( mean ),
+                                               np.argmax( labels[0] ) )
+                test_acc_list.append( correct_prediction )
 
-                    # store outputs
-                    if storeTests:
-                        preds_list.append( mean )
-                        labels_list.append( labels[0] )
+                # store outputs
+                if storeTests:
+                    preds_list.append( mean )
+                    labels_list.append( labels[0] )
                 i += 1
-            
+        
         test_accuracy = np.mean( test_acc_list )
         print( 'Time elapsed:', time.time() - t )
         print( 'Test accuracy:', test_accuracy )

@@ -10,11 +10,10 @@ from DataProvider import DataProvider
 
 
 class TestDataProvider( DataProvider ):
-    def __init__( self, streams, numSegments, smallBatches, **kwargs ):
+    def __init__( self, streams, numSegments, **kwargs ):
         super( TestDataProvider , self ).__init__( **kwargs )
         self._numSegments  = numSegments
         self.streams       = streams
-        self._smallBatches = smallBatches
         self._batchesMutex = Lock()
         self._paths = self._getPaths()
         
@@ -46,7 +45,7 @@ class TestDataProvider( DataProvider ):
         return labels
 
 
-    def generateFlowBatch( self, path, flip = False ):
+    def generateFlowBatch( self, path ):
         batch = list()
         fullPath  = os.path.join( self.flowDataDir, path )
         video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
@@ -63,7 +62,7 @@ class TestDataProvider( DataProvider ):
         return batch
 
 
-    def generateRgbBatch( self, path, flip = False ):
+    def generateRgbBatch( self, path ):
         batch = list()
         fullPath  = os.path.join( self.rgbDataDir, path )
         video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
@@ -93,13 +92,13 @@ class TestDataProvider( DataProvider ):
         return batch
 
 
-    def generateBatch( self, path, flip = False ):
+    def generateBatch( self, path ):
         batchDict = dict()
         if 'temporal' in self.streams:
-            batch = self.generateFlowBatch( path, flip )
+            batch = self.generateFlowBatch( path )
             batchDict['temporal'] = batch
         if 'spatial' in self.streams:
-            batch = self.generateRgbBatch( path, flip )
+            batch = self.generateRgbBatch( path )
             batchDict['spatial'] = batch
         if 'inertial' in self.streams:
             batch = self.generateImuBatch( path )
@@ -177,20 +176,17 @@ class TestDataProvider( DataProvider ):
 
 
     def _batchThread( self ):
-        while True:
+        while not self._processedAll():
             self._batchesMutex.acquire()
             batchTuple1 = self.nextBatch()
-            if batchTuple1 is None:
-                self._batchesMutex.release()
-                break
-            
-            batchTuples = [ batchTuple1 ]
-            if set( self.streams ).intersection( [ 'temporal', 'spatial' ] ):
-                batchTuples.append( self.getFlippedBatch( batchTuple1 ) )
-                
-            for batchTuple in batchTuples:
-                self._batchQueue.put( batchTuple )
-            self._totalProcessed += 1
+            if batchTuple1 is not None:
+                batchTuples = [ batchTuple1 ]
+                if set( self.streams ).intersection( [ 'temporal', 'spatial' ] ):
+                    batchTuples.append( self.getFlippedBatch( batchTuple1 ) )
+                    
+                for batchTuple in batchTuples:
+                    self._batchQueue.put( batchTuple )
+                self._totalProcessed += 1
             self._batchesMutex.release()
 
     
@@ -211,26 +207,25 @@ class TestDataProvider( DataProvider ):
 
 
 if __name__ == '__main__':
-    flowDataDir = '/home/caetano'
+    flowDataDir = '/lustre/cranieri/datasets/UCF-101_flow'
     #imuDataDir  = '/home/cmranieri/datasets/multimodal_inertial'
-    # dataDir = '/lustre/cranieri/UCF-101_flow'
-    filenames   = np.load( '../splits/ucf101/trainlist01.npy' )
-    lblFilename = '../classInd.txt'
     
     with TestDataProvider( flowDataDir  = flowDataDir,
                            #imuDataDir   = imuDataDir,
-                           filenames    = filenames,
-                           lblFilename  = lblFilename,
+                           namesFilePath = '../splits/ucf101/testlist01.txt',
+                           lblFilename  = '../classInd.txt',
                            streams      = ['temporal'],
                            flowSteps    = 10,
-                           numSegments  = 5,
-                           smallBatches = 1 ) as testDataProvider:
-         for i in range(40):
-         # while not testDataProvider.endOfData():
+                           numSegments  = 5 ) as testDataProvider:
+         # for i in range(40):
+         i = 0
+         while not testDataProvider.endOfData():
             t = time.time()
-            batch, labels = testDataProvider.getBatch()
-            testDataProvider.toFiles( batch, '{:02d}'.format(i) + '_' )
+            batchDict, labels = testDataProvider.getBatch()
+            print( i, batchDict['temporal'].shape )
+            #testDataProvider.toFiles( batch, '{:02d}'.format(i) + '_' )
             print( testDataProvider._totalProcessed, 'Total time:' , time.time() - t )
+            i += 1
 
 
 

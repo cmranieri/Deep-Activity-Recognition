@@ -1,6 +1,6 @@
-#PBS -N train_optflow
+#PBS -N train_stack
 #PBS -l ngpus=1
-#PBS -l walltime=300:00:00
+#PBS -l walltime=72:00:00
 
 
 module load python/3.5.4

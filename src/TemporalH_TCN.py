@@ -3,17 +3,18 @@ import os
 
 from TemporalH import TemporalH
 
-from keras.layers import Input, Dense 
-from keras.layers import concatenate, Reshape, Permute
-from keras.optimizers import SGD
-from keras.models import Model
+from tensorflow.keras.layers import Input, Dense 
+from tensorflow.keras.layers import concatenate, Reshape, Permute
+from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.models import Model
 from tcn import TCN
 
 
 
 class TemporalH_TCN( TemporalH ):
     def __init__( self, **kwargs ):
-        super( TemporalH_TCN , self ).__init__( **kwargs )
+        super( TemporalH_TCN , self ).__init__( streams = ['temporal'],
+                                                **kwargs )
 
 
    
@@ -40,11 +41,16 @@ class TemporalH_TCN( TemporalH ):
 
 
 if __name__ == '__main__':
-    #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
+    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
     network = TemporalTCN( flowDataDir  = '/lustre/cranieri/datasets/UCF-101_flow',
                            modelDir     = '/lustre/cranieri/models/ucf101',
                            modelName    = 'model-ucf101-tcn-inception',
+                           cnnModelName = 'model-ucf101-optflow-inception',
+                           trainListPath = '../splits/ucf101/trainlist01.txt',
+                           testListPath  = '../splits/ucf101/testlist01.txt',
+                           flowSteps    = 15,
+                           clipTh       = 20,
                            restoreModel = False,
                            normalize    = False)
 
@@ -52,7 +58,7 @@ if __name__ == '__main__':
     #                  smallBatches = 5,
     #                  storeTests   = True )
 
-    network.train( steps      = 800000,
-                   batchSize  = 16,
-                   numThreads = 8,
-                   maxsize    = 24 )  
+    network.train( steps      = 200000,
+                   batchSize  = 32,
+                   numThreads = 3,
+                   maxsize    = 8 )  

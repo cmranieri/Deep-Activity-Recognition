@@ -11,7 +11,7 @@ from InertialLoader import InertialLoader
 class DataProvider:
 
     def __init__( self,
-                  filenames,
+                  namesFilePath,
                   lblFilename,
                   flowDataDir = '',
                   rgbDataDir  = '',
@@ -29,19 +29,18 @@ class DataProvider:
         self.flowDataDir = flowDataDir
         self.rgbDataDir  = rgbDataDir
         self.imuDataDir  = imuDataDir
-        self.filenames   = filenames
         self.classes     = classes
         self.dim         = dim
         self.flowSteps   = flowSteps
         self.imuSteps    = imuSteps
         self._numThreads = numThreads
-        self._length     = filenames.shape[ 0 ]
         self._normalize  = normalize
         self._ranges     = ranges
-
-        self.clipTh = clipTh
+        self.clipTh      = clipTh
         self.framePeriod = framePeriod
         
+        self.filenames = self._loadFileNames( namesFilePath )
+        self._length   = self.filenames.shape[ 0 ]
         self._reset()
         self._generateLabelsDict( lblFilename )
         self.imuDict = self.loadImuData( dataDir = imuDataDir )
@@ -78,6 +77,14 @@ class DataProvider:
 
     def _incIndex( self ):
         raise NotImplementedError( 'Please implement this method' )
+
+
+    def _loadFileNames( self, namesFilePath ):
+        namesList = list()
+        with open( namesFilePath, 'r' ) as f:
+            for line in f:
+                namesList.append( line.split(' ')[0].strip('\n') )
+        return np.array( namesList )
 
 
     def loadImuData( self, dataDir ):
