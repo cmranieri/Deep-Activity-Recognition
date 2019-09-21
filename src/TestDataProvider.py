@@ -207,7 +207,7 @@ class TestDataProvider( DataProvider ):
 
 
 if __name__ == '__main__':
-    flowDataDir = '/lustre/cranieri/datasets/UCF-101_flow'
+    flowDataDir = '/home/cmranieri/datasets/UCF-101_flow'
     #imuDataDir  = '/home/cmranieri/datasets/multimodal_inertial'
     
     with TestDataProvider( flowDataDir  = flowDataDir,
@@ -221,6 +221,8 @@ if __name__ == '__main__':
          i = 0
          while not testDataProvider.endOfData():
             t = time.time()
+            batchDict, labels = testDataProvider.getBatch()
+            print( i, batchDict['temporal'].shape )
             batchDict, labels = testDataProvider.getBatch()
             print( i, batchDict['temporal'].shape )
             #testDataProvider.toFiles( batch, '{:02d}'.format(i) + '_' )

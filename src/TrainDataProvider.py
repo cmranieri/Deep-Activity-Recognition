@@ -159,7 +159,7 @@ class TrainDataProvider( DataProvider ):
                 batchDict[ 'spatial' ] = batch
             if 'inertial' in self.streams:
                 batch = self.generateImuBatch( batchPaths, startsList )
-                batchDict[ 'temporal' ] = batch
+                batchDict[ 'inertial' ] = batch
             labels = self._getLabelArray( batchPaths )
             batchTuple = ( batchDict, labels )
             self._batchQueue.put( batchTuple )
@@ -171,14 +171,14 @@ class TrainDataProvider( DataProvider ):
 
 
 if __name__ == '__main__':
-    flowDataDir = '/home/cmranieri/datasets/UCF-101_flow'
-    imuDataDir  = '/home/cmranieri/datasets/multimodal_inertial'
-    filenames   = np.load( '../splits/ucf101/trainlist01.npy' )
-    lblFilename = '../classInd.txt'
+    flowDataDir = '/home/cmranieri/datasets/multimodal_dataset_flow'
+    imuDataDir  = '/home/cmranieri/datasets/multimodal_dataset_imu'
+    filenames   = '../splits/multimodal_10/trainlist01.txt'
+    lblFilename = '../classIndMulti.txt'
     with TrainDataProvider( flowDataDir = flowDataDir,
                             imuDataDir  = imuDataDir,
                             lblFilename = lblFilename,
-                            filenames   = filenames,
+                            namesFilePath = filenames,
                             batchSize   = 16,
                             flowSteps   = 1,
                             numThreads  = 2,

@@ -43,8 +43,8 @@ class TemporalStack( NetworkBase ):
 if __name__ == '__main__':
     #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalStack( flowDataDir  = '/lustre/cranieri/datasets/UCF-101_flow',
-                             modelDir     = '/lustre/cranieri/models/ucf101',
+    network = TemporalStack( flowDataDir  = '/home/cmranieri/datasets/UCF-101_flow',
+                             modelDir     = '/home/cmranieri/models/ucf101',
                              modelName    = 'model-ucf101-stack-inception',
                              flowSteps    = 15,
                              clipTh       = 20,

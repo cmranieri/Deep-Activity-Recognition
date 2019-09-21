@@ -1,18 +1,29 @@
 import os
 import numpy as np
 from NetworkBase import NetworkBase
+from tensorflow.keras.layers import Input, Conv1D, MaxPooling1D
 from tensorflow.keras.optimizers import SGD, Adam
 from tensorflow.keras.models import Model, load_model
-
 
 
 class TemporalH( NetworkBase ):
     
     def __init__( self, cnnModelName, **kwargs ):
         cnnPath = os.path.join( kwargs['modelDir'], cnnModelName + '.h5' )
-        self.cnnModel = self.loadCNN( cnnPath )
         self.streams = kwargs[ 'streams' ]
+        self.cnnModel = self.loadCNN( cnnPath )
         super( TemporalH , self ).__init__( **kwargs )
+
+
+    def imuBlock( self, shape ):
+        inp = Input( shape = shape )
+        y = Conv1D(256, 1, padding='same', activation='relu')(inp)
+        y = Conv1D(512, 3, padding='same', activation='relu')(y)
+        y = MaxPooling1D(2)(y)
+
+        # [ b, t, f ]
+        model = Model( inputs = inp, outputs = y )
+        return model
 
 
     def _getFlowFeats( self, batch ):
@@ -21,30 +32,27 @@ class TemporalH( NetworkBase ):
                                      2, self.flowSteps ] )
         # [ t, b, d, d, c ]
         batch = list( np.transpose( batch, [ 4, 0, 1, 2, 3 ] ) )
-        featsBatch = self.runCNN( batch )
+        featsBatch = self.runFlowCNN( batch )
         return featsBatch
 
 
     def _prepareBatch( self, batchDict ):
-        concatList = list()
+        inputDataList = list()
         if 'temporal' in self.streams:
             # [ t, b, f ]
-            videoFeats = self._getFlowFeats( batchDict[ 'temporal' ] )
-            # [ f, t, b ]
-            videoFeats = np.transpose( videoFeats, [2, 0, 1 ] )
-            concatList += list( videoFeats )
-        if 'inertial' in self.streams:
+            flowFeats = self._getFlowFeats( batchDict[ 'temporal' ] )
             # [ b, t, f ]
-            inertialFeats = batchDict[ 'inertial' ]
-            # [ f, t, b ]
-            inertialFeats = np.transpose( inertialFeats, [2, 1, 0] )
-            concatList += list( inertialFeats )
-        # [ b, t, f ]
-        featsBatch = np.transpose( concatList, [2, 1, 0] )
-        return featsBatch
+            flowFeats = np.transpose( flowFeats, [ 1, 0, 2 ] )
+            inputDataList.append( flowFeats )
+        if 'inertial' in self.streams:
+            imuBatch = batchDict[ 'inertial' ]
+            inputDataList.append( imuBatch )
+        if len( inputDataList ) == 1:
+            return inputDataList[0]
+        return inputDataList
 
 
-    def runCNN( self, batch ):
+    def runFlowCNN( self, batch ):
         featsList = list()
         for batchT in batch:
             feats = self.cnnModel.predict_on_batch( batchT )

@@ -1,27 +1,34 @@
-from TemporalStack import TemporalStack as Network
+from Multimodal_LSTM import Multimodal_LSTM as Network
 import os
 import sys
 
-#os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
+os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
 
-#split = int( sys.argv[1] )
-#split_f = '{:02d}'.format( split )
+split = int( sys.argv[1] )
+split_f = '{:02d}'.format( split )
 
-network = Network( restoreModel  = True,
-                   classes       = 101,
-                   flowDataDir   = '/lustre/cranieri/datasets/UCF-101_flow',
-                   flowSteps     = 1,
-                   modelDir      = '/lustre/cranieri/models/ucf101',
-                   modelName     = 'model-ucf101-optflow-inception',
-                   lblFilename   = '../classInd.txt',
-                   trainListPath = '../splits/ucf101/trainlist01.txt',
-                   testListPath  = '../splits/ucf101/testlist01.txt',
-                   tl            = False )
-                   #tlSuffix      = '_tl_multi-l' + split_f )
+network = Network( flowDataDir  = '/home/cmranieri/datasets/multimodal_dataset_flow',
+                   imuDataDir   = '/home/cmranieri/datasets/multimodal_dataset_imu',
+                   modelDir     = '/home/cmranieri/models/multimodal',
+                   modelName    = 'model-multi-clstm-%s' % split_f,
+                   cnnModelName = 'model-ucf101-optflow-inception',
+                   trainListPath = '../splits/multimodal_10/trainlist%s.txt' % split_f,
+                   testListPath  = '../splits/multimodal_10/testlist%s.txt' % split_f,
+                   lblFilename  = '../classIndMulti.txt',
+                   imuShape     = ( 30, 19 ),
+                   classes      = 20,
+                   flowSteps    = 15,
+                   imuSteps     = 30,
+                   framePeriod  = 4,
+                   clipTh       = 20,
+                   restoreModel = False,
+                   normalize    = False )
 
-#network.train( steps        = 20000,
-#               batchSize    = 32, 
-#               numThreads   = 4 )
+network.train( steps        = 20000,
+               stepsToEval  = 30000, 
+               batchSize    = 16, 
+               numThreads   = 4,
+               maxsize      = 12 )
 
 network.evaluate( numSegments  = 25,
                   storeTests   = True )

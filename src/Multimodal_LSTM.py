@@ -9,23 +9,28 @@ from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.models import Model
 
 
-
-class TemporalH_LSTM( TemporalH ):
-    def __init__( self, **kwargs ):
-        super( TemporalH_LSTM , self ).__init__( streams = ['temporal'],
+class Multimodal_LSTM( TemporalH ):
+    def __init__( self, imuShape, **kwargs ):
+        self.imuShape = imuShape
+        super( Multimodal_LSTM , self ).__init__( streams = ['temporal','inertial'],
                                                  **kwargs )
 
 
     def defineNetwork( self ):
-        num_feats = int( self.cnnModel.output.shape[1] )
-        inp = Input( shape = (self.flowSteps, num_feats) )
+        numFeatsFlow = int( self.cnnModel.output.shape[1] )
+        # [ b, f, t ]
+        flowInp = Input( shape = ( self.flowSteps, numFeatsFlow ) )
+        imuModel = self.imuBlock( self.imuShape )
+        merge = concatenate( [ flowInp, imuModel.outputs[0] ] )
+        # [ b, t, f ]
+        y = Permute( (2, 1) )( merge )
         y = LSTM( units = 128,
                   return_sequences = False,
                   dropout = 0.3,
-                  unroll = False )( inp )
+                  unroll = False )( merge )
         y = Dense( self.classes, activation='softmax' )( y )
         
-        model = Model( inp, y )
+        model = Model( [ flowInp, imuModel.inputs[0] ], y )
         optimizer = SGD( lr = 1e-2,
                          momentum = 0.9,
                          nesterov = True,
@@ -38,14 +43,16 @@ class TemporalH_LSTM( TemporalH ):
 
 
 if __name__ == '__main__':
-    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
+    #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalH_LSTM( flowDataDir  = '/lustre/cranieri/datasets/UCF-101_flow',
-                              modelDir     = '/lustre/cranieri/models/ucf101',
-                              modelName    = 'model-ucf101-hlstm-inception',
+    network = TemporalH_LSTM( flowDataDir  = '/lustre/cranieri/datasets/multimodal_dataset_flow',
+                              modelDir     = '/lustre/cranieri/models/multimodal',
+                              modelName    = 'model-multimodal-clstm-inception',
                               cnnModelName = 'model-ucf101-optflow-inception',
-                              trainListPath = '../splits/ucf101/trainlist01.txt',
-                              testListPath  = '../splits/ucf101/testlist01.txt',
+                              trainListPath = '../splits/multimodal/trainlist01.txt',
+                              testListPath  = '../splits/multimodal/testlist01.txt',
+                              lblFilename  = '../classIndMulti.txt',
+                              imuShape     = (30, 19),
                               flowSteps    = 15,
                               clipTh       = 20,
                               restoreModel = False,

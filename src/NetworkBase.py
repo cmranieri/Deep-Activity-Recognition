@@ -31,7 +31,8 @@ class NetworkBase:
                   testListPath  = '../splits/ucf101/testlist01.txt',
                   tl            = False,
                   tlSuffix      = '',
-                  normalize     = False ):
+                  normalize     = False,
+                  **kwargs ):
         self.dim           = dim
         self.flowSteps     = flowSteps
         self.imuSteps      = imuSteps
@@ -226,15 +227,22 @@ class NetworkBase:
                 if not i % 200:
                     print( 'Evaluating sample', i )
 
-                # load and prepare batch and its flipped version
+                # load and prepare batch
                 batchDict , labels = testDataProvider.getBatch()
                 batch = self._prepareBatch( batchDict )
+                
+                # providing flipped batch
                 flipBatchDict, _ = testDataProvider.getBatch()
                 flipBatch = self._prepareBatch( flipBatchDict )
                 # concatenate batch and flipped batch
-                batch = np.concatenate( ( batch, flipBatch ), axis = 0 )
+                if isinstance( batch, list ):
+                    for i in range( len(batch) ):
+                        batch[i] = np.concatenate( ( batch[i], flipBatch[i] ), axis = 0 )
+                else:
+                    batch = np.concatenate( ( batch, flipBatch ), axis = 0 )
+                
                 # predict the data of an entire video
-                y_ = self.model.predict( batch, batch_size=75 )
+                y_ = self.model.predict( batch )
                 # mean scores of each sample
                 mean = np.mean( np.array( y_ ), 0 )
                 # check whether the prediction is correct
