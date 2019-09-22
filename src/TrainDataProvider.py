@@ -80,7 +80,7 @@ class TrainDataProvider( DataProvider ):
 
 
     def _randomFlip( self , img ):
-        if np.random.random() > 0.5:
+        if self.useFlips and np.random.random() > 0.5:
             img = np.flip( img , 1 )
         return img
 

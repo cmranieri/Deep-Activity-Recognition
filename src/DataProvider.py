@@ -24,6 +24,7 @@ class DataProvider:
                   clipTh      = 20,
                   numThreads  = 1,
                   maxsize     = 10,
+                  useFlips    = True,
                   normalize   = False,
                   ranges      = True ):
         self.flowDataDir = flowDataDir
@@ -38,6 +39,7 @@ class DataProvider:
         self._ranges     = ranges
         self.clipTh      = clipTh
         self.framePeriod = framePeriod
+        self.useFlips    = useFlips
         
         self.filenames = self._loadFileNames( namesFilePath )
         self._length   = self.filenames.shape[ 0 ]
@@ -90,7 +92,7 @@ class DataProvider:
     def loadImuData( self, dataDir ):
         if dataDir == '':
             return None
-        imuDict = InertialLoader().load_multimodal( data_dir = dataDir )
+        imuDict = InertialLoader().load_data( data_dir = dataDir )
         return imuDict
 
 

@@ -181,7 +181,8 @@ class TestDataProvider( DataProvider ):
             batchTuple1 = self.nextBatch()
             if batchTuple1 is not None:
                 batchTuples = [ batchTuple1 ]
-                if set( self.streams ).intersection( [ 'temporal', 'spatial' ] ):
+                if self.useFlips and \
+                        set( self.streams ).intersection( [ 'temporal', 'spatial' ] ):
                     batchTuples.append( self.getFlippedBatch( batchTuple1 ) )
                     
                 for batchTuple in batchTuples:

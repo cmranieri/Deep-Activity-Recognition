@@ -6,7 +6,7 @@ from PIL import Image
 from io import BytesIO
 import pickle
 
-algorithm = 'brox'
+algorithm = 'tvl1'
 #outsize   = (256,454)
 outsize   = (256,341)
 
@@ -137,10 +137,23 @@ def process_multimodal():
         t = time.time()
         process_video( input_dir, output_dir, filename )
         print( 'Time:', time.time() - t )
+
+
+def process_utd_mhad():
+    input_dir  = '/home/cmranieri/datasets/UTD-MHAD/RGB'
+    output_dir = '/home/cmranieri/datasets/UTD-MHAD/flow'
+    trainlist  = read_fileslist( '../splits/utd/trainlist01.txt' )
+    testlist   = read_fileslist( '../splits/utd/testlist01.txt' )
+
+    for filename in trainlist+testlist:
+        t = time.time()
+        process_video( input_dir, output_dir, filename )
+        print( 'Time:', time.time() - t )
     
 
 if __name__ == '__main__':
-    process_ucf101()
+    #process_ucf101()
     #process_multimodal()
+    process_utd_mhad()
 
 

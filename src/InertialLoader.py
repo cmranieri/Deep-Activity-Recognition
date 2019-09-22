@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 import numpy as np
 import csv
 
@@ -21,31 +22,27 @@ class InertialLoader:
         return inp
 
 
-    def load_multimodal( self,
-                         data_dir    = '',
-                         window_size = None,
-                         max_len     = None):
-        num_acts  = 20
-        num_seqs  = 10
+    def load_data( self,
+                   data_dir    = '',
+                   window_size = None,
+                   max_len     = None ):
         data_dict = dict()
-
-        for act_id in range( num_acts ):
-            for seq_id in range( num_seqs ):
-                act_num = '{:02d}'.format( act_id+1 )
-                seq_num = '{:02d}'.format( seq_id+1 )
-                filename = 'act' + act_num + 'seq' + seq_num + '.csv'
-                with open( os.path.join(data_dir, filename), 'r' ) as f:
-                    inp = list( csv.reader(f, quoting=csv.QUOTE_NONNUMERIC) )
-                    if max_len is not None:
-                        inp = self.fix_seq_size( inp, max_len )
-                    if window_size is not None:
-                        inp = self.window_data( inp, window_size )
-                    data_dict[ 'act%s/act%sseq%s' % (act_num, act_num, seq_num) ] = inp
+        filenames = os.listdir( data_dir )
+        for filename in filenames:
+            if filename.split('.')[-1] != 'csv': continue
+            classname = re.match('(\D+\d+).*', filename).groups()[0]
+            with open( os.path.join(data_dir, filename), 'r' ) as f:
+                inp = list( csv.reader(f, quoting=csv.QUOTE_NONNUMERIC) )
+                if max_len is not None:
+                    inp = self.fix_seq_size( inp, max_len )
+                if window_size is not None:
+                    inp = self.window_data( inp, window_size )
+                data_dict[ classname + '/' + filename.split('.')[0] ] = inp
         return data_dict
 
 
 if __name__ == '__main__':
     inertialLoader = InertialLoader()
-    data_dir = '/home/olorin/Documents/caetano/datasets/multimodal_inertial'
-    data = inertialLoader.load_multimodal( data_dir )
-    print(np.array(data['act02/act02seq02']).shape)
+    data_dir = '/home/cmranieri/datasets/UTD-MHAD/Inertial_csv'
+    data = inertialLoader.load_data( data_dir )
+    #print(np.array(data['act02/act02seq02']).shape)

@@ -32,6 +32,7 @@ class NetworkBase:
                   tl            = False,
                   tlSuffix      = '',
                   normalize     = False,
+                  useFlips      = True,
                   **kwargs ):
         self.dim           = dim
         self.flowSteps     = flowSteps
@@ -46,7 +47,8 @@ class NetworkBase:
         self.streams       = streams
         self.normalize     = normalize
         self.framePeriod   = framePeriod
-        self.clipTh        = clipTh 
+        self.clipTh        = clipTh
+        self.useFlips      = useFlips
         self.lblFilename   = lblFilename
         self.trainListPath = trainListPath
         self.testListPath  = testListPath
@@ -57,15 +59,6 @@ class NetworkBase:
         self.model = self.loadModel( restoreModel , tl )
         self._step = 0
 
-
-    """
-    def _loadSplitNames( self, filename ):
-        namesList = list()
-        with open( filename, 'r' ) as f:
-            for line in f:
-                namesList.append( line.split(' ')[0].strip('\n') )
-        return np.array( namesList )
-    """
 
     def defineNetwork( self ):
         raise NotImplementedError( 'Please implement this method' )
@@ -125,6 +118,7 @@ class NetworkBase:
                                   streams     = self.streams,
                                   normalize   = self.normalize,
                                   framePeriod = self.framePeriod,
+                                  useFlips    = self.useFlips,
                                   clipTh      = self.clipTh )
 
     def _generateTestDataProvider( self,
@@ -144,6 +138,7 @@ class NetworkBase:
                                  streams      = self.streams,
                                  normalize    = self.normalize,
                                  framePeriod  = self.framePeriod,
+                                 useFlips     = self.useFlips,
                                  clipTh       = self.clipTh )
 
 
