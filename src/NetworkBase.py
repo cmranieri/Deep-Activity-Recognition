@@ -167,7 +167,8 @@ class NetworkBase:
                numThreads        = 2,
                maxsize           = 6,
                stepsToTrainError = 100,
-               stepsToEval       = 20000):
+               stepsToEval       = 20000,
+               evalPer           = True ):
         train_acc_list  = list()
         train_loss_list = list()
 
@@ -199,10 +200,12 @@ class NetworkBase:
                         train_loss_list = list()
 
                     self._step += 1
-            # save and evaluate model
+            # save model
             self._saveModel()
-            print( 'STEP %d: TEST'%( self._step ) )
-            self.evaluate()
+            # evaluate
+            if evalPer:
+                print( 'STEP %d: TEST'%( self._step ) )
+                self.evaluate()
 
 
     def evaluate( self,
@@ -218,15 +221,17 @@ class NetworkBase:
         i = 0
         with self._generateTestDataProvider( maxsize = maxsize,
                                              numSegments  = numSegments ) as testDataProvider:
-            while not testDataProvider.endOfData():
+            while True:
                 if not i % 200:
                     print( 'Evaluating sample', i )
+                # load batch and check end of data
+                batchTuple = testDataProvider.getBatch()
+                if batchDict is None: break
 
-                # load and prepare batch
-                batchDict , labels = testDataProvider.getBatch()
+                # prepare batch
+                batchDict , labels = batchTuple
                 batch = self._prepareBatch( batchDict )
-                
-                # providing flipped batch
+                # provides flipped batch
                 flipBatchDict, _ = testDataProvider.getBatch()
                 flipBatch = self._prepareBatch( flipBatchDict )
                 # concatenate batch and flipped batch

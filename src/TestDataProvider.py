@@ -15,7 +15,8 @@ class TestDataProvider( DataProvider ):
         self._numSegments  = numSegments
         self.streams       = streams
         self._batchesMutex = Lock()
-        self._paths = self._getPaths()
+        self._finishedSem  = Semaphore(0)
+        self._paths        = self._getPaths()
         
  
     def _processedAll( self ):
@@ -189,6 +190,7 @@ class TestDataProvider( DataProvider ):
                     self._batchQueue.put( batchTuple )
                 self._totalProcessed += 1
             self._batchesMutex.release()
+        self._finishedSem.release()
 
     
     def toFiles( self, batch, prefix = '' ):
@@ -202,6 +204,7 @@ class TestDataProvider( DataProvider ):
 
     def getBatch( self ):
         if self.endOfData():
+            self._finishedSem.acquire()
             return None
         batchTuple = self._batchQueue.get()
         return batchTuple
