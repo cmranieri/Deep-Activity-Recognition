@@ -4,7 +4,7 @@ import time
 import cv2
 import pickle
 from PIL import Image
-from threading import Thread, Lock
+from threading import Thread, Lock, Semaphore
 import queue
 from DataProvider import DataProvider
 

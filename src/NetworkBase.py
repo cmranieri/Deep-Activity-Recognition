@@ -226,7 +226,7 @@ class NetworkBase:
                     print( 'Evaluating sample', i )
                 # load batch and check end of data
                 batchTuple = testDataProvider.getBatch()
-                if batchDict is None: break
+                if batchTuple is None: break
 
                 # prepare batch
                 batchDict , labels = batchTuple
