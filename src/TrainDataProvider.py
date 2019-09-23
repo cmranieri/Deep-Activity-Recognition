@@ -26,35 +26,31 @@ class TrainDataProvider( DataProvider ):
 
 
     def _resetSafe( self ):
-        self._resetMutex.acquire()
-        self._resetUnsafe()
-        self._resetMutex.release()
+        with self._resetMutex:
+            self._resetUnsafe()
         return 0
 
 
     def getIndex( self ):
-        self._resetMutex.acquire()
-        index = self._index
-        ids   = self._ids
-        self._resetMutex.release()
+        with self._resetMutex:
+            index = self._index
+            ids   = self._ids
         return index, ids
 
 
     def _incIndex( self ):
-        self._resetMutex.acquire()
-        newIndex = self._index + self.batchSize
-        if newIndex + self.batchSize >= self._length:
-            newIndex = self._reset()
-        self._index = newIndex
-        self._resetMutex.release()
+        with self._resetMutex:
+            newIndex = self._index + self.batchSize
+            if newIndex + self.batchSize >= self._length:
+                newIndex = self._reset()
+            self._index = newIndex
         return newIndex
 
 
     def _popIndex( self ):
-        self._indexMutex.acquire()
-        index, ids = self.getIndex()
-        self._incIndex()
-        self._indexMutex.release()
+        with self._indexMutex:
+            index, ids = self.getIndex()
+            self._incIndex()
         return index, ids
 
 
