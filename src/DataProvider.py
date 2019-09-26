@@ -46,7 +46,6 @@ class DataProvider:
         self._reset()
         self._generateLabelsDict( lblFilename )
         self.imuDict = self.loadImuData( dataDir = imuDataDir )
-
         self._produce = True
         self._batchQueue = queue.Queue( maxsize = maxsize )
         self._threadsList = list()

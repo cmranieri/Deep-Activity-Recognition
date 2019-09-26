@@ -10,9 +10,9 @@ from tensorflow.keras.models import Model
 
 
 
-class TemporalH_LSTM( TemporalH ):
+class TemporalH_TCN( TemporalH ):
     def __init__( self, **kwargs ):
-        super( TemporalH_LSTM , self ).__init__( streams = ['temporal'],
+        super( TemporalH_TCN , self ).__init__( streams = ['temporal'],
                                                  **kwargs )
 
 

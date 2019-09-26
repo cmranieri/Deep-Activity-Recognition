@@ -27,16 +27,18 @@ class Multimodal_LSTM( TemporalH ):
         y = LSTM( units = 128,
                   return_sequences = False,
                   dropout = 0.3,
-                  unroll = False )( merge )
+                  unroll = True )( merge )
         y = Dense( self.classes, activation='softmax' )( y )
         
         model = Model( [ flowInp, imuModel.inputs[0] ], y )
+        
         optimizer = SGD( lr = 1e-2,
                          momentum = 0.9,
                          nesterov = True,
                          decay = 1e-4 )
+       
         model.compile( loss = 'categorical_crossentropy',
-                       optimizer = optimizer,
+                       optimizer = 'rmsprop',
                        metrics   = [ 'acc' ] ) 
         return model
 

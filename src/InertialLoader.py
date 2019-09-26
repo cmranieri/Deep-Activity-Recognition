@@ -22,10 +22,24 @@ class InertialLoader:
         return inp
 
 
+    def convert_rate( self, data, input_rate, output_rate ):
+        out   = list()
+        ratio = output_rate / input_rate
+        next_idx = 0.0
+        for i, line in enumerate(data):
+            print(i)
+            if i == int( next_idx ):
+                out.append( line )
+                next_idx += ratio
+        return out
+
+
     def load_data( self,
                    data_dir    = '',
                    window_size = None,
-                   max_len     = None ):
+                   max_len     = None,
+                   input_rate  = None,
+                   output_rate = None ):
         data_dict = dict()
         filenames = os.listdir( data_dir )
         for filename in filenames:
@@ -33,6 +47,8 @@ class InertialLoader:
             classname = re.match('(\D+\d+).*', filename).groups()[0]
             with open( os.path.join(data_dir, filename), 'r' ) as f:
                 inp = list( csv.reader(f, quoting=csv.QUOTE_NONNUMERIC) )
+                if output_rate is not None:
+                    inp = self.convert_rate( inp, input_rate, output_rate )
                 if max_len is not None:
                     inp = self.fix_seq_size( inp, max_len )
                 if window_size is not None:

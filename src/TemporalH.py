@@ -1,18 +1,27 @@
 import os
 import numpy as np
 from NetworkBase import NetworkBase
-from tensorflow.keras.layers import Input, Conv1D, MaxPooling1D
+import tensorflow as tf
+from tensorflow.keras.layers import Input, Conv1D, MaxPooling1D, Lambda
 from tensorflow.keras.optimizers import SGD, Adam
 from tensorflow.keras.models import Model, load_model
 
 
 class TemporalH( NetworkBase ):
     
-    def __init__( self, cnnModelName, **kwargs ):
+    def __init__( self, cnnModelName, adjust = False, **kwargs ):
         cnnPath = os.path.join( kwargs['modelDir'], cnnModelName + '.h5' )
-        self.streams = kwargs[ 'streams' ]
+        self.streams  = kwargs[ 'streams' ]
+        self.imuSteps = kwargs[ 'imuSteps' ]
+        self.adjust   = adjust
         self.cnnModel = self.loadCNN( cnnPath )
         super( TemporalH , self ).__init__( **kwargs )
+
+    
+    def _adjustDim( self, y ):
+        ratio = 50 / 15
+        indices = [ int( i * ratio ) for i in range( 15 ) ]
+        return tf.gather( y, indices, axis=1 )
 
 
     def imuBlock( self, shape ):
@@ -20,7 +29,8 @@ class TemporalH( NetworkBase ):
         y = Conv1D(256, 1, padding='same', activation='relu')(inp)
         y = Conv1D(512, 3, padding='same', activation='relu')(y)
         y = MaxPooling1D(2)(y)
-
+        if self.adjust:
+            y = Lambda( self._adjustDim )(y)
         # [ b, t, f ]
         model = Model( inputs = inp, outputs = y )
         return model
