@@ -9,46 +9,55 @@ from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.models import Model
 from tcn import TCN
 
-
-class TemporalH_TCN( TemporalH ):
-    def __init__( self, **kwargs ):
-        super( TemporalH_TCN , self ).__init__( streams = ['temporal'],
+class Multimodal_TCN( TemporalH ):
+    def __init__( self, imuShape, **kwargs ):
+        self.imuShape = imuShape
+        super( Multimodal_TCN , self ).__init__( streams = ['temporal','inertial'],
                                                  **kwargs )
 
 
     def defineNetwork( self ):
-        num_feats = int( self.cnnModel.output.shape[1] )
-        inp = Input( shape = (self.flowSteps, num_feats) )
+        numFeatsFlow = int( self.cnnModel.output.shape[1] )
+        # [ b, f, t ]
+        flowInp = Input( shape = ( self.flowSteps, numFeatsFlow ) )
+        imuModel = self.imuBlock( self.imuShape )
+        merge = concatenate( [ flowInp, imuModel.outputs[0] ] )
+        # [ b, t, f ]
+        y = Permute( (2, 1) )( merge )
         y = TCN( nb_filters       = 128,
                  nb_stacks        = 3,
                  kernel_size      = 3,
                  use_skip_connections = True,
                  return_sequences = False,
                  dropout_rate     = 0.3,
-                 dilations        = [ 1, 2, 4 ] )( inp )
+                 dilations        = [ 1, 2, 4 ] )( merge )
         y = Dense( self.classes, activation='softmax' )( y )
         
-        model = Model( inp, y )
+        model = Model( [ flowInp, imuModel.inputs[0] ], y )
+        
         optimizer = SGD( lr = 1e-2,
                          momentum = 0.9,
                          nesterov = True,
                          decay = 1e-4 )
+       
         model.compile( loss = 'categorical_crossentropy',
-                       optimizer = optimizer,
+                       optimizer = 'rmsprop',
                        metrics   = [ 'acc' ] ) 
         return model
 
 
 
 if __name__ == '__main__':
-    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
+    #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalH_TCN( flowDataDir  = '/lustre/cranieri/datasets/UCF-101_flow',
-                              modelDir     = '/lustre/cranieri/models/ucf101',
-                              modelName    = 'model-ucf101-hlstm-inception',
+    network = TemporalH_LSTM( flowDataDir  = '/lustre/cranieri/datasets/multimodal_dataset_flow',
+                              modelDir     = '/lustre/cranieri/models/multimodal',
+                              modelName    = 'model-multimodal-clstm-inception',
                               cnnModelName = 'model-ucf101-optflow-inception',
-                              trainListPath = '../splits/ucf101/trainlist01.txt',
-                              testListPath  = '../splits/ucf101/testlist01.txt',
+                              trainListPath = '../splits/multimodal/trainlist01.txt',
+                              testListPath  = '../splits/multimodal/testlist01.txt',
+                              lblFilename  = '../classIndMulti.txt',
+                              imuShape     = (30, 19),
                               flowSteps    = 15,
                               clipTh       = 20,
                               restoreModel = False,
