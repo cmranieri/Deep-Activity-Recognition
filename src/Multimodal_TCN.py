@@ -9,7 +9,6 @@ from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.models import Model
 from tcn import TCN
 
-
 class Multimodal_TCN( TemporalH ):
     def __init__( self, imuShape, **kwargs ):
         self.imuShape = imuShape
@@ -25,14 +24,13 @@ class Multimodal_TCN( TemporalH ):
         merge = concatenate( [ flowInp, imuModel.outputs[0] ] )
         # [ b, t, f ]
         y = Permute( (2, 1) )( merge )
-        y = TCN( nb_filters           = 128,
-                 nb_stacks            = 3,
-                 kernel_size          = 5,
+        y = TCN( nb_filters       = 128,
+                 nb_stacks        = 3,
+                 kernel_size      = 3,
                  use_skip_connections = True,
-                 return_sequences     = False,
-                 dropout_rate         = 0.3,
-                 dilations            = [ 1, 2, 4 ] )( y )
-
+                 return_sequences = False,
+                 dropout_rate     = 0.3,
+                 dilations        = [ 1, 2, 4 ] )( merge )
         y = Dense( self.classes, activation='softmax' )( y )
         
         model = Model( [ flowInp, imuModel.inputs[0] ], y )

@@ -20,7 +20,7 @@ class TemporalH_TCN( TemporalH ):
         num_feats = int( self.cnnModel.output.shape[1] )
         inp = Input( shape = (self.flowSteps, num_feats) )
         y = TCN( nb_filters       = 128,
-                 nb_stacks        = 1,
+                 nb_stacks        = 3,
                  kernel_size      = 3,
                  use_skip_connections = True,
                  return_sequences = False,
