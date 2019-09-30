@@ -10,11 +10,12 @@ from tensorflow.keras.models import Model, load_model
 class TemporalH( NetworkBase ):
     
     def __init__( self, cnnModelName, adjust = False, **kwargs ):
-        cnnPath = os.path.join( kwargs['modelDir'], cnnModelName + '.h5' )
         self.streams  = kwargs[ 'streams' ]
         self.imuSteps = kwargs[ 'imuSteps' ]
         self.adjust   = adjust
-        self.cnnModel = self.loadCNN( cnnPath )
+        if cnnModelName is not None:
+            cnnPath = os.path.join( kwargs['modelDir'], cnnModelName + '.h5' )
+            self.cnnModel = self.loadCNN( cnnPath )
         super( TemporalH , self ).__init__( **kwargs )
 
     
