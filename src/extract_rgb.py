@@ -6,11 +6,19 @@ from PIL import Image
 from io import BytesIO
 import pickle
 
-outsize   = (256,454)
+outsize   = (256,341)
 
 def make_dir( path ):
     if not os.path.exists( path ):
         os.mkdir( path )
+
+
+def read_fileslist( path ):
+    namesList = list()
+    with open( path, 'r' ) as f:
+        for line in f:
+            namesList.append( line.split(' ')[0].strip('\n') )
+    return namesList
 
 
 def store_video_rgb( frames_list,
@@ -25,7 +33,7 @@ def prep_jpeg_frame( frame ):
     frame = frame[ ... , [ 2 , 1 , 0 ] ]
     img_frame = Image.fromarray( frame )
     out = BytesIO()
-    img_frame.save( out , format='jpeg' , quality=100 )
+    img_frame.save( out , format='jpeg' , quality=80 )
     return out
 
 
@@ -81,10 +89,25 @@ def process_multimodal():
         t = time.time()
         process_video( input_dir, output_dir, filename )
         print( 'Time:', time.time() - t )
-    
+
+
+def process_utd_mhad():
+    input_dir  = '/mnt/sda2/datasets/UTD-MHAD/RGB'
+    output_dir = '/mnt/sda2/datasets/UTD-MHAD/RGB_pickle'
+    trainlist = read_fileslist( '../splits/utd-mhad/trainlist01.txt' )
+    testlist = read_fileslist( '../splits/utd-mhad/testlist01.txt' )
+
+    for filename in trainlist+testlist:
+        t = time.time()
+        process_video( input_dir, output_dir, filename )
+        print( 'Time:', time.time() - t )   
+
+
+
 
 if __name__ == '__main__':
     #process_ucf101()
-    process_multimodal()
+    #process_multimodal()
+    process_utd_mhad()
 
 

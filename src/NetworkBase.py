@@ -172,6 +172,7 @@ class NetworkBase:
         train_acc_list  = list()
         train_loss_list = list()
 
+        print( 'Training...' )
         while self._step < steps:
             with self._generateTrainDataProvider( batchSize  = batchSize,
                                             numThreads = numThreads,
@@ -231,15 +232,16 @@ class NetworkBase:
                 # prepare batch
                 batchDict , labels = batchTuple
                 batch = self._prepareBatch( batchDict )
-                # provides flipped batch
-                flipBatchDict, _ = testDataProvider.getBatch()
-                flipBatch = self._prepareBatch( flipBatchDict )
-                # concatenate batch and flipped batch
-                if isinstance( batch, list ):
-                    for i in range( len(batch) ):
-                        batch[i] = np.concatenate( ( batch[i], flipBatch[i] ), axis = 0 )
-                else:
-                    batch = np.concatenate( ( batch, flipBatch ), axis = 0 )
+                if self.useFlips:
+                    # provides flipped batch
+                    flipBatchDict, _ = testDataProvider.getBatch()
+                    flipBatch = self._prepareBatch( flipBatchDict )
+                    # concatenate batch and flipped batch
+                    if isinstance( batch, list ):
+                        for i in range( len(batch) ):
+                            batch[i] = np.concatenate( ( batch[i], flipBatch[i] ), axis = 0 )
+                    else:
+                        batch = np.concatenate( ( batch, flipBatch ), axis = 0 )
                 
                 # predict the data of an entire video
                 y_ = self.model.predict( batch )

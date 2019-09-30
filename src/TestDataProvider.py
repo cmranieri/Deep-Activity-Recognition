@@ -69,7 +69,7 @@ class TestDataProvider( DataProvider ):
         video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
         for i in range( self._numSegments ):
             space = len( video ) // self._numSegments
-            batch.append( self.loadRgb( video, i*space ) )
+            batch.append( self.provideRgbFrame( video, i*space ) )
         batch = np.array( batch, dtype = 'float32' )
         batch = self.getCrops( inp = batch, stream = 'spatial' )
         return batch
