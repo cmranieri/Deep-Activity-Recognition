@@ -2,9 +2,9 @@ import os
 
 from NetworkBase import NetworkBase
 
-from tensorflow.keras.applications.inception_v3 import InceptionV3 as BaseModel
-from tensorflow.keras.layers import Input 
-from tensorflow.keras.optimizers import SGD
+from keras.applications.inception_v3 import InceptionV3 as BaseModel
+from keras.layers import Input 
+from keras.optimizers import SGD
 #from tensorflow.keras.optimizers.schedules import ExponentialDecay
 
 
@@ -43,19 +43,21 @@ class TemporalStack( NetworkBase ):
 if __name__ == '__main__':
     #os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalStack( flowDataDir  = '/home/cmranieri/datasets/UCF-101_flow',
-                             modelDir     = '/home/cmranieri/models/ucf101',
-                             modelName    = 'model-ucf101-stack-inception',
-                             flowSteps    = 15,
+    network = TemporalStack( flowDataDir  = '/lustre/cranieri/datasets/UCF-101_flow',
+                             modelDir     = '/lustre/cranieri/models/ucf101',
+                             modelName    = 'model-ucf101-optflow-inception2',
+                             lblFilename  = '../classes/classInd.txt',
+                             flowSteps    = 1,
                              clipTh       = 20,
                              framePeriod  = 1,
-                             restoreModel = True,
+                             restoreModel = False,
                              normalize    = False )
-
+    network.model.load_weights('/lustre/cranieri/models/ucf101/woptflow.h5')
+    network.model.save('/lustre/cranieri/models/multimodal/model-ucf101-optflow-inception-multibackend.h5')
     #network.evaluate( numSegments  = 25,
     #                  smallBatches = 5,
     #                  storeTests   = True )
-    network.train( steps      = 200000,
-                   batchSize  = 32,
-                   numThreads = 12,
-                   maxsize    = 36 )
+    #network.train( steps      = 200000,
+    #               batchSize  = 32,
+    #               numThreads = 12,
+    #               maxsize    = 36 )

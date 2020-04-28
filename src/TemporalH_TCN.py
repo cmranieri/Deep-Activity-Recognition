@@ -3,10 +3,10 @@ import os
 
 from TemporalH import TemporalH
 
-from tensorflow.keras.layers import Input, Dense, LSTM
-from tensorflow.keras.layers import concatenate, Reshape, Permute
-from tensorflow.keras.optimizers import SGD
-from tensorflow.keras.models import Model
+from keras.layers import Input, Dense, LSTM
+from keras.layers import concatenate, Reshape, Permute
+from keras.optimizers import SGD
+from keras.models import Model
 from tcn import TCN
 
 
@@ -24,7 +24,7 @@ class TemporalH_TCN( TemporalH ):
                  kernel_size      = 3,
                  use_skip_connections = True,
                  return_sequences = False,
-                 dropout_rate     = 0.3,
+                 dropout_rate     = 0.05,
                  dilations        = [ 1, 2, 4 ] )( inp )
         y = Dense( self.classes, activation='softmax' )( y )
         

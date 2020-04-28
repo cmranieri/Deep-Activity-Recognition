@@ -1,10 +1,11 @@
 import os
 import numpy as np
 from NetworkBase import NetworkBase
-import tensorflow as tf
-from tensorflow.keras.layers import Input, Conv1D, MaxPooling1D, Lambda
-from tensorflow.keras.optimizers import SGD, Adam
-from tensorflow.keras.models import Model, load_model
+#import tensorflow as tf
+import keras.backend as tf
+from keras.layers import Input, Conv1D, MaxPooling1D, Lambda
+from keras.optimizers import SGD, Adam
+from keras.models import Model, load_model
 
 
 class TemporalH( NetworkBase ):

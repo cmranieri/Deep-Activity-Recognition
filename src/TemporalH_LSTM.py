@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-from TemporalH import TemporalH
+from TemporalH2 import TemporalH
 
 from tensorflow.keras.layers import Input, Dense, LSTM
 from tensorflow.keras.layers import concatenate, Reshape, Permute
@@ -10,9 +10,9 @@ from tensorflow.keras.models import Model
 
 
 
-class TemporalH_TCN( TemporalH ):
+class TemporalH_LSTM( TemporalH ):
     def __init__( self, **kwargs ):
-        super( TemporalH_TCN , self ).__init__( streams = ['temporal'],
+        super( TemporalH_LSTM , self ).__init__( streams = ['temporal'],
                                                  **kwargs )
 
 
@@ -31,7 +31,7 @@ class TemporalH_TCN( TemporalH ):
                          nesterov = True,
                          decay = 1e-4 )
         model.compile( loss = 'categorical_crossentropy',
-                       optimizer = optimizer,
+                       optimizer = 'rmsprop',
                        metrics   = [ 'acc' ] ) 
         return model
 
