@@ -7,8 +7,8 @@ from io import BytesIO
 import pickle
 
 algorithm = 'tvl1'
-#outsize   = (256,454)
-outsize   = (256,341)
+#outsize  = ( 256, 454 )
+outsize   = ( 240, 320 )
 
 def make_dir( path ):
     if not os.path.exists( path ):
@@ -149,11 +149,24 @@ def process_utd_mhad():
         t = time.time()
         process_video( input_dir, output_dir, filename )
         print( 'Time:', time.time() - t )
-    
+
+
+def process_lyell():
+    input_dir  = '/home/cmranieri/datasets/lyell/rgb_blurred'
+    output_dir = '/home/cmranieri/datasets/lyell/flow'
+    trainlist  = read_fileslist( '../splits/lyell/trainlist01.txt' )
+    testlist   = read_fileslist( '../splits/lyell/testlist01.txt' )
+
+    for filename in trainlist+testlist:
+        t = time.time()
+        process_video( input_dir, output_dir, filename )
+        print( 'Time:', time.time() - t )
+
 
 if __name__ == '__main__':
     #process_ucf101()
     #process_multimodal()
-    process_utd_mhad()
+    #process_utd_mhad()
+    process_lyell()
 
 
