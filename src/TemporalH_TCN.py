@@ -1,12 +1,12 @@
 import numpy as np
 import os
 
-from TemporalH import TemporalH
+from TemporalH2 import TemporalH
 
-from keras.layers import Input, Dense, LSTM
-from keras.layers import concatenate, Reshape, Permute
-from keras.optimizers import SGD
-from keras.models import Model
+from tensorflow.keras.layers import Input, Dense, LSTM
+from tensorflow.keras.layers import concatenate, Reshape, Permute
+from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.models import Model
 from tcn import TCN
 
 

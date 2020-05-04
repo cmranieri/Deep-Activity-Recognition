@@ -152,8 +152,8 @@ def process_utd_mhad():
 
 
 def process_lyell():
-    input_dir  = '/home/cmranieri/datasets/lyell/rgb_blurred'
-    output_dir = '/home/cmranieri/datasets/lyell/flow'
+    input_dir  = '/lustre/cranieri/datasets/lyell/rgb_blurred'
+    output_dir = '/lustre/cranieri/datasets/lyell/flow'
     trainlist  = read_fileslist( '../splits/lyell/trainlist01.txt' )
     testlist   = read_fileslist( '../splits/lyell/testlist01.txt' )
 
