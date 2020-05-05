@@ -26,12 +26,12 @@ network = Network( flowDataDir  = '/home/cmranieri/datasets/lyell/flow/',
                    restoreModel = False,
                    normalize    = False )
 
-network.train( steps        = 40000,
+network.train( steps        = 60000,
                stepsToEval  = 20000, 
                batchSize    = 16, 
                numThreads   = 4,
                maxsize      = 16,
-               evalPer      = False )
+               evalPer      = True )
 
 network.evaluate( numSegments  = 25,
                   storeTests   = True )
