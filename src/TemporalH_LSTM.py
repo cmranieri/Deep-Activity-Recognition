@@ -26,12 +26,12 @@ class TemporalH_LSTM( TemporalH ):
         y = Dense( self.classes, activation='softmax' )( y )
         
         model = Model( inp, y )
-        optimizer = SGD( lr = 1e-2,
-                         momentum = 0.9,
-                         nesterov = True,
-                         decay = 1e-4 )
+        optimizer = SGD( lr = 1e-2 )
+                         #momentum = 0.9,
+                         #nesterov = True,
+                         #decay = 1e-4 )
         model.compile( loss = 'categorical_crossentropy',
-                       optimizer = 'rmsprop',
+                       optimizer = optimizer,
                        metrics   = [ 'acc' ] ) 
         return model
 

@@ -1,16 +1,16 @@
-from TemporalH_TCN import TemporalH_TCN as Network
+from TemporalH_LSTM import TemporalH_LSTM as Network
 import os
 import sys
 
-#os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
+os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
 
 split = int( sys.argv[1] )
 split_f = '{:02d}'.format( split )
 
-network = Network( flowDataDir  = '/lustre/cranieri/datasets/lyell/flow/',
-                   imuDataDir   = '/lustre/cranieri/datasets/lyell/inertial',
-                   modelDir     = '/lustre/cranieri/models/lyell/',
-                   modelName    = 'model-lyell-vtcn-%s' % split_f,
+network = Network( flowDataDir  = '/home/cmranieri/datasets/lyell/flow/',
+                   imuDataDir   = '/home/cmranieri/datasets/lyell/inertial',
+                   modelDir     = '/home/cmranieri/models/lyell/',
+                   modelName    = 'model-lyell-vlstm-%s' % split_f,
                    cnnModelName = 'model-ucf101-optflow-inception',
                    trainListPath = '../splits/lyell/trainlist%s.txt' % split_f,
                    testListPath  = '../splits/lyell/testlist%s.txt' % split_f,
@@ -21,17 +21,17 @@ network = Network( flowDataDir  = '/lustre/cranieri/datasets/lyell/flow/',
                    imuSteps     = 50,
                    adjust       = False,
                    useFlips     = False,
-                   framePeriod  = 1,
+                   framePeriod  = 2,
                    clipTh       = 20,
                    restoreModel = False,
                    normalize    = False )
 
-network.train( steps        = 30000,
-               stepsToEval  = 30000, 
+network.train( steps        = 40000,
+               stepsToEval  = 20000, 
                batchSize    = 16, 
-               numThreads   = 12,
-               maxsize      = 36,
+               numThreads   = 4,
+               maxsize      = 16,
                evalPer      = False )
 
-network.evaluate( numSegments  = 5,
+network.evaluate( numSegments  = 25,
                   storeTests   = True )
