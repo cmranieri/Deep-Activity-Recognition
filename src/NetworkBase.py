@@ -161,6 +161,7 @@ class NetworkBase:
         print( 'Model saved!' )
 
 
+
     def train( self,
                steps,
                batchSize         = 16,
@@ -188,10 +189,12 @@ class NetworkBase:
                     train_acc_list  += [ batch_acc ]
                     train_loss_list += [ batch_loss ]
 
+                    #print( self._step, batch_acc, batch_loss )
                     # periodically shows train acc and loss on the batches
                     if not self._step % stepsToTrainError:
                         train_accuracy = np.mean( train_acc_list  )
                         train_loss     = np.mean( train_loss_list )
+                        #print( self._step, train_accuracy, train_loss )
                         print( 'Step: %d | Train acc: %g | Loss: %g'%(
                                self._step, train_accuracy, train_loss ) )
                         self._storeResult( 'train.txt', str(self._step) + ' ' +
@@ -232,17 +235,32 @@ class NetworkBase:
                 # prepare batch
                 batchDict , labels = batchTuple
                 batch = self._prepareBatch( batchDict )
+                # provide flips, if required
                 if self.useFlips:
                     # provides flipped batch
                     flipBatchDict, _ = testDataProvider.getBatch()
                     flipBatch = self._prepareBatch( flipBatchDict )
                     # concatenate batch and flipped batch
+                    # if batch contains two streams or more
                     if isinstance( batch, list ):
-                        for i in range( len(batch) ):
-                            batch[i] = np.concatenate( ( batch[i], flipBatch[i] ), axis = 0 )
+                        print('multiple streams')
+                        # for each stream
+                        for j in range( len(batch) ):
+                            print( batch[j].shape )
+                            batch[j] = np.concatenate( ( batch[j], flipBatch[j] ), axis = 0 )
+                    # if batch contains a sigle stream
                     else:
+                        print( 'only one stream' )
+                        print( batch.shape )
                         batch = np.concatenate( ( batch, flipBatch ), axis = 0 )
-                
+                # if one of the streams runs out before another, finish loop
+                end_loop = False
+                if isinstance( batch, list ):
+                    for inp_id in range( len( self.model.inputs ) ):
+                        if self.model.inputs[inp_id].shape[1] != batch[inp_id].shape[1]:
+                            end_loop = True
+                    if end_loop:
+                        break
                 # predict the data of an entire video
                 y_ = self.model.predict( batch )
                 # mean scores of each sample
@@ -252,8 +270,7 @@ class NetworkBase:
                 correct_prediction = np.equal( np.argmax( mean ),
                                                np.argmax( labels[0] ) )
                 test_acc_list.append( correct_prediction )
-
-                # store outputs
+                # append outputs to lists
                 if storeTests:
                     preds_list.append( mean )
                     labels_list.append( labels[0] )

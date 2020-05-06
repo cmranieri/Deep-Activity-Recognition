@@ -34,17 +34,29 @@ class InertialLoader:
         return out
 
 
+    def _read_classes( self, classInd ):
+        classNames = list()
+        with open( classInd, 'r' ) as f:
+            for line in f.readlines():
+                classNames.append( line.split(' ')[1].strip('\n') )
+        return classNames
+
+
     def load_data( self,
                    data_dir    = '',
+                   classInd    = '../classes/classIndLyell.txt',
                    window_size = None,
                    max_len     = None,
                    input_rate  = None,
                    output_rate = None ):
+        classNames = self._read_classes( classInd )
         data_dict = dict()
         filenames = os.listdir( data_dir )
         for filename in filenames:
             if filename.split('.')[-1] != 'csv': continue
-            classname = re.match('(\D+\d+).*', filename).groups()[0]
+            for classname in classNames:
+                if re.findall( classname, filename ): break
+            #classname = re.match('(\D+\d+).*', filename).groups()[0]
             with open( os.path.join(data_dir, filename), 'r' ) as f:
                 inp = list( csv.reader(f, quoting=csv.QUOTE_NONNUMERIC) )
                 if output_rate is not None:

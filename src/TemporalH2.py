@@ -10,18 +10,21 @@ from tensorflow.keras.models import Model, load_model
 
 class TemporalH( NetworkBase ):
     
-    def __init__( self, cnnModelName, adjust = False, **kwargs ):
+    def __init__( self, cnnModelName, adjust = False, adjustRatio = (50,15), **kwargs ):
         cnnPath = os.path.join( kwargs['modelDir'], cnnModelName + '.h5' )
-        self.streams  = kwargs[ 'streams' ]
-        self.imuSteps = kwargs[ 'imuSteps' ]
-        self.adjust   = adjust
-        self.cnnModel = self.loadCNN( cnnPath )
+        self.streams     = kwargs[ 'streams' ]
+        self.imuSteps    = kwargs[ 'imuSteps' ]
+        self.adjust      = adjust
+        self.adjustRatio = adjustRatio
+        self.cnnModel    = self.loadCNN( cnnPath )
         super( TemporalH , self ).__init__( **kwargs )
 
     
     def _adjustDim( self, y ):
-        ratio = 50 / 15
-        indices = [ int( i * ratio ) for i in range( 15 ) ]
+        before, after = self.adjustRatio
+        ratio = before / after
+        indices = np.arange( 0, before, ratio )
+        indices = np.array( indices, dtype=np.int32 )
         return tf.gather( y, indices, axis=1 )
 
 

@@ -27,6 +27,7 @@ class DataProvider:
                   useFlips    = True,
                   normalize   = False,
                   ranges      = True ):
+        self.lblFilename = lblFilename
         self.flowDataDir = flowDataDir
         self.rgbDataDir  = rgbDataDir
         self.imuDataDir  = imuDataDir
@@ -91,7 +92,8 @@ class DataProvider:
     def loadImuData( self, dataDir ):
         if dataDir == '':
             return None
-        imuDict = InertialLoader().load_data( data_dir = dataDir )
+        imuDict = InertialLoader().load_data( data_dir = dataDir,
+                                              classInd = self.lblFilename )
         return imuDict
 
 

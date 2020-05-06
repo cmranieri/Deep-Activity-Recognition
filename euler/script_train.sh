@@ -1,12 +1,12 @@
-#PBS -N video_lstm
+#PBS -N multi_tcn
 #PBS -l ngpus=1
 #PBS -l walltime=128:00:00
 
 
-module load cuda-toolkit/10.2.89
+module load cuda-toolkit/9.0.176
 module load cudnn/7.6.5
 
-source ~/venv2/bin/activate
+source ~/venv3/bin/activate
 
 cd ~/Deep-Activity-Recognition/src
 

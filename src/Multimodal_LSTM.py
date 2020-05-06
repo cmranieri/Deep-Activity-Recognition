@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-from TemporalH import TemporalH
+from TemporalH2 import TemporalH
 
 from tensorflow.keras.layers import Input, Dense, LSTM
 from tensorflow.keras.layers import concatenate, Reshape, Permute
@@ -26,17 +26,14 @@ class Multimodal_LSTM( TemporalH ):
         y = Permute( (2, 1) )( merge )
         y = LSTM( units            = 128,
                   return_sequences = False,
-                  dropout          = 0.7,
+                  dropout          = 0.3,
                   unroll           = False )( merge )
         y = Dense( self.classes, activation='softmax' )( y )
         
         model = Model( [ flowInp, imuModel.inputs[0] ], y )
-        optimizer = SGD( lr = 1e-2,
-                         momentum = 0.9,
-                         nesterov = True,
-                         decay = 1e-4 )
+        optimizer = SGD( lr = 1e-2 )
         model.compile( loss = 'categorical_crossentropy',
-                       optimizer = 'rmsprop',
+                       optimizer = optimizer,
                        metrics   = [ 'acc' ] ) 
         return model
 

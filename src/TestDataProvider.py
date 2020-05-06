@@ -80,6 +80,7 @@ class TestDataProvider( DataProvider ):
         fullPath = os.path.join( self.imuDataDir, path )
         key = path.split('.')[0]
         seq = self.imuDict[ key ]
+        # for each segment of a trial
         for i in range( self._numSegments ):
             space = len( seq ) // self._numSegments
             if i * space + self.imuSteps < len( seq ):

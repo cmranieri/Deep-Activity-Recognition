@@ -1,12 +1,12 @@
 import numpy as np
 import os
 
-from TemporalH import TemporalH
+from TemporalH2 import TemporalH
 
-from keras.layers import Input, Dense, LSTM
-from keras.layers import concatenate, Reshape, Permute
-from keras.optimizers import SGD
-from keras.models import Model
+from tensorflow.keras.layers import Input, Dense, LSTM
+from tensorflow.keras.layers import concatenate, Reshape, Permute
+from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.models import Model
 from tcn import TCN
 
 class Multimodal_TCN( TemporalH ):
@@ -25,23 +25,19 @@ class Multimodal_TCN( TemporalH ):
         # [ b, t, f ]
         y = Permute( (2, 1) )( merge )
         y = TCN( nb_filters       = 128,
-                 nb_stacks        = 3,
+                 nb_stacks        = 1,
                  kernel_size      = 3,
-                 use_skip_connections = True,
+                 # change to True
+                 use_skip_connections = False,
                  return_sequences = False,
-                 dropout_rate     = 0.7,
-                 dilations        = [ 1, 2, 4 ] )( merge )
+                 dropout_rate     = 0.5,
+                 dilations        = [ 1, 2, 4, 8 ] )( merge )
         y = Dense( self.classes, activation='softmax' )( y )
         
         model = Model( [ flowInp, imuModel.inputs[0] ], y )
-        
-        optimizer = SGD( lr = 1e-2,
-                         momentum = 0.9,
-                         nesterov = True,
-                         decay = 1e-4 )
-       
+        optimizer = SGD( lr = 1e-2 )
         model.compile( loss = 'categorical_crossentropy',
-                       optimizer = 'rmsprop',
+                       optimizer = optimizer,
                        metrics   = [ 'acc' ] ) 
         return model
 
