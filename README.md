@@ -1,1 +1,2 @@
-# activity_recognition
+# Deep Activity Recognition
+Documentation will be available soon.
