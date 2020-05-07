@@ -3,7 +3,7 @@ import numpy as np
 from NetworkBase import NetworkBase
 import tensorflow as tf
 #import keras.backend as tf
-from tensorflow.keras.layers import Input, Conv1D, MaxPooling1D, Lambda
+from tensorflow.keras.layers import Input, Conv1D, MaxPooling1D, Lambda, BatchNormalization
 from tensorflow.keras.optimizers import SGD, Adam
 from tensorflow.keras.models import Model, load_model
 
@@ -30,11 +30,15 @@ class TemporalH( NetworkBase ):
 
     def imuBlock( self, shape ):
         inp = Input( shape = shape )
-        y = Conv1D(256, 1, padding='same', activation='relu')(inp)
+        y = BatchNormalization()(inp)
+        y = Conv1D(256, 3, padding='same', activation='relu')(y)
+        y = MaxPooling1D(2)(y)
+        y = BatchNormalization()(y)
         y = Conv1D(512, 3, padding='same', activation='relu')(y)
         y = MaxPooling1D(2)(y)
         if self.adjust:
             y = Lambda( self._adjustDim )(y)
+        y = BatchNormalization()(y)
         # [ b, t, f ]
         model = Model( inputs = inp, outputs = y )
         return model
