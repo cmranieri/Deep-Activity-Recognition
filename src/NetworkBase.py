@@ -194,9 +194,9 @@ class NetworkBase:
                     if not self._step % stepsToTrainError:
                         train_accuracy = np.mean( train_acc_list  )
                         train_loss     = np.mean( train_loss_list )
-                        #print( self._step, train_accuracy, train_loss )
-                        print( 'Step: %d | Train acc: %g | Loss: %g'%(
-                               self._step, train_accuracy, train_loss ) )
+                        print( self._step, train_accuracy, train_loss )
+                        print( 'Step: %d | Train acc: %s | Loss: %s'%(
+                               self._step, str(train_accuracy), str(train_loss) ) )
                         self._storeResult( 'train.txt', str(self._step) + ' ' +
                                                         str(train_accuracy) + ' ' +
                                                         str(train_loss) + '\n' )

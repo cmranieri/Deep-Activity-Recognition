@@ -24,10 +24,11 @@ class Multimodal_LSTM( TemporalH ):
         merge = concatenate( [ flowInp, imuModel.outputs[0] ] )
         # [ b, t, f ]
         y = Permute( (2, 1) )( merge )
-        y = LSTM( units            = 128,
-                  return_sequences = False,
-                  dropout          = 0.3,
-                  unroll           = False )( merge )
+        y = LSTM( units             = 128,
+                  return_sequences  = False,
+                  dropout           = 0.1,
+                  recurrent_dropout = 0.0,
+                  unroll            = False )( merge )
         y = Dense( self.classes, activation='softmax' )( y )
         
         model = Model( [ flowInp, imuModel.inputs[0] ], y )

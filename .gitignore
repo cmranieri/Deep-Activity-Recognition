@@ -4,6 +4,7 @@ src/__pycache__/*
 euler/*
 src/train.sh
 src/train2.sh
+src/eval.sh
 src/test.py
 src/test2.py
 src/train_model1.py
