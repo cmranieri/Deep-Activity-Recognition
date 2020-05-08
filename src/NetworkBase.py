@@ -242,15 +242,12 @@ class NetworkBase:
                     # concatenate batch and flipped batch
                     # if batch contains two streams or more
                     if isinstance( batch, list ):
-                        print('multiple streams')
                         # for each stream
                         for j in range( len(batch) ):
                             print( batch[j].shape )
                             batch[j] = np.concatenate( ( batch[j], flipBatch[j] ), axis = 0 )
                     # if batch contains a sigle stream
                     else:
-                        print( 'only one stream' )
-                        print( batch.shape )
                         batch = np.concatenate( ( batch, flipBatch ), axis = 0 )
                 # if one of the streams runs out before another, finish loop
                 end_loop = False

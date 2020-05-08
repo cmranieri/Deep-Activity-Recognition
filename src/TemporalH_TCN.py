@@ -7,6 +7,7 @@ from tensorflow.keras.layers import Input, Dense, LSTM
 from tensorflow.keras.layers import concatenate, Reshape, Permute
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.models import Model
+from tensorflow.keras import regularizers
 from tcn import TCN
 
 
@@ -26,10 +27,16 @@ class TemporalH_TCN( TemporalH ):
                  return_sequences = False,
                  dropout_rate     = 0.5,
                  dilations        = [ 1, 2, 4, 8, 16 ] )( inp )
-        y = Dense( self.classes, activation='softmax' )( y )
+        y = Dense( self.classes,
+                   kernel_regularizer = regularizers.l2( 0.01 ),
+                   activation='softmax' )( y )
         
         model = Model( inp, y )
-        optimizer = SGD( lr = 1e-2 )
+        optimizer = SGD( lr = 1e-2,
+                         momentum=0.9,
+                         decay=1e-4,
+                         clipnorm=1.,
+                         clipvalue=0.5 )
         model.compile( loss = 'categorical_crossentropy',
                        optimizer = optimizer,
                        metrics   = [ 'acc' ] ) 
