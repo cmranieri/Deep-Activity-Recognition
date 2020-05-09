@@ -179,7 +179,7 @@ class NetworkBase:
                                             numThreads = numThreads,
                                             maxsize    = maxsize ) as trainDataProvider:
                 # train stepsToEval before saving and evaluating
-                for i in range( stepsToEval ):
+                for eval_idx in range( stepsToEval ):
                     batchDict , labels = trainDataProvider.getBatch()
                     batch = self._prepareBatch( batchDict )
                     # train the selected batch
@@ -221,12 +221,12 @@ class NetworkBase:
         preds_list    = list()
         labels_list   = list()
         print( 'Evaluating...' )
-        i = 0
+        batch_idx = 0
         with self._generateTestDataProvider( maxsize = maxsize,
                                              numSegments  = numSegments ) as testDataProvider:
             while True:
-                if not i % 200:
-                    print( 'Evaluating sample', i )
+                if not batch_idx % 200:
+                    print( 'Evaluating sample', batch_idx )
                 # load batch and check end of data
                 batchTuple = testDataProvider.getBatch()
                 if batchTuple is None: break
@@ -249,14 +249,14 @@ class NetworkBase:
                     # if batch contains a sigle stream
                     else:
                         batch = np.concatenate( ( batch, flipBatch ), axis = 0 )
-                # if one of the streams runs out before another, finish loop
+                # if one of the streams runs out of instances before another, finish loop
                 end_loop = False
                 if isinstance( batch, list ):
                     for inp_id in range( len( self.model.inputs ) ):
                         if self.model.inputs[inp_id].shape[1] != batch[inp_id].shape[1]:
                             end_loop = True
                     if end_loop:
-                        break
+                        continue
                 # predict the data of an entire video
                 y_ = self.model.predict( batch )
                 # mean scores of each sample
@@ -270,7 +270,7 @@ class NetworkBase:
                 if storeTests:
                     preds_list.append( mean )
                     labels_list.append( labels[0] )
-                i += 1
+                batch_idx += 1
         
         test_accuracy = np.mean( test_acc_list )
         print( 'Time elapsed:', time.time() - t )
@@ -282,9 +282,3 @@ class NetworkBase:
                 pickle.dump( dict( { 'predictions': np.array( preds_list ),
                                      'labels'     : np.array( labels_list ) } ), f )
         return test_accuracy
-        
-
-
-
-if __name__ == '__main__':
-    os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'

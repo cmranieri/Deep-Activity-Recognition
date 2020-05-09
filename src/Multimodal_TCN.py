@@ -25,24 +25,24 @@ class Multimodal_TCN( TemporalH ):
         merge = concatenate( [ flowInp, imuModel.outputs[0] ] )
         # [ b, t, f ]
         y = Permute( (2, 1) )( merge )
-        y = TCN( nb_filters       = 128,
-                 nb_stacks        = 3,
-                 kernel_size      = 3,
+        y = TCN( nb_filters           = 128,
+                 nb_stacks            = 3,
+                 kernel_size          = 3,
                  use_skip_connections = True,
-                 return_sequences = False,
-                 dropout_rate     = 0.5,
-                 dilations        = [ 1, 2, 4, 8, 16 ] )( merge )
+                 return_sequences     = False,
+                 dropout_rate         = 0.3,
+                 dilations            = [ 1, 2, 4, 8 ] )( merge )
         y = Dense( self.classes,
                    kernel_regularizer = regularizers.l2( 0.01 ),
                    activation='softmax' )( y )
         
         model = Model( [ flowInp, imuModel.inputs[0] ], y )
-        optimizer = SGD( lr = 1e-2,
-                         momentum=0.9,
-                         decay=1e-4,
-                         clipnorm=1.,
-                         clipvalue=0.5 )
-        model.compile( loss = 'categorical_crossentropy',
+        optimizer = SGD( lr        = 1e-2,
+                         momentum  = 0.9,
+                         decay     = 1e-4,
+                         clipnorm  = 1.,
+                         clipvalue = 0.5 )
+        model.compile( loss      = 'categorical_crossentropy',
                        optimizer = optimizer,
                        metrics   = [ 'acc' ] ) 
         return model

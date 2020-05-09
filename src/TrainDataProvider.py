@@ -136,6 +136,7 @@ class TrainDataProvider( DataProvider ):
         for i, batchPath in enumerate( batchPaths ):
             key = batchPath.split('.')[ 0 ]
             seq = self.imuDict[ key ]
+            # startsList[i] \in [0,1]
             start = int( startsList[i] * ( len(seq) - self.imuSteps ) )
             batch.append( self.stackImu( key, start ) )
         batch  = np.array( batch,  dtype = 'float32' )

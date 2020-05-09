@@ -60,7 +60,7 @@ class DataProvider:
     def __exit__( self, exc_type, exc_value, traceback ):
         self._produce = False
         for i, t in enumerate( self._threadsList ):
-            t.join(1)
+            t.join( 1 )
             print( 'Finished thread %d' % ( i ) )
         while not self._batchQueue.empty():
             self._batchQueue.get()
@@ -128,6 +128,7 @@ class DataProvider:
 
 
     def stackImu( self, key, start ):
+        #start = min( start, len( self.imuDict[key] ) - self.imuSteps )
         window = self.imuDict[ key ][ start : start + self.imuSteps ]
         # [ t, f ]
         return np.array( window )

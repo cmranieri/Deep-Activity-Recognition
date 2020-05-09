@@ -28,19 +28,20 @@ class Multimodal_LSTM( TemporalH ):
         y = Permute( (2, 1) )( merge )
         y = LSTM( units             = 128,
                   return_sequences  = False,
-                  dropout           = 0.5,
+                  dropout           = 0.7,
+                  recurrent_dropout = 0.3,
                   unroll            = False )( merge )
         y = Dense( self.classes,
                    kernel_regularizer = regularizers.l2( 0.01 ),
-                   activation='softmax' )( y )
+                   activation = 'softmax' )( y )
         
         model = Model( [ flowInp, imuModel.inputs[0] ], y )
-        optimizer = SGD( lr = 1e-2, 
-                         momentum=0.9,
-                         decay=1e-4,
-                         clipnorm=1.,
-                         clipvalue=0.5 )
-        model.compile( loss = 'categorical_crossentropy',
+        optimizer = SGD( lr        = 1e-2, 
+                         momentum  = 0.9,
+                         decay     =1e-4,
+                         clipnorm  =1.,
+                         clipvalue =0.5 )
+        model.compile( loss      = 'categorical_crossentropy',
                        optimizer = optimizer,
                        metrics   = [ 'acc' ] ) 
         return model
