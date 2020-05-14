@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-from TemporalH2 import TemporalH
+from TemporalBase import TemporalBase
 
 from tensorflow.keras.layers import Input, Dense, LSTM
 from tensorflow.keras.layers import concatenate, Reshape, Permute
@@ -10,7 +10,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras import regularizers
 
 
-class Multimodal_LSTM( TemporalH ):
+class Multimodal_LSTM( TemporalBase ):
     def __init__( self, imuShape, **kwargs ):
         self.imuShape = imuShape
         super( Multimodal_LSTM , self ).__init__( streams = ['temporal','inertial'],

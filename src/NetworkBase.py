@@ -249,14 +249,17 @@ class NetworkBase:
                     # if batch contains a sigle stream
                     else:
                         batch = np.concatenate( ( batch, flipBatch ), axis = 0 )
-                # if one of the streams runs out of instances before another, finish loop
+                # if one of the streams runs out of instances, finish loop
                 end_loop = False
                 if isinstance( batch, list ):
                     for inp_id in range( len( self.model.inputs ) ):
                         if self.model.inputs[inp_id].shape[1] != batch[inp_id].shape[1]:
                             end_loop = True
-                    if end_loop:
-                        continue
+                else:
+                    if self.model.input.shape[1] != batch.shape[1]:
+                        end_loop = True
+                if end_loop:
+                    continue
                 # predict the data of an entire video
                 y_ = self.model.predict( batch )
                 # mean scores of each sample

@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-from TemporalH2 import TemporalH
+from TemporalBase import TemporalBase
 
 from tensorflow.keras.layers import Input, Dense, LSTM
 from tensorflow.keras.layers import concatenate, Reshape, Permute
@@ -11,10 +11,10 @@ from tensorflow.keras import regularizers
 
 
 
-class TemporalH_LSTM( TemporalH ):
+class Temporal_LSTM( TemporalBase ):
     def __init__( self, **kwargs ):
-        super( TemporalH_LSTM , self ).__init__( streams = ['temporal'],
-                                                 **kwargs )
+        super( Temporal_LSTM , self ).__init__( streams = ['temporal'],
+                                                **kwargs )
 
 
     def defineNetwork( self ):
@@ -44,16 +44,16 @@ class TemporalH_LSTM( TemporalH ):
 if __name__ == '__main__':
     os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
     
-    network = TemporalH_LSTM( flowDataDir  = '/lustre/cranieri/datasets/UCF-101_flow',
-                              modelDir     = '/lustre/cranieri/models/ucf101',
-                              modelName    = 'model-ucf101-hlstm-inception',
-                              cnnModelName = 'model-ucf101-optflow-inception',
-                              trainListPath = '../splits/ucf101/trainlist01.txt',
-                              testListPath  = '../splits/ucf101/testlist01.txt',
-                              flowSteps    = 15,
-                              clipTh       = 20,
-                              restoreModel = False,
-                              normalize    = False )
+    network = Temporal_LSTM( flowDataDir  = '/lustre/cranieri/datasets/UCF-101_flow',
+                             modelDir     = '/lustre/cranieri/models/ucf101',
+                             modelName    = 'model-ucf101-hlstm-inception',
+                             cnnModelName = 'model-ucf101-optflow-inception',
+                             trainListPath = '../splits/ucf101/trainlist01.txt',
+                             testListPath  = '../splits/ucf101/testlist01.txt',
+                             flowSteps    = 15,
+                             clipTh       = 20,
+                             restoreModel = False,
+                             normalize    = False )
     print( network.model.count_params() )
     #network.evaluate( numSegments  = 5,
     #                  maxsize = 128 )

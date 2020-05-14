@@ -1,3 +1,6 @@
+"""Provides optical flow from all RGB files within a dataset
+"""
+
 import cv2
 import numpy as np
 import os
@@ -7,10 +10,11 @@ from io import BytesIO
 import pickle
 
 algorithm = 'tvl1'
-#outsize  = ( 256, 454 )
 outsize   = ( 240, 320 )
 
 def make_dir( path ):
+    """Creates a directory only if path doesn't exist."""
+
     if not os.path.exists( path ):
         os.mkdir( path )
 
@@ -167,6 +171,6 @@ if __name__ == '__main__':
     #process_ucf101()
     #process_multimodal()
     #process_utd_mhad()
-    process_lyell()
+    #process_lyell()
 
-
+    help(make_dir)

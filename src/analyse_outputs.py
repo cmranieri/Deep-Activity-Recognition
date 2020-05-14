@@ -7,11 +7,11 @@ b = 1
 c = 0
 
 acc_list = list()
-for j in range(2):
+for j in range(8):
     split_f = '{:02d}'.format( j+1 )
     #out_a = pickle.load( open ('../outputs/model-ucf101-spatial-mobilenet.pickle', 'rb') )
     #out_b = pickle.load( open ('../outputs/model-ucf101-stack-inres.pickle', 'rb') )
-    out_a = pickle.load( open ('../outputs/model-multi-ctcn2-'+split_f+'.pickle', 'rb') )
+    out_a = pickle.load( open ('../outputs/model-lyell-imutcn-'+split_f+'.pickle', 'rb') )
     #out_b = pickle.load( open ('../outputs/model-ucf101-stack-inception_tl_multi-l'+split_f+'.pickle', 'rb') )
     #out_c = pickle.load( open ('../outputs/caetano-cnn-lstm-l'+str(j+1)+'.pickle', 'rb') )
     correct_list = list()

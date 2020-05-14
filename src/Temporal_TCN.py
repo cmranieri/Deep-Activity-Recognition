@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-from TemporalH2 import TemporalH
+from TemporalBase import TemporalBase
 
 from tensorflow.keras.layers import Input, Dense, LSTM
 from tensorflow.keras.layers import concatenate, Reshape, Permute
@@ -11,9 +11,9 @@ from tensorflow.keras import regularizers
 from tcn import TCN
 
 
-class TemporalH_TCN( TemporalH ):
+class Temporal_TCN( TemporalBase ):
     def __init__( self, **kwargs ):
-        super( TemporalH_TCN , self ).__init__( streams = ['temporal'],
+        super( Temporal_TCN , self ).__init__( streams = ['temporal'],
                                                  **kwargs )
 
 

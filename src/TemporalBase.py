@@ -8,16 +8,17 @@ from tensorflow.keras.optimizers import SGD, Adam
 from tensorflow.keras.models import Model, load_model
 
 
-class TemporalH( NetworkBase ):
+class TemporalBase( NetworkBase ):
     
     def __init__( self, cnnModelName, adjust = False, adjustRatio = (50,15), **kwargs ):
-        cnnPath = os.path.join( kwargs['modelDir'], cnnModelName + '.h5' )
         self.streams     = kwargs[ 'streams' ]
         self.imuSteps    = kwargs[ 'imuSteps' ]
         self.adjust      = adjust
         self.adjustRatio = adjustRatio
-        self.cnnModel    = self.loadCNN( cnnPath )
-        super( TemporalH , self ).__init__( **kwargs )
+        if cnnModelName is not None:
+            cnnPath = os.path.join( kwargs['modelDir'], cnnModelName + '.h5' )
+            self.cnnModel    = self.loadCNN( cnnPath )
+        super( TemporalBase , self ).__init__( **kwargs )
 
     
     def _adjustDim( self, y ):
