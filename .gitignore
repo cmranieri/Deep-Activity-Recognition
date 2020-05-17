@@ -9,5 +9,6 @@ src/test.py
 src/test2.py
 src/train_model1.py
 src/train_model2.py
+src/train_model3.py
 preprocessing/*
 *.pyc

@@ -66,6 +66,7 @@ class InertialLoader:
                 if window_size is not None:
                     inp = self.window_data( inp, window_size )
                 data_dict[ classname + '/' + filename.split('.')[0] ] = inp
+        print( data_dict.keys() )
         return data_dict
 
 

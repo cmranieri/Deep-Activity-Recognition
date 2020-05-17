@@ -26,13 +26,12 @@ class Spatial( NetworkBase ):
                                 pooling = 'avg' )
         y = base_model.output
         y = Dense( self.classes, activation='softmax' )( y )
-        
         model = Model( inputs = base_model.input, outputs = y )
         for layer in base_model.layers:
                 layer.trainable = False
-
-        optimizer = SGD( lr = 1e-2, momentum = 0.9,
-                         nesterov=True, decay = 1e-5 )
+        optimizer = SGD( lr = 1e-2,
+                         momentum = 0.9,
+                         decay = 1e-4 )
         model.compile( loss = 'categorical_crossentropy',
                        optimizer = optimizer,
                        metrics   = [ 'acc' ] ) 
