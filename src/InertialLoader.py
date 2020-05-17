@@ -66,12 +66,4 @@ class InertialLoader:
                 if window_size is not None:
                     inp = self.window_data( inp, window_size )
                 data_dict[ classname + '/' + filename.split('.')[0] ] = inp
-        print( data_dict.keys() )
         return data_dict
-
-
-if __name__ == '__main__':
-    inertialLoader = InertialLoader()
-    data_dir = '/home/cmranieri/datasets/UTD-MHAD/Inertial_csv'
-    data = inertialLoader.load_data( data_dir )
-    #print(np.array(data['act02/act02seq02']).shape)
