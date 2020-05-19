@@ -1,6 +1,7 @@
 outputs/*
 results/*
 src/__pycache__/*
+src/.tmp/*
 euler/*
 src/train.sh
 src/train2.sh

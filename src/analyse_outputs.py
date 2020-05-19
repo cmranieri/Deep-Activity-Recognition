@@ -9,8 +9,8 @@ temp_flow   = 'lstm'
 temp_imu    = 'lstm'
 temp_bimod  = 'lstm'
 w = { 'flow' : 0,
-      'imu'  : 1,
-      'spat' : 0,
+      'imu'  : 5,
+      'spat' : 1,
       'bimod': 0 }
 
 def get_path( dataset, stream, split ):
@@ -38,15 +38,16 @@ for j in range( n_splits ):
         n_rows.append( len ( outs[ 'bimod' ][ 'labels' ] ) )
 
     correct_list = list()
+    # Test instances in a split
     for i in range( min( n_rows ) ):
         pred = list()
         for key in outs.keys():
             pred.append( w[ key ] * outs[ key ][ 'predictions' ][ i ] )
-            label = outs[ key ][ 'labels' ][ i ]
+            label = outs[ 'imu' ][ 'labels' ][ i ]
         pred = np.sum( pred, axis=0 )
         correct = np.equal( np.argmax( pred ),
                             np.argmax( label ) )
-        correct_list.append(correct)
+        correct_list.append( correct )
     acc_list.append( np.mean( correct_list ) )
 
 print(np.mean(acc_list))

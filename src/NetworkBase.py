@@ -229,8 +229,8 @@ class NetworkBase:
                     print( 'Evaluating sample', batch_idx )
                 # load batch and check end of data
                 batchTuple = testDataProvider.getBatch()
-                if batchTuple is None: break
-
+                if batchTuple is None:
+                    break
                 # prepare batch
                 batchDict , labels = batchTuple
                 batch = self._prepareBatch( batchDict )
@@ -239,7 +239,6 @@ class NetworkBase:
                     # provides flipped batch
                     flipBatchDict, _ = testDataProvider.getBatch()
                     flipBatch = self._prepareBatch( flipBatchDict )
-                    # concatenate batch and flipped batch
                     # if batch contains two streams or more
                     if isinstance( batch, list ):
                         # for each stream
@@ -265,7 +264,7 @@ class NetworkBase:
                 # mean scores of each sample
                 mean = np.mean( np.array( y_ ), 0 )
                 # check whether the prediction is correct
-                # assumes the label is the same for all instances on the batch
+                # assumes the label is the same for all instances of the batch
                 correct_prediction = np.equal( np.argmax( mean ),
                                                np.argmax( labels[0] ) )
                 test_acc_list.append( correct_prediction )

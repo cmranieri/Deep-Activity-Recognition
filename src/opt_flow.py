@@ -45,7 +45,6 @@ def prep_flow_frame( u, v ):
 
 
 def convert_video( video_path, out_dir, ext ):
- 
     cap = cv2.VideoCapture( video_path + ext )
     ret, frame1 = cap.read()
     frame1 = cv2.resize( frame1, outsize, interpolation=cv2.INTER_AREA )
@@ -87,7 +86,6 @@ def convert_video( video_path, out_dir, ext ):
                     np.max( flow[ ... , 1 ] ) ]
         ur_list += [ u_range ]
         vr_list += [ v_range ]
-
         prev = next
 
     video_name = video_path.split('/')[-1]
