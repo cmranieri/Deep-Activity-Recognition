@@ -105,25 +105,24 @@ class DataProvider:
         return frame
 
 
-    def provideFlowFrame( self, video, index ):
-        u = np.asarray( Image.open( video ['u'] [index] ) , dtype = 'float32' )
-        v = np.asarray( Image.open( video ['v'] [index] ) , dtype = 'float32' )
-
-        if self._ranges:
-            u_range = video ['u_range'] [index]
-            v_range = video ['v_range'] [index]
-            cv2.normalize( u, u, u_range[0], u_range[1], cv2.NORM_MINMAX )
-            cv2.normalize( v, v, v_range[0], v_range[1], cv2.NORM_MINMAX )
-
-        if self.clipTh is not None:
-            u[ u >  self.clipTh ] =  self.clipTh
-            u[ u < -self.clipTh ] = -self.clipTh
-            v[ v >  self.clipTh ] =  self.clipTh
-            v[ v < -self.clipTh ] = -self.clipTh
-
-        if self._normalize:
-            u = u / max( np.max( np.abs( u ) ) , 1e-4 ) 
-            v = v / max( np.max( np.abs( v ) ) , 1e-4 ) 
+    def provideFlowFrame( self, video, index, flowVecs = [ 'u', 'v' ] ):
+        data = dict()
+        ranges = dict()
+        for vec in flowVecs:
+            data[ vec ] = np.asarray( Image.open( video [ vec ] [index] ),
+                                      dtype = 'float32' ) 
+            if self._ranges:
+                ranges[ vec ] = video ['%s_range'%vec] [index]
+                cv2.normalize( data[ vec ],
+                               data[ vec ],
+                               ranges[ vec ][ 0 ],
+                               ranges[ vec ][ 1 ],
+                               cv2.NORM_MINMAX )
+            if self.clipTh is not None and len( flowVecs )==2:
+                data[ vec ][ data[ vec ] >  self.clipTh ] = self.clipTh
+                data[ vec ][ data[ vec ] < -self.clipTh ] = -self.clipTh
+            if self._normalize:
+                data[ vec ] = data[ vec ] / max( np.max( np.abs( data[ vec ] ) ) , 1e-4 ) 
         return u, v
 
 
