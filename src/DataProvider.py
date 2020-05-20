@@ -122,8 +122,9 @@ class DataProvider:
                 data[ vec ][ data[ vec ] >  self.clipTh ] = self.clipTh
                 data[ vec ][ data[ vec ] < -self.clipTh ] = -self.clipTh
             if self._normalize:
-                data[ vec ] = data[ vec ] / max( np.max( np.abs( data[ vec ] ) ) , 1e-4 ) 
-        return u, v
+                data[ vec ] = data[ vec ] / max( np.max( np.abs( data[ vec ] ) ) , 1e-4 )
+        ret = [ data[ key ] for key in data.keys() ]
+        return ret
 
 
     def stackImu( self, key, start ):
