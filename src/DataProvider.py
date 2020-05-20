@@ -24,6 +24,7 @@ class DataProvider:
                   clipTh      = 20,
                   numThreads  = 1,
                   maxsize     = 10,
+                  nFlowMaps   = 2,
                   useFlips    = True,
                   normalize   = False,
                   ranges      = True ):
@@ -41,6 +42,7 @@ class DataProvider:
         self.clipTh      = clipTh
         self.framePeriod = framePeriod
         self.useFlips    = useFlips
+        self.nFlowMaps   = nFlowMaps
         
         self.filenames = self._loadFileNames( namesFilePath )
         self._length   = self.filenames.shape[ 0 ]
@@ -105,7 +107,11 @@ class DataProvider:
         return frame
 
 
-    def provideFlowFrame( self, video, index, flowVecs = [ 'u', 'v' ] ):
+    def provideFlowFrame( self, video, index ):
+        if self.nFlowMaps==2:
+            flowVecs = [ 'u', 'v' ]
+        elif self.nFlowMaps==3:
+            flowVecs = [ 'u', 'v', 'w' ]
         data = dict()
         ranges = dict()
         for vec in flowVecs:

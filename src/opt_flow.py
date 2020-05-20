@@ -13,8 +13,6 @@ algorithm = 'tvl1'
 outsize   = ( 240, 320 )
 
 def make_dir( path ):
-    """Creates a directory only if path doesn't exist."""
-
     if not os.path.exists( path ):
         os.mkdir( path )
 

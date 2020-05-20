@@ -33,6 +33,7 @@ class NetworkBase:
                   tlSuffix      = '',
                   normalize     = False,
                   useFlips      = True,
+                  nFlowMaps     = 2,
                   **kwargs ):
         self.dim           = dim
         self.flowSteps     = flowSteps
@@ -52,6 +53,7 @@ class NetworkBase:
         self.lblFilename   = lblFilename
         self.trainListPath = trainListPath
         self.testListPath  = testListPath
+        self.nFlowMaps     = nFlowMaps
 
         self._resultsDir  = '../results'
         self._outputsPath = os.path.join( '../outputs', self.modelName + '.pickle' )
@@ -119,7 +121,8 @@ class NetworkBase:
                                   normalize   = self.normalize,
                                   framePeriod = self.framePeriod,
                                   useFlips    = self.useFlips,
-                                  clipTh      = self.clipTh )
+                                  clipTh      = self.clipTh,
+                                  nFlowMaps   = self.nFlowMaps )
 
     def _generateTestDataProvider( self,
                                    maxsize,
@@ -139,7 +142,8 @@ class NetworkBase:
                                  normalize    = self.normalize,
                                  framePeriod  = self.framePeriod,
                                  useFlips     = self.useFlips,
-                                 clipTh       = self.clipTh )
+                                 clipTh       = self.clipTh,
+                                 nFlowMaps   = self.nFlowMaps )
 
 
 
