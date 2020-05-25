@@ -4,13 +4,13 @@ import os
 
 
 dataset     = 'lyell'
-n_splits    = 5
+n_splits    = 8
 temp_flow   = 'lstm'
 temp_imu    = 'lstm'
 temp_bimod  = 'lstm'
-w = { 'flow' : 0,
-      'imu'  : 5,
-      'spat' : 1,
+w = { 'flow' : 5,
+      'imu'  : 1,
+      'spat' : 0,
       'bimod': 0 }
 
 def get_path( dataset, stream, split ):
@@ -43,7 +43,7 @@ for j in range( n_splits ):
         pred = list()
         for key in outs.keys():
             pred.append( w[ key ] * outs[ key ][ 'predictions' ][ i ] )
-            label = outs[ 'imu' ][ 'labels' ][ i ]
+            label = outs[ key ][ 'labels' ][ i ]
         pred = np.sum( pred, axis=0 )
         correct = np.equal( np.argmax( pred ),
                             np.argmax( label ) )

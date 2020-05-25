@@ -127,7 +127,7 @@ class TrainDataProvider( DataProvider ):
         batch = np.reshape( batch , [ len( batchPaths ), 
                                       self.dim,
                                       self.dim,
-                                      2 * self.flowSteps] )
+                                      self.nFlowMaps * self.flowSteps] )
         return batch
 
 

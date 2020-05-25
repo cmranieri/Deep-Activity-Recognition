@@ -56,7 +56,7 @@ class TestDataProvider( DataProvider ):
                 start = i * space
             else:
                 start = len( video[ 'u' ] ) - 1 - self.flowSteps * self.framePeriod
-            # [ b, h, w, 2, t ]
+            # [ b, h, w, {2,3}, t ]
             batch.append( self.stackFlow( video, start ) )
         batch = np.array( batch, dtype = 'float32' )
         batch = self.getCrops( inp = batch, stream = 'temporal' )
@@ -139,10 +139,10 @@ class TestDataProvider( DataProvider ):
                            marginX : marginX + dim ] ]
         crops = np.array( crops, dtype = 'float32' )
         if stream == 'temporal':
-            # [ c * b, h, w, 2t ]
+            # [ c * b, h, w, {2,3}t ]
             crops = np.reshape( crops, [ 5 * self._numSegments,
                                          self.dim, self.dim,
-                                         2 * self.flowSteps ] )
+                                         self.nFlowMaps * self.flowSteps ] )
         elif stream == 'spatial':
             # [ c * b, h, w, 3 ]
             crops = np.reshape( crops, [ 5 * self._numSegments,

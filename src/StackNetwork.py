@@ -2,17 +2,17 @@ import os
 
 from NetworkBase import NetworkBase
 
-from keras.applications.inception_v3 import InceptionV3 as BaseModel
-from keras.layers import Input 
-from keras.optimizers import SGD
+from tensorflow.keras.applications.inception_v3 import InceptionV3 as BaseModel
+from tensorflow.keras.layers import Input 
+from tensorflow.keras.optimizers import SGD
 #from tensorflow.keras.optimizers.schedules import ExponentialDecay
 
 
 
-class TemporalStack( NetworkBase ):
+class StackNetwork( NetworkBase ):
     
     def __init__( self, **kwargs ):
-        super( TemporalStack , self ).__init__( streams = ['temporal'], **kwargs )
+        super( StackNetwork , self ).__init__( streams = ['temporal'], **kwargs )
 
 
     def _prepareBatch( self, batchDict ):
@@ -21,8 +21,9 @@ class TemporalStack( NetworkBase ):
 
 
     def defineNetwork( self ):
+        print( 'define network' )
         input_tensor = Input( shape = ( self.dim, self.dim,
-                                        2 * self.flowSteps ) )
+                                        self.nFlowMaps * self.flowSteps ) )
         model = BaseModel( input_tensor = input_tensor,
                            weights = None,
                            classes = self.classes )

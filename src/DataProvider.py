@@ -145,10 +145,14 @@ class DataProvider:
         for i in range( start,
                         start + self.flowSteps * self.framePeriod,
                         self.framePeriod ):
-            u, v = self.provideFlowFrame( video, i )
-            flowList.append( np.array( [ u , v ] ) )
+            if self.nFlowMaps == 2:
+                u, v = self.provideFlowFrame( video, i )
+                flowList.append( np.array( [ u , v ] ) )
+            elif self.nFlowMaps == 3:
+                u, v, w = self.provideFlowFrame( video, i )
+                flowList.append( np.array( [ u , v , w ] ) )
         stack = np.array( flowList )
-        # [ u, v, 2, t ]
+        # [ h, w, {2, 3}, t ]
         stack = np.transpose( stack , [ 2 , 3 , 0 , 1 ] )
         return stack
 
