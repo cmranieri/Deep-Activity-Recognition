@@ -8,10 +8,11 @@ n_splits    = 8
 temp_flow   = 'lstm'
 temp_imu    = 'lstm'
 temp_bimod  = 'lstm'
-w = { 'flow' : 5,
-      'imu'  : 1,
+w = { 'flow' : 0,
+      'imu'  : 0,
       'spat' : 0,
-      'bimod': 0 }
+      'bimod': 0,
+      'cnn'  : 1 }
 
 def get_path( dataset, stream, split ):
     return os.path.join( '..', 'outputs', 'model-%s-%s-%0.2d.pickle' % ( dataset, stream, split ) )
@@ -36,6 +37,10 @@ for j in range( n_splits ):
         with open( get_path( dataset, 'c%s'%temp_bimod, j+1 ), 'rb' ) as f:
             outs[ 'bimod' ] = pickle.load( f )
         n_rows.append( len ( outs[ 'bimod' ][ 'labels' ] ) )
+    if w[ 'cnn' ]:
+        with open( get_path( dataset, 'cnn', j+1 ), 'rb' ) as f:
+            outs[ 'cnn' ] = pickle.load( f )
+        n_rows.append( len ( outs[ 'cnn' ][ 'labels' ] ) )
 
     correct_list = list()
     # Test instances in a split

@@ -48,7 +48,7 @@ class TemporalBase( NetworkBase ):
     def _getFlowFeats( self, batch ):
         batch = np.reshape( batch, [ batch.shape[0],
                                      self.dim, self.dim,
-                                     2, self.flowSteps ] )
+                                     self.nFlowMaps, self.flowSteps ] )
         # [ t, b, d, d, c ]
         batch = list( np.transpose( batch, [ 4, 0, 1, 2, 3 ] ) )
         featsBatch = self.runFlowCNN( batch )
