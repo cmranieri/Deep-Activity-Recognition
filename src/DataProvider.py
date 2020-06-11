@@ -25,7 +25,8 @@ class DataProvider:
                   numThreads  = 1,
                   maxsize     = 10,
                   nFlowMaps   = 2,
-                  useFlips    = True,
+                  scaleFlow  = False,
+                  useFlips    = False,
                   normalize   = False,
                   ranges      = True ):
         self.lblFilename = lblFilename
@@ -43,6 +44,7 @@ class DataProvider:
         self.framePeriod = framePeriod
         self.useFlips    = useFlips
         self.nFlowMaps   = nFlowMaps
+        self.scaleFlow   = scaleFlow
         
         self.filenames = self._loadFileNames( namesFilePath )
         self._length   = self.filenames.shape[ 0 ]
@@ -127,6 +129,8 @@ class DataProvider:
             if self.clipTh is not None and len( flowVecs )==2:
                 data[ vec ][ data[ vec ] >  self.clipTh ] = self.clipTh
                 data[ vec ][ data[ vec ] < -self.clipTh ] = -self.clipTh
+            if self.scaleFlow:
+                data[ vec ] = data[ vec ] * 5000
             if self._normalize:
                 data[ vec ] = data[ vec ] / max( np.max( np.abs( data[ vec ] ) ) , 1e-4 )
         ret = [ data[ key ] for key in data.keys() ]

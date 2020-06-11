@@ -17,6 +17,7 @@ class TemporalBase( NetworkBase ):
         self.adjustRatio = adjustRatio
         if cnnModelName is not None:
             cnnPath = os.path.join( kwargs['modelDir'], cnnModelName + '.h5' )
+            print(cnnPath)
             self.cnnModel    = self.loadCNN( cnnPath )
         super( TemporalBase , self ).__init__( **kwargs )
 

@@ -33,7 +33,7 @@ class StackNetwork( NetworkBase ):
         #                                decay_steps = 2000,
         #                                decay_rate  = 0.96,
         #                                staircase   = True )
-        optimizer = SGD( lr=1e-2, momentum = 0.9, nesterov=True, decay=1e-4 )
+        optimizer = SGD( lr=1e-2, momentum = 0.9, decay=1e-4 )
         model.compile( loss = 'categorical_crossentropy',
                        optimizer = optimizer,
                        metrics   = [ 'acc' ] ) 

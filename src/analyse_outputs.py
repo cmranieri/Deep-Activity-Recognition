@@ -8,11 +8,12 @@ n_splits    = 8
 temp_flow   = 'lstm'
 temp_imu    = 'lstm'
 temp_bimod  = 'lstm'
-w = { 'flow' : 0,
+w = { 'sflow': 0,
+      'flow' : 1,
       'imu'  : 0,
       'spat' : 0,
       'bimod': 0,
-      'cnn'  : 1 }
+      'cnn'  : 0 }
 
 def get_path( dataset, stream, split ):
     return os.path.join( '..', 'outputs', 'model-%s-%s-%0.2d.pickle' % ( dataset, stream, split ) )
@@ -21,8 +22,12 @@ acc_list = list()
 for j in range( n_splits ):
     n_rows = list()
     outs   = dict()
+    if w[ 'sflow' ]:
+        with open( get_path( dataset, 's%s'%temp_flow, j+1 ), 'rb' ) as f:
+            outs[ 'sflow' ] = pickle.load( f )
+        n_rows.append( len ( outs[ 'sflow' ][ 'labels' ] ) )
     if w[ 'flow' ]:
-        with open( get_path( dataset, 'v%s'%temp_flow, j+1 ), 'rb' ) as f:
+        with open( get_path( dataset, 'v%s-sf2d'%temp_flow, j+1 ), 'rb' ) as f:
             outs[ 'flow' ] = pickle.load( f )
         n_rows.append( len ( outs[ 'flow' ][ 'labels' ] ) )
     if w[ 'imu' ]:
@@ -38,7 +43,7 @@ for j in range( n_splits ):
             outs[ 'bimod' ] = pickle.load( f )
         n_rows.append( len ( outs[ 'bimod' ][ 'labels' ] ) )
     if w[ 'cnn' ]:
-        with open( get_path( dataset, 'cnn', j+1 ), 'rb' ) as f:
+        with open( get_path( dataset, 'cnn-sf2d', j+1 ), 'rb' ) as f:
             outs[ 'cnn' ] = pickle.load( f )
         n_rows.append( len ( outs[ 'cnn' ][ 'labels' ] ) )
 
