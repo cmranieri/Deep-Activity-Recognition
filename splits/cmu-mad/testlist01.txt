@@ -11,7 +11,6 @@ switch_on/S07_switch_on_10073.mp4
 switch_on/S08_switch_on_8353.mp4
 switch_on/S09_switch_on_12491.mp4
 open_fridge/S07_open-fridge_1164.mp4
-open_fridge/S08_open-fridge_5048.mp4
 take_small_cup/S07_take-measuring_cup_small_706.mp4
 take_small_cup/S08_take-measuring_cup_small_460.mp4
 stir_bowl/S07_stir-big_bowl_5287.mp4
@@ -30,7 +29,6 @@ take_fork/S08_take-fork_768.mp4
 put_cook_cupboard/S07_put-oil-into-cupboard_bottom_right_3768.mp4
 put_cook_cupboard/S08_put-pam-into-cupboard_bottom_right_7145.mp4
 put_cook_cupboard/S09_put-oil-into-cupboard_bottom_right_3835.mp4
-close_fridge/S07_close-fridge_1360.mp4
 close_fridge/S08_close-fridge_5194.mp4
 put_pan_oven/S07_put-baking_pan-into-oven_9752.mp4
 put_pan_oven/S08_put-baking_pan-into-oven_8714.mp4

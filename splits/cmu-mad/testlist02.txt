@@ -3,6 +3,7 @@ pour_water_cup/S12_pour-water-into-measuring_cup_big_4142.mp4
 twist_cap_off/S09_twist_off-cap_2784.mp4
 twist_cap_off/S12_twist_off-cap_4836.mp4
 spray_pam/S08_spray-pam_6873.mp4
+spray_pam/S09_spray-pam_10445.mp4
 walk_to_fridge/S09_walk--to-fridge_1374.mp4
 walk_to_fridge/S12_walk--to-fridge_1724.mp4
 pour_oil_cup/S09_pour-oil-into-measuring_cup_small_3007.mp4
@@ -10,8 +11,9 @@ pour_oil_cup/S12_pour-oil-into-measuring_cup_small_4935.mp4
 switch_on/S12_switch_on_14193.mp4
 switch_on/S13_switch_on_1004.mp4
 switch_on/S13_switch_on_18134.mp4
+switch_on/S13_switch_on_18292.mp4
+open_fridge/S08_open-fridge_5048.mp4
 open_fridge/S09_open-fridge_1426.mp4
-open_fridge/S12_open-fridge_1796.mp4
 take_small_cup/S09_take-measuring_cup_small_748.mp4
 take_small_cup/S12_take-measuring_cup_small_717.mp4
 stir_bowl/S09_stir-big_bowl_11055.mp4
@@ -27,11 +29,12 @@ crack_egg/S12_crack-egg_2322.mp4
 crack_egg/S12_crack-egg_2579.mp4
 take_fork/S09_take-fork_2365.mp4
 take_fork/S12_take-fork_3030.mp4
+take_fork/S13_take-fork_8468.mp4
 put_cook_cupboard/S09_put-pam-into-cupboard_bottom_right_10942.mp4
 put_cook_cupboard/S12_put-oil-into-cupboard_bottom_right_5361.mp4
 put_cook_cupboard/S12_put-pam-into-cupboard_bottom_right_12780.mp4
+put_cook_cupboard/S13_put-oil-into-cupboard_bottom_right_14699.mp4
 close_fridge/S09_close-fridge_1630.mp4
-close_fridge/S12_close-fridge_2077.mp4
 put_pan_oven/S09_put-baking_pan-into-oven_12994.mp4
 put_pan_oven/S12_put-baking_pan-into-oven_14904.mp4
 take_big_cup/S09_take-measuring_cup_big_834.mp4
@@ -44,6 +47,7 @@ take_eggs/S12_take-egg_1879.mp4
 walk_to_counter/S09_walk--to-counter_1663.mp4
 walk_to_counter/S12_walk--to-counter_2111.mp4
 take_cooking_spray/S09_take-pam_10309.mp4
+take_cooking_spray/S12_take-pam_563.mp4
 take_baking_pan/S09_take-baking_pan_10140.mp4
 take_baking_pan/S12_take-baking_pan_1207.mp4
 take_brownie_box/S09_take-brownie_box_227.mp4
@@ -54,7 +58,9 @@ twist_cap_on/S09_twist_on-cap_3769.mp4
 twist_cap_on/S12_twist_on-cap_5292.mp4
 pour_water_bowl/S09_pour-water-into-big_bowl_4209.mp4
 pour_water_bowl/S12_pour-water-into-big_bowl_4364.mp4
+pour_water_bowl/S13_pour-water-into-big_bowl_4531.mp4
 take_bowl/S09_take-big_bowl_581.mp4
 take_bowl/S12_take-big_bowl_838.mp4
 open_brownie_bag/S12_open-brownie_bag_6739.mp4
 open_brownie_bag/S13_open-brownie_bag_2094.mp4
+open_brownie_bag/S13_open-brownie_bag_2370.mp4
