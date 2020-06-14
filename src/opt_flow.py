@@ -120,7 +120,6 @@ def process_ucf101():
     output_dir = '/home/cmranieri/datasets/UCF-101_flow'
     trainlist  = read_fileslist( '../splits/ucf101/trainlist01.txt' )
     testlist   = read_fileslist( '../splits/ucf101/testlist01.txt' )
-
     for filename in trainlist+testlist:
         t = time.time()
         process_video( input_dir, output_dir, filename )
@@ -132,7 +131,6 @@ def process_multimodal():
     output_dir = '/home/cmranieri/datasets/multimodal_dataset_flow'
     trainlist  = read_fileslist( '../splits/multimodal_datasetucf101/trainlist01.txt' )
     testlist   = read_fileslist( '../splits/multimodal_dataset/testlist01.txt' )
-
     for filename in trainlist+testlist:
         t = time.time()
         process_video( input_dir, output_dir, filename )
@@ -144,7 +142,6 @@ def process_utd_mhad():
     output_dir = '/home/cmranieri/datasets/UTD-MHAD/flow'
     trainlist  = read_fileslist( '../splits/utd/trainlist01.txt' )
     testlist   = read_fileslist( '../splits/utd/testlist01.txt' )
-
     for filename in trainlist+testlist:
         t = time.time()
         process_video( input_dir, output_dir, filename )
@@ -156,7 +153,17 @@ def process_lyell():
     output_dir = '/lustre/cranieri/datasets/lyell/flow'
     trainlist  = read_fileslist( '../splits/lyell/trainlist01.txt' )
     testlist   = read_fileslist( '../splits/lyell/testlist01.txt' )
+    for filename in trainlist+testlist:
+        t = time.time()
+        process_video( input_dir, output_dir, filename )
+        print( 'Time:', time.time() - t )
 
+
+def process_cmu():
+    input_dir  = '/home/caetano/datasets/CMU-MAD/lbl_video'
+    output_dir = '/home/caetano/datasets/CMU-MAD/flow'
+    trainlist  = read_fileslist( '../splits/cmu-mad/trainlist01.txt' )
+    testlist   = read_fileslist( '../splits/cmu-mad/testlist01.txt' )
     for filename in trainlist+testlist:
         t = time.time()
         process_video( input_dir, output_dir, filename )
@@ -168,5 +175,4 @@ if __name__ == '__main__':
     #process_multimodal()
     #process_utd_mhad()
     #process_lyell()
-
-    help(make_dir)
+    process_cmu()

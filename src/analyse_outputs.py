@@ -27,7 +27,7 @@ for j in range( n_splits ):
             outs[ 'sflow' ] = pickle.load( f )
         n_rows.append( len ( outs[ 'sflow' ][ 'labels' ] ) )
     if w[ 'flow' ]:
-        with open( get_path( dataset, 'v%s-sf2d'%temp_flow, j+1 ), 'rb' ) as f:
+        with open( get_path( dataset, 'v%s-scratch'%temp_flow, j+1 ), 'rb' ) as f:
             outs[ 'flow' ] = pickle.load( f )
         n_rows.append( len ( outs[ 'flow' ][ 'labels' ] ) )
     if w[ 'imu' ]:

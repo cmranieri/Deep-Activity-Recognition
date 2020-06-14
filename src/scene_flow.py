@@ -8,8 +8,6 @@ from io import BytesIO
 import pickle
 
 
-PID = os.getpid()
-print(PID)
 sf_impair_path = os.path.join( '/home', 'caetano', 'PD-Flow', 'build', 'Scene-Flow-Impair' )
 fps_depth = 15
 fps_rgb   = 15
@@ -19,11 +17,11 @@ def prep_flow_frame( flow_frame ):
     out_list = list()
     ranges_list = list()
     # [ u, v, w ]
-    for x in flow_frame:
-        ranges_list.append( [ np.min( x ), np.max(x) ] )
-        x = cv2.normalize( x, x, 0, 255, cv2.NORM_MINMAX )
-        x = x.astype( 'uint8' )
-        img = Image.fromarray( x )
+    for vec in flow_frame:
+        ranges_list.append( [ np.min( vec ), np.max(vec) ] )
+        vec = cv2.normalize( vec, vec, 0, 255, cv2.NORM_MINMAX )
+        vec = vec.astype( 'uint8' )
+        img = Image.fromarray( vec )
         out = BytesIO()
         img.save( out , format='jpeg' , quality=90 )
         out_list.append( out )
@@ -69,13 +67,13 @@ def load_depth_pair( depth, frame_id ):
 
 def load_rgb( rgb_dir, lbl, fname ):
     fname_noext = fname.split( '.' )[0]
-    rgb_path = os.path.join( rgb_dir, lbl, '%s.mp4'%fname_noext )
+    rgb_path = os.path.join( rgb_dir, lbl, '%s.avi'%fname_noext )
     rgb = list()
     cap = cv2.VideoCapture( rgb_path )
     ret, f = cap.read()
     while ret:
         f = cv2.cvtColor( f, cv2.COLOR_BGR2GRAY )
-        f = cv2.resize( f, ( 240, 320 ), interpolation=cv2.INTER_AREA )
+        f = cv2.resize( f, ( 320, 240 ), interpolation=cv2.INTER_AREA )
         rgb.append( f )
         ret, f = cap.read()
     cap.release()
@@ -94,20 +92,20 @@ def get_results_fname():
     best_NN     = 0
     fname_best  = ''
     # Get filename of the last result
-    for fname in os.listdir( '.tmp_%s'%PID ):
+    for fname in os.listdir( '.tmp' ):
         res = re.match( 'pdflow_results(\d+).txt', fname )
         if res:
             NN = int( res.groups()[ 0 ] )
             if NN > best_NN:
                 best_NN = NN
-                fname_best = res[ 0 ]
+                fname_best = fname
     return fname_best
 
 
 def results2array():
     fname = get_results_fname()
     data = np.zeros( [ 3, 240, 320 ] )
-    with open( os.path.join( '.tmp_%s'%PID, fname ), 'r' ) as f:
+    with open( os.path.join( '.tmp', fname ), 'r' ) as f:
         for line in f.readlines():
             line = np.array( line.split(' '), dtype=np.float32 )
             data[ 0, int( line[0] ), int( line[1] ) ] = line[ 2 ]
@@ -122,9 +120,9 @@ def compute_pair_flow( depth, rgb, frame_id ):
         return None
     f1, f2 = ret
     d1, d2 = load_depth_pair( depth, frame_id )
-    if not os.path.exists( '.tmp_%s'%PID ):
-        os.mkdir( '.tmp_%s'%PID )
-    os.chdir( '.tmp_%s'%PID )
+    if not os.path.exists( '.tmp' ):
+        os.mkdir( '.tmp' )
+    os.chdir( '.tmp' )
     cv2.imwrite( 'i1.png', f1 )
     cv2.imwrite( 'i2.png', f2 )
     cv2.imwrite( 'z1.png', d1 )
@@ -132,15 +130,15 @@ def compute_pair_flow( depth, rgb, frame_id ):
     subprocess.call( [ sf_impair_path + ' --no-show' ], shell=True, executable='/bin/bash' )
     os.chdir( '..' )
     data = results2array()
-    [ os.remove( os.path.join( '.tmp_%s'%PID, x ) ) for x in os.listdir( '.tmp_%s'%PID ) ]
+    [ os.remove( os.path.join( '.tmp', x ) ) for x in os.listdir( '.tmp' ) ]
     return data
 
 
 def compute_video( depth_dir, rgb_dir, lbl, fname ):
     depth = load_depth( depth_dir, lbl, fname )
-    rgb   = load_rgb( rgb_dir, lbl, fname )
+    rgb   = load_rgb( rgb_dir, lbl, re.sub( 'depth.npy', 'color.avi', fname ) )
     data = list()
-    for frame_id in range( 1, depth.shape[ 0 ] ): 
+    for frame_id in range( depth.shape[ 0 ] ): 
         print( 'Frame %d' % frame_id )
         pair_flow = compute_pair_flow( depth, rgb, frame_id )
         if pair_flow is not None:
@@ -157,8 +155,8 @@ def compute_all( depth_dir, rgb_dir, out_dir ):
             fname_noext = fname.split( '.' )[0]
             video_outs   = list()
             video_ranges = list()
-            s = re.findall( '_U\d+', fname )[0]
-            t = re.findall( '_U\d+', fname )[0]
+            s = re.findall( '_s\d+', fname )[0]
+            t = re.findall( '_t\d+', fname )[0]
             if os.path.exists( os.path.join( out_dir, lbl, '%s.pickle'%fname_noext ) ):
                 continue
 
@@ -172,12 +170,9 @@ def compute_all( depth_dir, rgb_dir, out_dir ):
 
 
 if __name__=='__main__':
-    #depth_dir = os.path.join( '/home', 'caetano', 'datasets', 'UTD-MHAD', 'Depth_npy' )
-    #rgb_dir   = os.path.join( '/home', 'caetano', 'datasets', 'UTD-MHAD', 'RGB' )
-    #out_dir   = os.path.join( '/home', 'caetano', 'datasets', 'UTD-MHAD', 'scene_flow' )
-    depth_dir = os.path.join( '/media', 'caetano', 'Caetano', 'datasets', 'HuDaAct', 'Depth3' )
-    rgb_dir   = os.path.join( '/media', 'caetano', 'Caetano', 'datasets', 'HuDaAct', 'RGB3' )
-    out_dir   = os.path.join( '/media', 'caetano', 'Caetano', 'datasets', 'HuDaAct', 'scene_flow' )
+    depth_dir = os.path.join( '/media', 'caetano', 'Caetano', 'datasets', 'UTD-MHAD', 'Depth_npy' )
+    rgb_dir   = os.path.join( '/media', 'caetano', 'Caetano', 'datasets', 'UTD-MHAD', 'RGB' )
+    out_dir   = os.path.join( '/media', 'caetano', 'Caetano', 'datasets', 'UTD-MHAD', 'scene_flow' )
     compute_all( depth_dir, rgb_dir, out_dir )
 
 
