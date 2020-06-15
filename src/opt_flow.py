@@ -8,6 +8,7 @@ import time
 from PIL import Image
 from io import BytesIO
 import pickle
+import re
 
 algorithm = 'tvl1'
 outsize   = ( 240, 320 )
@@ -165,6 +166,9 @@ def process_cmu():
     trainlist  = read_fileslist( '../splits/cmu-mad/trainlist01.txt' )
     testlist   = read_fileslist( '../splits/cmu-mad/testlist01.txt' )
     for filename in trainlist+testlist:
+        new = re.sub( '.mp4', '.pickle', filename )
+        if os.path.exists( os.path.join( output_dir, new ) ):
+            continue
         t = time.time()
         process_video( input_dir, output_dir, filename )
         print( 'Time:', time.time() - t )
