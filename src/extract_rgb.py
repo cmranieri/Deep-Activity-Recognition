@@ -6,7 +6,7 @@ from PIL import Image
 from io import BytesIO
 import pickle
 
-outsize   = (240,320)
+outsize   = (320,240)
 
 def make_dir( path ):
     if not os.path.exists( path ):
@@ -30,10 +30,10 @@ def store_video_rgb( frames_list,
 
 def prep_jpeg_frame( frame ):
     frame = cv2.resize( frame, outsize, interpolation=cv2.INTER_AREA )
-    frame = frame[ ... , [ 2 , 1 , 0 ] ]
+    #frame = frame[ ... , [ 2 , 1 , 0 ] ]
     img_frame = Image.fromarray( frame )
     out = BytesIO()
-    img_frame.save( out , format='jpeg' , quality=80 )
+    img_frame.save( out , format='jpeg' , quality=100 )
     return out
 
 

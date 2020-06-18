@@ -44,12 +44,11 @@ def prep_flow_frame( u, v ):
     return u_out, v_out
 
 
-def compute_flow( prev, next, u_list, v_list, ur_list, vr_list ):
+def compute_flow( prev, next, u_list, v_list, ur_list, vr_list, optical_flow=None ):
     if algorithm == 'brox':
         next = np.float32( next ) / 255.0
         flow = cv2.pythoncuda.gpuOpticalFlowBrox( prev, next, None )
     elif algorithm == 'tvl1':
-        optical_flow = cv2.DualTVL1OpticalFlow_create()
         flow = optical_flow.calc( prev, next, None )
     elif algorithm == 'farneback':
         flow = cv2.pythoncuda.gpuOpticalFlowFarneback( prev, next, None, 0.5, 3, 15, 3, 5, 1.2, 0 )
@@ -76,7 +75,7 @@ def convert_video( video_path, out_dir, ext ):
     prev = cv2.cvtColor( frame1 , cv2.COLOR_BGR2GRAY )
     if algorithm == 'brox':
         prev = np.float32( prev ) / 255.0
-
+    optical_flow = cv2.DualTVL1OpticalFlow_create()
     u_list  = list()
     v_list  = list()
     ur_list = list()
@@ -89,7 +88,9 @@ def convert_video( video_path, out_dir, ext ):
             break
         
         # Reduces from 25fps to 10fps BEFORE computing flow 
-        if reduced_fps and count % 2.5 > 0.5:
+        #if reduced_fps and count % 2.5 > 0.5:
+        # Reduces from 30fps to 10fps BEFORE computing flow 
+        if reduced_fps and count % 3 > 0:
             count += 1
             continue
 
@@ -98,7 +99,8 @@ def convert_video( video_path, out_dir, ext ):
         next = cv2.cvtColor( frame2, cv2.COLOR_BGR2GRAY )
         u_list, v_list, ur_list, vr_list = compute_flow( prev, next, 
                                                          u_list, v_list,
-                                                         ur_list, vr_list )
+                                                         ur_list, vr_list,
+                                                         optical_flow )
     video_name = video_path.split('/')[-1]
     store_video_flow( u_list, v_list, ur_list, vr_list, out_dir, video_name )
     cap.release()
