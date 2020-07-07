@@ -26,8 +26,8 @@ class Inertial_TCN( TemporalBase ):
                  kernel_size          = 3,
                  use_skip_connections = True,
                  return_sequences     = False,
-                 dropout_rate         = 0.3,
-                 dilations            = [ 1, 2, 4, 8 ] )( imuModel.outputs[0] )
+                 dropout_rate         = 0.5,
+                 dilations            = [ 1, 2, 4, 8, 16 ] )( imuModel.outputs[0] )
         y = Dense( self.classes,
                    kernel_regularizer = regularizers.l2( 0.01 ),
                    activation='softmax' )( y )

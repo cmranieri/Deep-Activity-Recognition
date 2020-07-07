@@ -33,14 +33,14 @@ class TemporalBase( NetworkBase ):
     def imuBlock( self, shape ):
         inp = Input( shape = shape )
         y = BatchNormalization()(inp)
-        y = Conv1D(256, 3, padding='same', activation='relu')(y)
+        y = Conv1D(256, 7, padding='same', activation='relu')(y)
         y = MaxPooling1D(2)(y)
         y = BatchNormalization()(y)
-        y = Conv1D(512, 3, padding='same', activation='relu')(y)
+        y = Conv1D(512, 7, padding='same', activation='relu')(y)
         y = MaxPooling1D(2)(y)
         if self.adjust:
             y = Lambda( self._adjustDim )(y)
-        y = BatchNormalization()(y)
+        #y = BatchNormalization()(y)
         # [ b, t, f ]
         model = Model( inputs = inp, outputs = y )
         return model

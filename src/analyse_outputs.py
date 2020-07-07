@@ -1,64 +1,79 @@
 import numpy as np
 import pickle
 import os
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sn
+import pandas
 
 
-dataset     = 'lyell'
-n_splits    = 8
-temp_flow   = 'lstm'
-temp_imu    = 'lstm'
-temp_bimod  = 'lstm'
-w = { 'sflow': 0,
-      'flow' : 1,
-      'imu'  : 0,
-      'spat' : 0,
-      'bimod': 0,
-      'cnn'  : 0 }
 
 def get_path( dataset, stream, split ):
     return os.path.join( '..', 'outputs', 'model-%s-%s-%0.2d.pickle' % ( dataset, stream, split ) )
 
-acc_list = list()
-for j in range( n_splits ):
-    n_rows = list()
-    outs   = dict()
-    if w[ 'sflow' ]:
-        with open( get_path( dataset, 's%s'%temp_flow, j+1 ), 'rb' ) as f:
-            outs[ 'sflow' ] = pickle.load( f )
-        n_rows.append( len ( outs[ 'sflow' ][ 'labels' ] ) )
-    if w[ 'flow' ]:
-        with open( get_path( dataset, 'v%s-scratch'%temp_flow, j+1 ), 'rb' ) as f:
-            outs[ 'flow' ] = pickle.load( f )
-        n_rows.append( len ( outs[ 'flow' ][ 'labels' ] ) )
-    if w[ 'imu' ]:
-        with open( get_path( dataset, 'imu%s'%temp_imu, j+1 ), 'rb' ) as f:
-            outs [ 'imu' ] = pickle.load( f )
-        n_rows.append( len ( outs[ 'imu' ][ 'labels' ] ) )
-    if w[ 'spat' ]:
-        with open( get_path( dataset, 'spatial', j+1 ), 'rb' ) as f:
-            outs[ 'spat' ] = pickle.load( f )
-        n_rows.append( len ( outs[ 'spat' ][ 'labels' ] ) )
-    if w[ 'bimod' ]:
-        with open( get_path( dataset, 'c%s'%temp_bimod, j+1 ), 'rb' ) as f:
-            outs[ 'bimod' ] = pickle.load( f )
-        n_rows.append( len ( outs[ 'bimod' ][ 'labels' ] ) )
-    if w[ 'cnn' ]:
-        with open( get_path( dataset, 'cnn-sf2d', j+1 ), 'rb' ) as f:
-            outs[ 'cnn' ] = pickle.load( f )
-        n_rows.append( len ( outs[ 'cnn' ][ 'labels' ] ) )
 
-    correct_list = list()
-    # Test instances in a split
-    for i in range( min( n_rows ) ):
-        pred = list()
-        for key in outs.keys():
-            pred.append( w[ key ] * outs[ key ][ 'predictions' ][ i ] )
-            label = outs[ key ][ 'labels' ][ i ]
-        pred = np.sum( pred, axis=0 )
-        correct = np.equal( np.argmax( pred ),
-                            np.argmax( label ) )
-        correct_list.append( correct )
-    acc_list.append( np.mean( correct_list ) )
+def compute_results( dataset,
+                     n_splits,
+                     w,
+                     temp_flow='lstm',
+                     temp_imu='lstm',
+                     temp_bimod='lstm' ):
+    acc_list = list()
+    cf_list  = list()
+    for j in range( n_splits ):
+        n_rows = list()
+        outs   = dict()
 
-print(np.mean(acc_list))
-print(np.std(acc_list))
+        for key in w.keys():
+            if w[ key ] == 0:
+                continue
+            with open( get_path( dataset, key, j+1 ), 'rb' ) as f:
+                outs[ key ] = pickle.load( f )
+            n_rows.append( len( outs[ key ][ 'labels' ] ) )
+            
+        correct_list = list()
+        preds   = list()
+        labels  = list()
+        # Test instances in a split
+        for i in range( min( n_rows ) ):
+            pred = list()
+            # For each modality
+            for key in outs.keys():
+                pred.append( w[ key ] * outs[ key ][ 'predictions' ][ i ] )
+                label = outs[ key ][ 'labels' ][ i ]
+            pred = np.sum( pred, axis=0 )
+            preds.append( np.argmax( pred ) )
+            labels.append( np.argmax( label ) )
+            correct = np.equal( np.argmax( pred ),
+                                np.argmax( label ) )
+            correct_list.append( correct )
+        acc_list.append( np.mean( correct_list ) )
+        cf = confusion_matrix( labels,
+                               preds )
+        cf_list.append( cf )
+    return acc_list, cf_list
+
+
+
+if __name__ == '__main__':
+    dataset     = 'utd'
+    n_splits    = 8
+    w = { 'vlstm' : 1,
+          'imulstm' : 1,
+          'cnn-sf2d'  : 0 }
+    #lbls = [ 'Cereals', 'Clean', 'Laptop', 'Newspaper', 'Sandwich', 'Smartphone', 'Table', 'Tea', 'Wash' ]
+
+    acc_list, cf_list = compute_results( dataset, n_splits, w )
+    mean_acc = np.mean( acc_list )
+    std_acc  = np.std(  acc_list )
+    sum_cf   = np.sum( cf_list, axis=0 )
+
+    print( mean_acc, std_acc )
+
+    df = pandas.DataFrame( sum_cf )#,
+                           #index = lbls,
+                           #columns = lbls )
+    sn.set(font_scale=1.4)
+    sn.heatmap( df, annot=True, annot_kws={"size": 12} )
+    plt.tight_layout()
+    plt.show()

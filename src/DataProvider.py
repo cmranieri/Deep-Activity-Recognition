@@ -25,7 +25,7 @@ class DataProvider:
                   numThreads  = 1,
                   maxsize     = 10,
                   nFlowMaps   = 2,
-                  scaleFlow  = False,
+                  scaleFlow   = False,
                   useFlips    = False,
                   normalize   = False,
                   ranges      = True ):
@@ -104,7 +104,7 @@ class DataProvider:
     def provideRgbFrame( self, video, index ):
         frame = np.asarray( Image.open( video[ index ] ),
                             dtype = 'float32' )
-        frame = frame[ ... , [ 2 , 1 , 0 ] ]
+        #frame = frame[ ... , [ 2 , 1 , 0 ] ]
         frame = frame / 255.0
         return frame
 
@@ -113,7 +113,7 @@ class DataProvider:
         if self.nFlowMaps==2:
             flowVecs = [ 'u', 'v' ]
         elif self.nFlowMaps==3:
-            flowVecs = [ 'u', 'v', 'w' ]
+            flowVecs = [ 'v', 'w', 'u' ]
         data = dict()
         ranges = dict()
         for vec in flowVecs:
@@ -130,7 +130,7 @@ class DataProvider:
                 data[ vec ][ data[ vec ] >  self.clipTh ] = self.clipTh
                 data[ vec ][ data[ vec ] < -self.clipTh ] = -self.clipTh
             if self.scaleFlow:
-                data[ vec ] = data[ vec ] * 5000
+                data[ vec ] = data[ vec ] * 100
             if self._normalize:
                 data[ vec ] = data[ vec ] / max( np.max( np.abs( data[ vec ] ) ) , 1e-4 )
         ret = [ data[ key ] for key in data.keys() ]
@@ -138,8 +138,8 @@ class DataProvider:
 
 
     def stackImu( self, key, start ):
-        #start = min( start, len( self.imuDict[key] ) - self.imuSteps )
-        window = self.imuDict[ key ][ start : start + self.imuSteps ]
+        idxs = np.arange( start, start + self.imuSteps ) % len( self.imuDict[ key ] )
+        window = np.array( self.imuDict[ key ] )[ idxs ]
         # [ t, f ]
         return np.array( window )
 

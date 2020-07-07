@@ -139,6 +139,7 @@ class TrainDataProvider( DataProvider ):
             # startsList[i] \in [0,1]
             start = int( startsList[i] * ( len(seq) - self.imuSteps ) )
             batch.append( self.stackImu( key, start ) )
+
         batch  = np.array( batch,  dtype = 'float32' )
         return batch
 

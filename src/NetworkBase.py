@@ -35,6 +35,7 @@ class NetworkBase:
                   useFlips      = True,
                   nFlowMaps     = 2,
                   scaleFlow     = False,
+                  ranges        = True,
                   **kwargs ):
         self.dim           = dim
         self.flowSteps     = flowSteps
@@ -56,6 +57,7 @@ class NetworkBase:
         self.testListPath  = testListPath
         self.nFlowMaps     = nFlowMaps
         self.scaleFlow     = scaleFlow
+        self.ranges        = ranges
 
         self._resultsDir  = '../results'
         self._outputsPath = os.path.join( '../outputs', self.modelName + '.pickle' )
@@ -124,7 +126,8 @@ class NetworkBase:
                                   useFlips    = self.useFlips,
                                   clipTh      = self.clipTh,
                                   nFlowMaps   = self.nFlowMaps,
-                                  scaleFlow   = self.scaleFlow )
+                                  scaleFlow   = self.scaleFlow,
+                                  ranges      = self.ranges )
 
     def _generateTestDataProvider( self,
                                    maxsize,
@@ -146,7 +149,8 @@ class NetworkBase:
                                  useFlips     = self.useFlips,
                                  clipTh       = self.clipTh,
                                  nFlowMaps    = self.nFlowMaps,
-                                 scaleFlow    = self.scaleFlow )
+                                 scaleFlow    = self.scaleFlow,
+                                 ranges       = self.ranges )
 
 
 
@@ -220,7 +224,7 @@ class NetworkBase:
 
     def evaluate( self,
                   maxsize      = 8,
-                  numSegments  = 5,
+                  numSegments  = 25,
                   storeTests   = False ):
         t = time.time()
         test_acc_list = list()

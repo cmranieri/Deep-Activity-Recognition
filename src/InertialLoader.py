@@ -42,6 +42,14 @@ class InertialLoader:
         return classNames
 
 
+    def get_fnames( self, data_dir ):
+        all_fnames = list()
+        for root, dirs, fnames in os.walk( data_dir ):
+            for fname in fnames:
+                all_fnames.append( re.sub( data_dir+'/*', '', os.path.join( root, fname ) ) )
+        return all_fnames
+
+
     def load_data( self,
                    data_dir    = '',
                    classInd    = '../classes/classIndLyell.txt',
@@ -51,7 +59,9 @@ class InertialLoader:
                    output_rate = None ):
         classNames = self._read_classes( classInd )
         data_dict = dict()
-        filenames = os.listdir( data_dir )
+
+        #filenames = os.listdir( data_dir )
+        filenames = self.get_fnames( data_dir )
         for filename in filenames:
             if filename.split('.')[-1] != 'csv': continue
             for classname in classNames:
@@ -65,5 +75,8 @@ class InertialLoader:
                     inp = self.fix_seq_size( inp, max_len )
                 if window_size is not None:
                     inp = self.window_data( inp, window_size )
-                data_dict[ classname + '/' + filename.split('.')[0] ] = inp
+                #if re.findall( '%s/'%classname, filename ):
+                data_dict[ filename.split('.')[0] ] = inp
+                #else:
+                #    data_dict[ classname + '/' + filename.split('.')[0] ] = inp
         return data_dict
