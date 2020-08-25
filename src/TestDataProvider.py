@@ -37,8 +37,8 @@ class TestDataProvider( DataProvider ):
         self._index += 1
 
 
-    def _getLabelArray( self, path ):
-        labels = np.zeros( ( 5 * self._numSegments, self.classes ), 
+    def _getLabelArray( self, path, length ):
+        labels = np.zeros( ( length, self.classes ), 
                            dtype = 'float32' )
         className = path.split('/')[ -2 ]
         labels[ :, int( self._labelsDict[ className ] ) - 1 ] = 1.0
@@ -50,8 +50,14 @@ class TestDataProvider( DataProvider ):
         batch = list()
         fullPath  = os.path.join( self.flowDataDir, path )
         video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
-        for i in range( self._numSegments ):
-            space = len( video[ 'u' ] ) // self._numSegments
+        
+        if self._numSegments is not None:
+            length = self._numSegments
+        else:
+            length = len( video[ 'u' ] )
+
+        for i in range( length ):
+            space = len( video[ 'u' ] ) // length
             if i * space + self.flowSteps * self.framePeriod < len( video[ 'u' ] ):
                 start = i * space
             else:
@@ -59,7 +65,7 @@ class TestDataProvider( DataProvider ):
             # [ b, h, w, {2,3}, t ]
             batch.append( self.stackFlow( video, start ) )
         batch = np.array( batch, dtype = 'float32' )
-        batch = self.getCrops( inp = batch, stream = 'temporal' )
+        batch = self.getCrops( inp = batch, stream = 'temporal', length = length )
         return batch
 
 
@@ -67,11 +73,17 @@ class TestDataProvider( DataProvider ):
         batch = list()
         fullPath  = os.path.join( self.rgbDataDir, path )
         video = pickle.load( open( fullPath + '.pickle' , 'rb' ) )
-        for i in range( self._numSegments ):
-            space = len( video ) // self._numSegments
+
+        if self._numSegments is not None:
+            length = self._numSegments
+        else:
+            length = len( video )
+
+        for i in range( length ):
+            space = len( video ) // length
             batch.append( self.provideRgbFrame( video, i*space ) )
         batch = np.array( batch, dtype = 'float32' )
-        batch = self.getCrops( inp = batch, stream = 'spatial' )
+        batch = self.getCrops( inp = batch, stream = 'spatial', length = length )
         return batch
 
 
@@ -80,13 +92,19 @@ class TestDataProvider( DataProvider ):
         fullPath = os.path.join( self.imuDataDir, path )
         key = path.split('.')[0]
         seq = self.imuDict[ key ]
+
+        if self._numSegments is not None:
+            length = self._numSegments
+        else:
+            length = len( video )
+
         # for each segment of a trial
-        for i in range( self._numSegments ):
-            space = len( seq ) // self._numSegments
+        for i in range( length ):
+            space = len( seq ) // length
             if i * space + self.imuSteps < len( seq ):
                 start = i * space
             else:
-                start = len( seq ) - 1 - self.imuSteps
+                start = len( seq ) - self.imuSteps - 1
             # [ b, t, f ]
             batch.append( self.stackImu( key, start ) )
         batch = np.array( batch, dtype = 'float32' )
@@ -105,7 +123,11 @@ class TestDataProvider( DataProvider ):
         if 'inertial' in self.streams:
             batch = self.generateImuBatch( path )
             batchDict['inertial'] = batch
-        labels = self._getLabelArray( path )
+        if self._numSegments is not None:
+            length = 5 * self._numSegments
+        else:
+            length = 5 * len( batchDict[ list( batchDict.keys() )[0] ] )
+        labels = self._getLabelArray( path, length )
         return ( batchDict, labels )
 
 
@@ -125,7 +147,7 @@ class TestDataProvider( DataProvider ):
         return np.array( rep_inp, dtype = 'float32' )
 
 
-    def getCrops( self , inp, stream ):
+    def getCrops( self , inp, stream, length ):
         dim = self.dim
         marginX = ( inp.shape[ 2 ] - dim ) // 2
         marginY = ( inp.shape[ 1 ] - dim ) // 2
@@ -140,12 +162,12 @@ class TestDataProvider( DataProvider ):
         crops = np.array( crops, dtype = 'float32' )
         if stream == 'temporal':
             # [ c * b, h, w, {2,3}t ]
-            crops = np.reshape( crops, [ 5 * self._numSegments,
+            crops = np.reshape( crops, [ 5 * length,
                                          self.dim, self.dim,
                                          self.nFlowMaps * self.flowSteps ] )
         elif stream == 'spatial':
             # [ c * b, h, w, 3 ]
-            crops = np.reshape( crops, [ 5 * self._numSegments,
+            crops = np.reshape( crops, [ 5 * length,
                                          self.dim, self.dim, 3 ] )
         return crops
 

@@ -238,13 +238,16 @@ class NetworkBase:
             while True:
                 if not batch_idx % 200:
                     print( 'Evaluating sample', batch_idx )
+
                 # load batch and check end of data
                 batchTuple = testDataProvider.getBatch()
                 if batchTuple is None:
                     break
+
                 # prepare batch
                 batchDict , labels = batchTuple
                 batch = self._prepareBatch( batchDict )
+
                 # provide flips, if required
                 if self.useFlips:
                     # provides flipped batch
@@ -259,6 +262,7 @@ class NetworkBase:
                     # if batch contains a sigle stream
                     else:
                         batch = np.concatenate( ( batch, flipBatch ), axis = 0 )
+
                 # if one of the streams runs out of instances, finish loop
                 end_loop = False
                 if isinstance( batch, list ):
@@ -270,8 +274,13 @@ class NetworkBase:
                         end_loop = True
                 if end_loop:
                     continue
+
                 # predict the data of an entire video
-                y_ = self.model.predict( batch )
+                y_ = self.model.predict( batch, batch_size=32 )
+                if storeTests:
+                    preds_list.append( y_ )
+                    labels_list.append( labels[0] )
+
                 # mean scores of each sample
                 mean = np.mean( np.array( y_ ), 0 )
                 # check whether the prediction is correct
@@ -280,9 +289,6 @@ class NetworkBase:
                                                np.argmax( labels[0] ) )
                 test_acc_list.append( correct_prediction )
                 # append outputs to lists
-                if storeTests:
-                    preds_list.append( mean )
-                    labels_list.append( labels[0] )
                 batch_idx += 1
         
         test_accuracy = np.mean( test_acc_list )
@@ -291,6 +297,7 @@ class NetworkBase:
         self._storeResult( 'test.txt', str(self._step) + ' ' +
                                       str( test_accuracy ) + '\n' )
         if storeTests:
+            print( np.array( preds_list ).shape )
             with open( self._outputsPath, 'wb' ) as f:
                 pickle.dump( dict( { 'predictions': np.array( preds_list ),
                                      'labels'     : np.array( labels_list ) } ), f )

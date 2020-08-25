@@ -76,7 +76,7 @@ class InertialLoader:
                 if window_size is not None:
                     inp = self.window_data( inp, window_size )
                 #if re.findall( '%s/'%classname, filename ):
-                data_dict[ filename.split('.')[0] ] = inp
+                #data_dict[ filename.split('.')[0] ] = inp
                 #else:
-                #    data_dict[ classname + '/' + filename.split('.')[0] ] = inp
+                data_dict[ classname + '/' + filename.split('.')[0] ] = inp
         return data_dict

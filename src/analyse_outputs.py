@@ -29,6 +29,8 @@ def compute_results( dataset,
                 continue
             with open( get_path( dataset, key, j+1 ), 'rb' ) as f:
                 outs[ key ] = pickle.load( f )
+            outs[ key ][ 'predictions' ] = np.mean( outs[ key ][ 'predictions' ],
+                                                    axis = 1 )
             n_rows.append( len( outs[ key ][ 'labels' ] ) )
             
         correct_list = list()
@@ -56,11 +58,11 @@ def compute_results( dataset,
 
 
 if __name__ == '__main__':
-    dataset     = 'utd'
+    dataset     = 'lyell'
     n_splits    = 8
-    w = { 'vlstm' : 1,
-          'imulstm' : 1,
-          'cnn-sf2d'  : 0 }
+    w = { 'imulstm' : 1}#,
+          #'imulstm' : 0,
+          #'cnn-sf2d'  : 0 }
     #lbls = [ 'Cereals', 'Clean', 'Laptop', 'Newspaper', 'Sandwich', 'Smartphone', 'Table', 'Tea', 'Wash' ]
 
     acc_list, cf_list = compute_results( dataset, n_splits, w )

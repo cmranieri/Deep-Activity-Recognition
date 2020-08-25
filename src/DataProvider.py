@@ -138,7 +138,7 @@ class DataProvider:
 
 
     def stackImu( self, key, start ):
-        idxs = np.arange( start, start + self.imuSteps ) % len( self.imuDict[ key ] )
+        idxs = np.arange( start, start + self.imuSteps )# % len( self.imuDict[ key ] )
         window = np.array( self.imuDict[ key ] )[ idxs ]
         # [ t, f ]
         return np.array( window )
