@@ -141,9 +141,9 @@ class TestDataProvider( DataProvider ):
 
     def replicateImu( self, inp ):
         rep_inp = list( inp )
-        if set( self.streams ).intersection( ['temporal', 'spatial'] ):
+        #if set( self.streams ).intersection( ['temporal', 'spatial'] ):
             # center + crops
-            rep_inp = rep_inp * 5
+        rep_inp = rep_inp * 5
         return np.array( rep_inp, dtype = 'float32' )
 
 
