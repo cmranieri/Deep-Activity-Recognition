@@ -56,7 +56,8 @@ class InertialLoader:
                    window_size = None,
                    max_len     = None,
                    input_rate  = None,
-                   output_rate = None ):
+                   output_rate = None,
+                   diff_dirs   = True ):
         classNames = self._read_classes( classInd )
         data_dict = dict()
 
@@ -65,7 +66,7 @@ class InertialLoader:
         for filename in filenames:
             if filename.split('.')[-1] != 'csv': continue
             for classname in classNames:
-                if re.findall( classname, filename ): break
+                if re.match( '%s_.*' % classname, filename ): break
             #classname = re.match('(\D+\d+).*', filename).groups()[0]
             with open( os.path.join(data_dir, filename), 'r' ) as f:
                 inp = list( csv.reader(f, quoting=csv.QUOTE_NONNUMERIC) )
@@ -76,7 +77,8 @@ class InertialLoader:
                 if window_size is not None:
                     inp = self.window_data( inp, window_size )
                 #if re.findall( '%s/'%classname, filename ):
-                #data_dict[ filename.split('.')[0] ] = inp
-                #else:
-                data_dict[ classname + '/' + filename.split('.')[0] ] = inp
+                if diff_dirs:
+                    data_dict[ filename.split('.')[0] ] = inp
+                else:
+                    data_dict[ classname + '/' + filename.split('.')[0] ] = inp
         return data_dict

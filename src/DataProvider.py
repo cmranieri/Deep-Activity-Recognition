@@ -16,6 +16,7 @@ class DataProvider:
                   flowDataDir = '',
                   rgbDataDir  = '',
                   imuDataDir  = '',
+                  imuClassDirs = True,
                   classes     = 101,
                   dim         = 224,
                   flowSteps   = 1,
@@ -33,6 +34,7 @@ class DataProvider:
         self.flowDataDir = flowDataDir
         self.rgbDataDir  = rgbDataDir
         self.imuDataDir  = imuDataDir
+        self.imuClassDirs = imuClassDirs
         self.classes     = classes
         self.dim         = dim
         self.flowSteps   = flowSteps
@@ -96,8 +98,9 @@ class DataProvider:
     def loadImuData( self, dataDir ):
         if dataDir == '':
             return None
-        imuDict = InertialLoader().load_data( data_dir = dataDir,
-                                              classInd = self.lblFilename )
+        imuDict = InertialLoader().load_data( data_dir  = dataDir,
+                                              classInd  = self.lblFilename,
+                                              diff_dirs = self.imuClassDirs )
         return imuDict
 
 

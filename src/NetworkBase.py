@@ -19,6 +19,7 @@ class NetworkBase:
                   flowDataDir   = '',
                   rgbDataDir    = '',
                   imuDataDir    = '',
+                  imuClassDirs  = True,
                   restoreModel  = False,
                   classes       = 101,
                   dim           = 224,
@@ -44,6 +45,7 @@ class NetworkBase:
         self.flowDataDir   = flowDataDir
         self.rgbDataDir    = rgbDataDir
         self.imuDataDir    = imuDataDir
+        self.imuClassDirs  = imuClassDirs
         self.modelDir      = modelDir
         self.modelName     = modelName
         self.tlSuffix      = tlSuffix
@@ -111,6 +113,7 @@ class NetworkBase:
         return TrainDataProvider( flowDataDir = self.flowDataDir,
                                   rgbDataDir  = self.rgbDataDir,
                                   imuDataDir  = self.imuDataDir,
+                                  imuClassDirs = self.imuClassDirs,
                                   namesFilePath = self.trainListPath,
                                   batchSize   = batchSize,
                                   numThreads  = numThreads,
@@ -135,6 +138,7 @@ class NetworkBase:
         return TestDataProvider( flowDataDir  = self.flowDataDir,
                                  rgbDataDir   = self.rgbDataDir,
                                  imuDataDir   = self.imuDataDir,
+                                 imuClassDirs = self.imuClassDirs,
                                  namesFilePath = self.testListPath,
                                  numSegments  = numSegments,
                                  maxsize      = maxsize,
