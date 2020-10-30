@@ -92,12 +92,10 @@ class TestDataProvider( DataProvider ):
         fullPath = os.path.join( self.imuDataDir, path )
         key = path.split('.')[0]
         seq = self.imuDict[ key ]
-
         if self._numSegments is not None:
             length = self._numSegments
         else:
             length = len( video )
-
         # for each segment of a trial
         for i in range( length ):
             space = len( seq ) // length
@@ -108,7 +106,30 @@ class TestDataProvider( DataProvider ):
             # [ b, t, f ]
             batch.append( self.stackImu( key, start ) )
         batch = np.array( batch, dtype = 'float32' )
-        batch = self.replicateImu( batch )
+        batch = self.replicate( batch )
+        return batch
+
+
+    def generateHomeBatch( self, path ):
+        batch = list()
+        fullPath = os.path.join( self.imuDataDir, path )
+        key = path.split('.')[0]
+        seq = self.imuDict[ key ]
+        if self._numSegments is not None:
+            length = self._numSegments
+        else:
+            length = len( video )
+        # for each segment of a trial
+        for i in range( length ):
+            space = len( seq ) // length
+            if i * space + self.imuSteps < len( seq ):
+                start = i * space
+            else:
+                start = len( seq ) - self.imuSteps - 1
+            # [ b, t, f ]
+            batch.append( self.getHomeState( key, start ) )
+        batch = np.array( batch, dtype = 'float32' )
+        batch = self.replicate( batch )
         return batch
 
 
@@ -123,6 +144,9 @@ class TestDataProvider( DataProvider ):
         if 'inertial' in self.streams:
             batch = self.generateImuBatch( path )
             batchDict['inertial'] = batch
+        if 'smart_home' in self.streams:
+            batch = self.generateHomeBatch( path )
+            batchDict[ 'smart_home' ] = batch
         if self._numSegments is not None:
             length = 5 * self._numSegments
         else:
@@ -139,7 +163,7 @@ class TestDataProvider( DataProvider ):
         return paths
 
 
-    def replicateImu( self, inp ):
+    def replicate( self, inp ):
         rep_inp = list( inp )
         #if set( self.streams ).intersection( ['temporal', 'spatial'] ):
             # center + crops

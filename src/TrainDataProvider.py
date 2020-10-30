@@ -139,7 +139,17 @@ class TrainDataProvider( DataProvider ):
             # startsList[i] \in [0,1]
             start = int( startsList[i] * ( len(seq) - self.imuSteps ) )
             batch.append( self.stackImu( key, start ) )
+        batch  = np.array( batch,  dtype = 'float32' )
+        return batch
 
+
+    def generateHomeBatch( self, batchPaths, startsList ):
+        batch  = list()
+        for i, batchPath in enumerate( batchPaths ):
+            key = batchPath.split('.')[ 0 ]
+            seq = self.homeDict[ key ]
+            start = int( startsList[i] * ( len(seq) - self.imuSteps ) )
+            batch.append( self.getHomeState( key, start ) )
         batch  = np.array( batch,  dtype = 'float32' )
         return batch
 
@@ -158,6 +168,9 @@ class TrainDataProvider( DataProvider ):
             if 'inertial' in self.streams:
                 batch = self.generateImuBatch( batchPaths, startsList )
                 batchDict[ 'inertial' ] = batch
+            if 'smart_home' in self.streams:
+                batch = self.generateHomeBatch( batchPaths, startsList )
+                batchDict[ 'smart_home' ] = batch
             labels = self._getLabelArray( batchPaths )
             batchTuple = ( batchDict, labels )
             self._batchQueue.put( batchTuple )

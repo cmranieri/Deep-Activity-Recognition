@@ -6,7 +6,7 @@ import pickle
 from PIL import Image
 from threading import Thread, Lock
 import queue
-from InertialLoader import InertialLoader
+from RawDataLoader import RawDataLoader
 
 class DataProvider:
 
@@ -16,6 +16,7 @@ class DataProvider:
                   flowDataDir = '',
                   rgbDataDir  = '',
                   imuDataDir  = '',
+                  homeDataDir = '',
                   imuClassDirs = True,
                   classes     = 101,
                   dim         = 224,
@@ -52,7 +53,8 @@ class DataProvider:
         self._length   = self.filenames.shape[ 0 ]
         self._reset()
         self._generateLabelsDict( lblFilename )
-        self.imuDict = self.loadImuData( dataDir = imuDataDir )
+        self.imuDict  = self.loadRawData( dataDir = imuDataDir )
+        self.homeDict = self.loadRawData( dataDir = homeDataDir )
         self._produce = True
         self._batchQueue = queue.Queue( maxsize = maxsize )
         self._threadsList = list()
@@ -95,12 +97,12 @@ class DataProvider:
         return np.array( namesList )
 
 
-    def loadImuData( self, dataDir ):
+    def loadRawData( self, dataDir ):
         if dataDir == '':
             return None
-        imuDict = InertialLoader().load_data( data_dir  = dataDir,
-                                              classInd  = self.lblFilename,
-                                              diff_dirs = self.imuClassDirs )
+        imuDict = RawDataLoader().load_data( data_dir  = dataDir,
+                                             classInd  = self.lblFilename,
+                                             diff_dirs = self.imuClassDirs )
         return imuDict
 
 
@@ -144,7 +146,15 @@ class DataProvider:
         idxs = np.arange( start, start + self.imuSteps )# % len( self.imuDict[ key ] )
         window = np.array( self.imuDict[ key ] )[ idxs ]
         # [ t, f ]
-        return np.array( window )
+        return window
+
+
+    def getHomeState( self, key, start ):
+        idxs = np.arange( start, start + self.imuSteps )# % len( self.imuDict[ key ] )
+        window = np.array( self.homeDict[ key ] )[ idxs ]
+        m = np.mean( window, axis=0 )
+        # [ t, f ]
+        return m
 
 
     def stackFlow( self, video, start ):

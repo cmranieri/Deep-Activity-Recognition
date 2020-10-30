@@ -4,8 +4,9 @@ import os
 import re
 import numpy as np
 import csv
+from sklearn.preprocessing import Normalizer
 
-class InertialLoader:
+class RawDataLoader:
 
     def window_data( self, data, window_size ):
         w_data = [ data[ i*window_size : (i+1)*window_size ]
@@ -32,6 +33,17 @@ class InertialLoader:
                 out.append( line )
                 next_idx += ratio
         return out
+
+
+    def normalize_all( self, data_dict ):
+        all_data = list()
+        for key in data_dict:
+            all_data += list( data_dict[key] )
+        normalizer = Normalizer()
+        normalizer.fit( all_data )
+        for key in data_dict:
+            data_dict[key] = normalizer.transform( data_dict[key] )
+        return data_dict
 
 
     def _read_classes( self, classInd ):
@@ -66,6 +78,7 @@ class InertialLoader:
         for filename in filenames:
             if filename.split('.')[-1] != 'csv': continue
             for classname in classNames:
+                # CHANGE FOR UTD-MHAD
                 if re.match( '%s_.*' % classname, filename ): break
             #classname = re.match('(\D+\d+).*', filename).groups()[0]
             with open( os.path.join(data_dir, filename), 'r' ) as f:
@@ -76,9 +89,9 @@ class InertialLoader:
                     inp = self.fix_seq_size( inp, max_len )
                 if window_size is not None:
                     inp = self.window_data( inp, window_size )
-                #if re.findall( '%s/'%classname, filename ):
                 if diff_dirs:
                     data_dict[ filename.split('.')[0] ] = inp
                 else:
                     data_dict[ classname + '/' + filename.split('.')[0] ] = inp
+        data_dict = self.normalize_all( data_dict )
         return data_dict

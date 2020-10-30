@@ -32,14 +32,12 @@ class TemporalBase( NetworkBase ):
 
     def imuBlock( self, shape ):
         inp = Input( shape = shape )
-        y = BatchNormalization()(inp)
+        y = BatchNormalization()( inp )
         y = Conv1D(128, 11, padding='same', activation='relu')(y)
-        y = MaxPooling1D(2)(y)
-        y = BatchNormalization()(y)
-        y = Conv1D(192, 11, padding='same', activation='relu')(y)
         y = MaxPooling1D(2)(y)
         y = Conv1D(256, 11, padding='same', activation='relu')(y)
         y = MaxPooling1D(2)(y)
+        y = BatchNormalization()( y )
         y = Conv1D(378, 11, padding='same', activation='relu')(y)
         y = MaxPooling1D(2)(y)
         if self.adjust:
@@ -71,6 +69,9 @@ class TemporalBase( NetworkBase ):
         if 'inertial' in self.streams:
             imuBatch = batchDict[ 'inertial' ]
             inputDataList.append( imuBatch )
+        if 'smart_home' in self.streams:
+            homeBatch = batchDict[ 'smart_home' ]
+            inputDataList.append( homeBatch )
         if len( inputDataList ) == 1:
             return inputDataList[0]
         return inputDataList

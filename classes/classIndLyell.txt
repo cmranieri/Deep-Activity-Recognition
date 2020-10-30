@@ -1,9 +1,9 @@
 1 cereals
-2 clean
+2 tidy
 3 laptop
-4 reading
+4 newspaper
 5 sandwich
 6 smartphone
 7 table
 8 tea
-9 wash
+9 dishes
