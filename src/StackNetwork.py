@@ -27,12 +27,6 @@ class StackNetwork( NetworkBase ):
         model = BaseModel( input_tensor = input_tensor,
                            weights = None,
                            classes = self.classes )
-
-        #initial_learning_rate = 1e-2
-        #lr_schedule = ExponentialDecay( initial_learning_rate,
-        #                                decay_steps = 2000,
-        #                                decay_rate  = 0.96,
-        #                                staircase   = True )
         optimizer = SGD( lr=1e-2, momentum = 0.9, decay=1e-4 )
         model.compile( loss = 'categorical_crossentropy',
                        optimizer = optimizer,
