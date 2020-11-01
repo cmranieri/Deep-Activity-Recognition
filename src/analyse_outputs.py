@@ -61,9 +61,9 @@ if __name__ == '__main__':
     dataset     = 'lyell'
     n_splits    = 8
     # imulstm2, imu_sh, cnn-lstm
-    w = { 'imu_sh' : 1,
-          'cnn-lstm'  : 6 }
-    lbls = [ 'Cereals', 'Clean', 'Laptop', 'Newspaper', 'Sandwich', 'Smartphone', 'Table', 'Tea', 'Wash' ]
+    w = { 'imulstm2' : 1 }
+          #'vlstm'  : 6 }
+    #lbls = [ 'Cereals', 'Clean', 'Laptop', 'Newspaper', 'Sandwich', 'Smartphone', 'Table', 'Tea', 'Wash' ]
 
     acc_list, cf_list = compute_results( dataset, n_splits, w )
     mean_acc = np.mean( acc_list )
@@ -71,10 +71,10 @@ if __name__ == '__main__':
     sum_cf   = np.sum( cf_list, axis=0 )
 
     print( mean_acc, std_acc )
-
-    df = pandas.DataFrame( sum_cf,
-                           index = lbls,
-                           columns = lbls )
+    exit()
+    df = pandas.DataFrame( sum_cf )#,
+                           #index = lbls,
+                           #columns = lbls )
     sn.set(font_scale=1.4)
     sn.heatmap( df, annot=True, annot_kws={"size": 12} )
     plt.tight_layout()

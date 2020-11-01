@@ -1,8 +1,10 @@
 import numpy as np
 import os
 import time
+import gc
 
 import pickle
+import tensorflow as tf
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import SGD
@@ -284,7 +286,7 @@ class NetworkBase:
                     continue
 
                 # predict the data of an entire video
-                y_ = self.model.predict( batch, batch_size=32 )
+                y_ = self.model.predict( batch, batch_size=4 )
                 if storeTests:
                     preds_list.append( y_ )
                     labels_list.append( labels[0] )

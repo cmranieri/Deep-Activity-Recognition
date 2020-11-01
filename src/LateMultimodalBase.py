@@ -7,11 +7,13 @@ from tensorflow.keras.layers import Input, Conv1D, MaxPooling1D, Lambda, BatchNo
 from tensorflow.keras.optimizers import SGD, Adam
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.applications.inception_v3 import InceptionV3 as BaseModel
+#from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2 as BaseModel
 
 
 class LateMultimodalBase( NetworkBase ):
     
-    def __init__( self, **kwargs ):
+    def __init__( self, cnnModelName, **kwargs ):
+        self.cnnPath   = os.path.join( kwargs['modelDir'], cnnModelName + '.h5' )
         self.streams   = kwargs[ 'streams' ]
         self.imuSteps  = kwargs[ 'imuSteps' ]
         super( LateMultimodalBase, self ).__init__( **kwargs )
