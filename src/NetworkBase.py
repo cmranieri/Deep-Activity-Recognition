@@ -286,7 +286,7 @@ class NetworkBase:
                     continue
 
                 # predict the data of an entire video
-                y_ = self.model.predict( batch, batch_size=4 )
+                y_ = self.model.predict( batch, batch_size=32 )
                 if storeTests:
                     preds_list.append( y_ )
                     labels_list.append( labels[0] )

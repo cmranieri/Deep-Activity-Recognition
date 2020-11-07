@@ -49,11 +49,10 @@ class TemporalBase( NetworkBase ):
 
 
     def _getFlowFeats( self, batch ):
-        batch = np.reshape( batch, [ batch.shape[0],
-                                     self.dim, self.dim,
+        batch = np.reshape( batch, [ -1, self.dim, self.dim,
                                      self.nFlowMaps, self.flowSteps ] )
-        # [ t, b, d, d, c ]
-        batch = list( np.transpose( batch, [ 4, 0, 1, 2, 3 ] ) )
+        # [ b, t, d, d, c ]
+        batch = list( np.transpose( batch, [ 0, 4, 1, 2, 3 ] ) )
         featsBatch = self.runFlowCNN( batch )
         return featsBatch
 
@@ -61,10 +60,8 @@ class TemporalBase( NetworkBase ):
     def _prepareBatch( self, batchDict ):
         inputDataList = list()
         if 'temporal' in self.streams:
-            # [ t, b, f ]
-            flowFeats = self._getFlowFeats( batchDict[ 'temporal' ] )
             # [ b, t, f ]
-            flowFeats = np.transpose( flowFeats, [ 1, 0, 2 ] )
+            flowFeats = self._getFlowFeats( batchDict[ 'temporal' ] )
             inputDataList.append( flowFeats )
         if 'inertial' in self.streams:
             imuBatch = batchDict[ 'inertial' ]
@@ -79,12 +76,11 @@ class TemporalBase( NetworkBase ):
 
     def runFlowCNN( self, batch ):
         featsList = list()
-        for batchT in batch:
-            feats = self.cnnModel.predict_on_batch( batchT )
-            featsList.append( feats )
-        # [ t, b, f ]
-        featsArray = np.array( featsList )
-        return featsArray
+        batch = np.reshape( batch, [ -1, self.dim, self.dim, self.nFlowMaps ] )
+        feats = self.cnnModel.predict_on_batch( batch )
+        # [ b, t, f ]
+        feats = np.reshape( feats, [ -1, self.flowSteps, feats.shape[1] ] )
+        return feats
 
 
     def loadCNN( self, cnnPath ):

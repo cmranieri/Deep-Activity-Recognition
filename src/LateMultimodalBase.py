@@ -12,8 +12,7 @@ from tensorflow.keras.applications.inception_v3 import InceptionV3 as BaseModel
 
 class LateMultimodalBase( NetworkBase ):
     
-    def __init__( self, cnnModelName, **kwargs ):
-        self.cnnPath   = os.path.join( kwargs['modelDir'], cnnModelName + '.h5' )
+    def __init__( self, **kwargs ):
         self.streams   = kwargs[ 'streams' ]
         self.imuSteps  = kwargs[ 'imuSteps' ]
         super( LateMultimodalBase, self ).__init__( **kwargs )

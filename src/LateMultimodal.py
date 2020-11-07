@@ -4,7 +4,6 @@ import os
 from LateMultimodalBase import LateMultimodalBase
 
 from tensorflow.keras.layers import Input, Dense, LSTM, Activation
-from tensorflow.compat.v1.keras.layers import CuDNNLSTM
 from tensorflow.keras.layers import concatenate, Flatten, Reshape, Permute, Dropout
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.models import Model
@@ -32,18 +31,18 @@ class LateMultimodal( LateMultimodalBase ):
                   )( imuModel.output )
         
         # Smart home block
-        homeInp = Input( self.homeShape )
-        y2 = Flatten()( homeInp )
-        y2 = Dense( 128, activation='relu' )( y2 )
-        y2 = Dropout(0.5)( y2 )
+        #homeInp = Input( self.homeShape )
+        #y2 = Flatten()( homeInp )
+        #y2 = Dense( 128, activation='relu' )( y2 )
+        #y2 = Dropout(0.5)( y2 )
 
         # Late fusion
-        y = concatenate( [ y0, y1, y2 ] )
+        y = concatenate( [ y0, y1 ] )
         y = Dense( self.classes,
                    kernel_regularizer = regularizers.l2( 0.01 ),
                    activation = 'softmax' )( y )
        
-        model = Model( [flowModel.inputs, imuModel.inputs, homeInp], y )
+        model = Model( [flowModel.inputs, imuModel.inputs], y )
         optimizer = SGD( lr        = 1e-2, 
                          momentum  = 0.9,
                          decay     = 1e-4,
