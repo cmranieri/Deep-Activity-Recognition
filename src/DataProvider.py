@@ -118,8 +118,8 @@ class DataProvider:
         if self.nFlowMaps==2:
             flowVecs = [ 'u', 'v' ]
         elif self.nFlowMaps==3:
-            #flowVecs = [ 'v', 'w', 'u' ]
-            flowVecs = [ 'u', 'v', 'w' ]
+            flowVecs = [ 'v', 'w', 'u' ]
+            #flowVecs = [ 'u', 'v', 'w' ]
         data = dict()
         ranges = dict()
         for vec in flowVecs:
