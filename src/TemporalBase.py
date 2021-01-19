@@ -77,7 +77,7 @@ class TemporalBase( NetworkBase ):
     def runFlowCNN( self, batch ):
         featsList = list()
         batch = np.reshape( batch, [ -1, self.dim, self.dim, self.nFlowMaps ] )
-        feats = self.cnnModel.predict_on_batch( batch )
+        feats = self.cnnModel.predict_on_batch( batch, batch_size=8 )
         # [ b, t, f ]
         feats = np.reshape( feats, [ -1, self.flowSteps, feats.shape[1] ] )
         return feats

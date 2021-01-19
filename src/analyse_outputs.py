@@ -94,16 +94,21 @@ def compute_results( dataset,
     return acc_list, cf_list
 
 
-def results_cf( dataset, n_splits, n_classes, num_segments, w, ax, lbls=None ):
+def results_cf( dataset, n_splits, n_classes, num_segments, w, ax=None, lbls=None ):
     acc_list, cf_list = compute_results( dataset, n_splits, w )
     mean_acc = np.mean( acc_list )
     std_acc  = np.std(  acc_list )
     sum_cf   = np.sum( cf_list, axis=0 )
     print( w.keys(), mean_acc, std_acc )
-    df = pandas.DataFrame( sum_cf,
-                           index = lbls,
-                           columns = lbls )
-    sn.heatmap( df, ax=ax, annot=True, cbar=False, annot_kws={"size": 12} )
+    if ax is None:
+        return
+    if lbls is not None:
+        df = pandas.DataFrame( sum_cf,
+                               index = lbls,
+                               columns = lbls )
+    else:
+        df = pandas.DataFrame( sum_cf )
+    sn.heatmap( df, ax=ax, annot=True, cbar=False, cmap='YlOrBr', annot_kws={"size": 12} )
     return
 
 
@@ -114,7 +119,7 @@ def all_results_cf( dataset, n_splits, n_classes, num_segments, w_list, titles, 
         results_cf( dataset, n_splits, n_classes, num_segments, w_list[i], axs[i//3,i%3], lbls )
         axs[ i//3, i%3 ].set_title( titles[i] )
     fig.tight_layout()
-    plt.savefig( '../images/cf.pdf' )
+    plt.savefig( '../images/cf_lyell.pdf' )
 
 
 def all_seqs( dataset, n_splits, n_classes, num_segments, w_list, titles, lbls=None ):
@@ -122,14 +127,17 @@ def all_seqs( dataset, n_splits, n_classes, num_segments, w_list, titles, lbls=N
     fig, axs = plt.subplots( nrows=2, ncols=3, figsize=(12,10) )
     for i in range( 6 ):
         pred_seqs = compute_all_seqs( dataset, n_splits, w_list[i], n_classes, num_segments )
-        df = pandas.DataFrame( pred_seqs, index=lbls )
-        cbar = i in [2, 5]
-        sn.heatmap( df, ax=axs[i//3,i%3], annot=False, cbar=cbar, cmap='coolwarm', annot_kws={"size": 12} )
+        if lbls is not None:
+            df = pandas.DataFrame( pred_seqs, index=lbls )
+        else:
+            df = pandas.DataFrame( pred_seqs )
+        cbar = i in [2]
+        sn.heatmap( df, 0, 1, ax=axs[i//3,i%3], annot=False, cbar=cbar, cmap='coolwarm', annot_kws={"size": 12} )
         axs[ i//3, i%3 ].set_title( titles[i] )
         axs[ i//3, i%3 ].set_xticks( [] )
         axs[ i//3, i%3 ].set_xlabel( 'Segment' )
     fig.tight_layout()
-    plt.savefig( '../images/seqs.pdf' )
+    plt.savefig( '../images/seqs_lyell.pdf' )
 
 
 if __name__ == '__main__':
@@ -137,20 +145,34 @@ if __name__ == '__main__':
     n_splits = 8
     n_classes = 9
     num_segments = 25
+    
+    #w = { 'ambient': 1 }
+    #results_cf( dataset, n_splits, n_classes, num_segments, w )
+    #exit()
+
     # imulstm2, imu_sh, cnn-lstm, slstm
-    w_list = [ { 'cnn-lstm' : 1 },
-               { 'slstm'    : 1 },
+    w_list = [ { 'cnn'      : 1 },
+               { 'cnn-lstm' : 1 },
                { 'imulstm2' : 1 },
                { 'imu_sh'   : 1 },
                { 'imulstm2' : 1./7, 'cnn-lstm'  : 6./7 },
                { 'imu_sh'   : 1./7, 'cnn-lstm'  : 6./7 } ]
-    titles = [ 'Optical flow',
-               'Scene flow', 
+    #w_list = [ { 'cnn-flow'   : 1 },
+    #           { 'vlstm-flow' : 1 },
+    #           { 'imulstm2' : 1 },
+    #           { 'imulstm2' : 1./3, 'vlstm-flow'  : 2./3 } ]
+    titles = [ 'Optical flow\n(single frame)',
+               'Optical flow\n(sequence)', 
                'IMU', 
                'IMU + smart home',
                'IMU + opt. flow', 
                'IMU + smart home\n+ opt. flow' ]
+    #titles = [ 'Optical flow\n(single frame)',
+    #           'Optical flow\n(sequence)', 
+    #           'IMU', 
+    #           'IMU + opt. flow' ] 
     lbls = [ 'Cereals', 'Tidy', 'Laptop', 'Newspaper', 'Sandwich', 'Smartphone', 'Table', 'Tea', 'Dishes' ]
+    #lbls = None
 
     all_results_cf( dataset, n_splits, n_classes, num_segments, w_list, titles, lbls )
     all_seqs( dataset, n_splits, n_classes, num_segments, w_list, titles, lbls )
