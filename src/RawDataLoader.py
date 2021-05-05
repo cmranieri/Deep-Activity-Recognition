@@ -6,7 +6,6 @@ import numpy as np
 import csv
 from sklearn.preprocessing import Normalizer
 
-####
 class RawDataLoader:
 
     def window_data( self, data, window_size ):
